@@ -1,14 +1,22 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { testimonials } from "@/lib/site";
 
 const FRAME_BG = ["bg-primary", "bg-secondary", "bg-paper-tint"];
+const AUTO_INTERVAL = 4000;
 
 export default function Wall() {
   const [[index, dir], setIndex] = useState<[number, number]>([0, 1]);
   const t = testimonials[index % testimonials.length];
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setIndex(([i]) => [(i + 1) % testimonials.length, 1]);
+    }, AUTO_INTERVAL);
+    return () => clearInterval(id);
+  }, []);
 
   const go = (step: number) =>
     setIndex(([i]) => [
@@ -40,11 +48,11 @@ export default function Wall() {
                 <img
                   src={t.avatar.replace("/80?", "/160?")}
                   alt={t.name}
-                  className="h-28 w-28 rounded-full border-4 border-white object-cover"
+                  className="h-38 w-38 rounded-full border-4 border-white object-cover"
                 />
               </div>
 
-              <blockquote className="mx-auto mt-10 max-w-2xl text-2xl font-extrabold leading-snug tracking-tight text-dark sm:text-3xl">
+              <blockquote className="mx-auto mt-10 max-w-2xl text-4xl font-extrabold leading-snug tracking-tight text-dark sm:text-3xl">
                 &ldquo;{t.quote}&rdquo;
               </blockquote>
 

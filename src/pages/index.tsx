@@ -6,7 +6,6 @@ import BentoGrid from "@/components/landing/BentoGrid";
 import ShowcaseBlocks from "@/components/landing/ShowcaseBlocks";
 import Audiences from "@/components/landing/Audiences";
 import Wall from "@/components/landing/Wall";
-import Plans from "@/components/landing/Plans";
 import BigCTA from "@/components/landing/BigCTA";
 import FooterMega from "@/components/landing/FooterMega";
 
@@ -34,7 +33,6 @@ export default function Home() {
         <ShowcaseBlocks />
         <Audiences />
         <Wall />
-        <Plans />
         <BigCTA />
         <FooterMega />
       </main>

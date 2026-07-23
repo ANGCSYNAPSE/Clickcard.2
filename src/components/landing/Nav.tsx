@@ -8,7 +8,7 @@ const LINKS = [
   { label: "Features", href: "/#features" },
   { label: "Showcase", href: "/#showcase" },
   { label: "Wall of love", href: "/#love" },
-  { label: "Pricing", href: "/#pricing" },
+  { label: "Pricing", href: "/pricing" },
 ];
 
 export default function Nav() {

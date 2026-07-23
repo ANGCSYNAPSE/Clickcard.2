@@ -7,6 +7,10 @@ import { Star } from "lucide-react";
 import Autoplay from "embla-carousel-autoplay";
 import ClaimBar from "./ClaimBar";
 import { heroAvatars } from "@/lib/site";
+import Img1 from "../../images/img1.png";
+import Img2 from "../../images/img2.png";
+import Img3 from "../../images/img3.png";
+import Img4 from "../../images/img4.png";
 import {
   Carousel,
   CarouselContent,
@@ -25,38 +29,10 @@ const SERVICES = [
 ];
 
 const HERO_PROFILES = [
-  {
-    name: "Arjun Mehta",
-    handle: "clickcard.app/arjun",
-    avatar: "https://i.pravatar.cc/160?img=12",
-    bg: "bg-dark",
-    text: "text-white",
-    links: ["Portfolio", "Instagram", "Book a call", "My shop"],
-  },
-  {
-    name: "Priya Sharma",
-    handle: "clickcard.app/priya",
-    avatar: "https://i.pravatar.cc/160?img=45",
-    bg: "bg-primary",
-    text: "text-dark",
-    links: ["My Music", "YouTube", "Spotify", "Merch store"],
-  },
-  {
-    name: "Rohan Kapoor",
-    handle: "clickcard.app/rohan",
-    avatar: "https://i.pravatar.cc/160?img=33",
-    bg: "bg-paper-tint",
-    text: "text-dark",
-    links: ["Designs", "Dribbble", "Hire me", "Resume"],
-  },
-  {
-    name: "Sneha Iyer",
-    handle: "clickcard.app/sneha",
-    avatar: "https://i.pravatar.cc/160?img=47",
-    bg: "bg-secondary",
-    text: "text-dark",
-    links: ["Courses", "LinkedIn", "Newsletter", "Coaching"],
-  },
+  { id: 1, img: Img1.src, accent: "before:bg-emerald-500", svg: "fill-gray-800 group-hover:fill-gray-800" },
+  { id: 2, img: Img2.src, accent: "before:bg-violet-500",  svg: "fill-gray-800 group-hover:fill-gray-800" },
+  { id: 3, img: Img3.src, accent: "before:bg-rose-500",    svg: "fill-gray-800 group-hover:fill-gray-800" },
+  { id: 4, img: Img4.src, accent: "before:bg-amber-500",   svg: "fill-gray-800 group-hover:fill-gray-800" },
 ];
 
 function RotatingService() {
@@ -86,50 +62,36 @@ function RotatingService() {
 }
 
 function ProfileCarousel() {
-  const plugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: false }));
+  const plugin = useRef(
+    Autoplay({
+      delay: 3000,
+      stopOnInteraction: false,
+    })
+  );
 
   return (
     <Carousel
       plugins={[plugin.current]}
       orientation="vertical"
       opts={{ loop: true, align: "start" }}
-      className="w-full"
-      style={{ height: 620 }}
-      onMouseEnter={plugin.current.stop}
-      onMouseLeave={plugin.current.reset}
+      className="absolute top-1/2 left-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[36px] mt-5"
+      style={{ height: 720 }}
+      onMouseEnter={() => plugin.current.stop()}
+      onMouseLeave={() => plugin.current.reset()}
     >
-      <CarouselContent className="-mt-0" style={{ height: 620 }}>
-        {HERO_PROFILES.map((p) => (
-          <CarouselItem key={p.name} className="pt-0 basis-full">
+      <CarouselContent className="-mt-0" style={{ height: 820 }}>
+        {HERO_PROFILES.map((profile) => (
+          <CarouselItem key={profile.id} className="basis-full pt-0">
             <div
-              className={`${p.bg} ${p.text} flex items-center justify-center rounded-[36px] border border-line p-8 shadow-soft-lg`}
-              style={{ height: 620 }}
+              className="relative flex h-full items-center justify-center overflow-hidden rounded-[36px]"
+              style={{ height: 750 }}
             >
-              <div className="w-full text-center">
-                <div className="mx-auto h-24 w-24 overflow-hidden rounded-full ring-4 ring-white/60">
-                  <img
-                    src={p.avatar}
-                    alt={p.name}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <h3 className="mt-4 text-xl font-extrabold tracking-tight">
-                  {p.name}
-                </h3>
-                <p className="mt-1 text-sm font-medium opacity-60">
-                  {p.handle}
-                </p>
-                <div className="mt-6 space-y-3">
-                  {p.links.map((l) => (
-                    <div
-                      key={l}
-                      className="rounded-full bg-white/90 px-4 py-3 text-sm font-bold text-dark shadow-soft-sm"
-                    >
-                      {l}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <img
+                src={profile.img}
+                alt={`Profile ${profile.id}`}
+                className="h-full w-full object-cover"
+              />
+             
             </div>
           </CarouselItem>
         ))}
@@ -222,12 +184,12 @@ export default function Hero() {
             className="relative hidden lg:block"
           >
             <ProfileCarousel />
-            <div className="absolute -right-5 top-10 z-10 rounded-full bg-primary px-4 py-2 text-xs font-extrabold text-dark shadow-soft">
+            {/* <div className="absolute -right-5 top-1/2 z-10 rounded-full bg-primary px-4 py-2 text-xs font-extrabold text-dark shadow-soft">
               Free!
             </div>
             <div className="absolute -bottom-4 -left-5 z-10 grid h-14 w-14 place-items-center rounded-full bg-white text-xl shadow-soft">
               🔗
-            </div>
+            </div> */}
           </motion.div>
         </div>
       </div>
