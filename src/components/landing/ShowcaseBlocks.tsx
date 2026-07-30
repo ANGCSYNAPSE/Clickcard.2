@@ -19,7 +19,7 @@ export default function ShowcaseBlocks() {
   return (
     <div id="showcase">
       {/* ── 01 · CREATE ── */}
-      <section className="bg-paper-soft px-4 py-24">
+      <section className="relative bg-paper-soft px-4 py-24 h-[590px]">
         <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
           <motion.div {...reveal}>
             <span className={`${eyebrow} bg-yellow text-dark`}>
@@ -42,7 +42,7 @@ export default function ShowcaseBlocks() {
             </a>
           </motion.div>
 
-          <div className="relative mx-auto w-full max-w-md">
+          <div className="absolute right-40 top-0 mx-auto w-full max-w-xl overflow-hidden ">
             <TemplateCarousel />
           </div>
         </div>

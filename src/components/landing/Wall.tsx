@@ -52,7 +52,7 @@ export default function Wall() {
                 />
               </div>
 
-              <blockquote className="mx-auto mt-10 max-w-2xl text-4xl font-extrabold leading-snug tracking-tight text-dark sm:text-3xl">
+              <blockquote className="mx-auto mt-10 max-w-2xl text-2xl font-extrabold leading-snug tracking-tight text-dark sm:text-3xl lg:text-4xl">
                 &ldquo;{t.quote}&rdquo;
               </blockquote>
 

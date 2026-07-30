@@ -26,20 +26,44 @@ const IMAGES = [
 // A 9-slot arc: the outermost slot on each side is a fully transparent
 // "parking" position. Cards fade out into it before they wrap around,
 // so the wrap itself always happens while invisible — never a visible
-// jump across the row. The two slots just inside the edges carry a
-// half blur, so cards visibly blur in/out as they enter and exit
-// rather than snapping straight to full focus.
-const POSITIONS = [
-  { id: "pos0", rotate: -45, x: "-430%", y: 210, scale: 0.8, zIndex: 0, hideMobile: true, opacity: 0, blur: 10 },
-  { id: "pos1", rotate: -35, x: "-330%", y: 160, scale: 0.9, zIndex: 0, hideMobile: true, opacity: 1, blur: 5 },
-  { id: "pos2", rotate: -25, x: "-220%", y: 100, scale: 1, zIndex: 1, hideMobile: true, opacity: 1, blur: 0 },
-  { id: "pos3", rotate: -12, x: "-110%", y: 30, scale: 1, zIndex: 2, opacity: 1, blur: 0 },
-  { id: "pos4", rotate: 0, x: "0%", y: -10, scale: 1.15, zIndex: 3, isCenter: true, opacity: 1, blur: 0 },
-  { id: "pos5", rotate: 12, x: "110%", y: 30, scale: 1, zIndex: 2, opacity: 1, blur: 0 },
-  { id: "pos6", rotate: 25, x: "220%", y: 100, scale: 1, zIndex: 1, hideMobile: true, opacity: 1, blur: 0 },
-  { id: "pos7", rotate: 35, x: "330%", y: 160, scale: 0.9, zIndex: 0, hideMobile: true, opacity: 1, blur: 5 },
-  { id: "pos8", rotate: 45, x: "430%", y: 210, scale: 0.8, zIndex: 0, hideMobile: true, opacity: 0, blur: 10 },
+// jump across the row. Only the cards at the very start and end of the
+// screen carry a "blurSide": just the outer half of that card (the half
+// facing off-screen) is blurred, fading into a sharp inner half.
+//
+// Positions are placed by angle around a circle (not hand-picked pixel
+// values), so every card sits evenly spaced on the same circular arc and
+// is rotated to match its tangent — a true circular carousel.
+const SLOT_COUNT = 9;
+const CENTER_SLOT = (SLOT_COUNT - 1) / 2;
+const ANGLE_STEP_DEG = 12;
+const RADIUS_X = 600; // % — horizontal circle radius
+const RADIUS_Y = 660; // px — vertical circle radius (curvature depth)
+const CENTER_Y = -10; // px — vertical offset of the center card
+
+const SLOT_META = [
+  { scale: 0.8, zIndex: 0, hideMobile: true, opacity: 0, blurSide: "left" }, // offset -4 (buffer)
+  { scale: 0.9, zIndex: 0, hideMobile: true, opacity: 1, blurSide: "left" }, // offset -3
+  { scale: 1, zIndex: 1, hideMobile: true, opacity: 1, blurSide: "none" }, // offset -2
+  { scale: 1, zIndex: 2, hideMobile: false, opacity: 1, blurSide: "none" }, // offset -1
+  { scale: 1.15, zIndex: 3, hideMobile: false, opacity: 1, blurSide: "none", isCenter: true }, // offset 0
+  { scale: 1, zIndex: 2, hideMobile: false, opacity: 1, blurSide: "none" }, // offset 1
+  { scale: 1, zIndex: 1, hideMobile: true, opacity: 1, blurSide: "none" }, // offset 2
+  { scale: 0.9, zIndex: 0, hideMobile: true, opacity: 1, blurSide: "right" }, // offset 3
+  { scale: 0.8, zIndex: 0, hideMobile: true, opacity: 0, blurSide: "right" }, // offset 4 (buffer)
 ];
+
+const POSITIONS = SLOT_META.map((meta, i) => {
+  const offset = i - CENTER_SLOT;
+  const angleDeg = offset * ANGLE_STEP_DEG;
+  const angleRad = (angleDeg * Math.PI) / 180;
+  return {
+    id: `pos${i}`,
+    rotate: angleDeg,
+    x: `${(RADIUS_X * Math.sin(angleRad)).toFixed(1)}%`,
+    y: Math.round(CENTER_Y + RADIUS_Y * (1 - Math.cos(angleRad))),
+    ...meta,
+  };
+});
 
 const ROTATE_INTERVAL = 3500;
 const N = IMAGES.length;
@@ -88,7 +112,6 @@ export default function Hero() {
                   x: pos.x,
                   rotate: pos.rotate,
                   scale: pos.scale,
-                  filter: `blur(${pos.blur}px)`,
                 }}
                 animate={{
                   opacity: pos.opacity,
@@ -96,18 +119,35 @@ export default function Hero() {
                   x: pos.x,
                   rotate: pos.rotate,
                   scale: pos.scale,
-                  filter: `blur(${pos.blur}px)`,
                 }}
                 transition={{ duration: 1.1, ease: [0.45, 0, 0.2, 1] }}
                 className={`absolute w-32 h-32 sm:w-48 sm:h-48 md:w-60 md:h-60 ${pos.hideMobile ? "hidden md:block" : "block"}`}
                 style={{ zIndex: pos.zIndex }}
               >
-                  <div className="w-full h-full rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-soft-lg bg-white border border-line">
+                  <div className="relative w-full h-full rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-soft-lg bg-white border border-line">
                     <img
                       src={img.src}
                       alt={`Hero ${img.id}`}
                       className="h-full w-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-300"
                     />
+                    {pos.blurSide !== "none" && (
+                      <img
+                        src={img.src}
+                        aria-hidden
+                        className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+                        style={{
+                          filter: "blur(10px)",
+                          WebkitMaskImage:
+                            pos.blurSide === "left"
+                              ? "linear-gradient(to right, black 0%, black 30%, transparent 75%)"
+                              : "linear-gradient(to left, black 0%, black 30%, transparent 75%)",
+                          maskImage:
+                            pos.blurSide === "left"
+                              ? "linear-gradient(to right, black 0%, black 30%, transparent 75%)"
+                              : "linear-gradient(to left, black 0%, black 30%, transparent 75%)",
+                        }}
+                      />
+                    )}
                   </div>
 
                   {/* Badges for the center image */}
@@ -189,7 +229,7 @@ export default function Hero() {
             Your identity, one tap away
           </span>
 
-          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-extrabold leading-[1.05] text-dark sm:text-6xl lg:text-5xl">
+          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-extrabold leading-[1.05] text-dark sm:text-5xl lg:text-6xl">
             The Future Doesn&apos;t Exchange Cards.
             <br />
             It Shares{" "}

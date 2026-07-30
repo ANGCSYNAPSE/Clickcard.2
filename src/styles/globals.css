@@ -129,6 +129,22 @@ body {
   animation-play-state: paused;
 }
 
+@keyframes marquee-y {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+.animate-marquee-y {
+  animation: marquee-y 22s linear infinite;
+  will-change: transform;
+}
+.marquee-pause:hover .animate-marquee-y {
+  animation-play-state: paused;
+}
+
 @keyframes spin_slow {
   to {
     transform: rotate(360deg);
