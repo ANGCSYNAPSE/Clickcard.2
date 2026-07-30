@@ -1,9 +1,9 @@
 "use client";
 import { motion } from "framer-motion";
-import { QRCodeSVG } from "qrcode.react";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { stats, WEBAPP_URL } from "@/lib/site";
 import TemplateCarousel from "./TemplateCarousel";
+import ShareCardStack from "./ShareCardStack";
 
 const reveal = {
   initial: { opacity: 0, y: 32 },
@@ -15,11 +15,21 @@ const reveal = {
 const eyebrow =
   "inline-block rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em]";
 
+const TAP_DATA = [
+  { day: "Mon", pct: 30, taps: 90 },
+  { day: "Tue", pct: 48, taps: 145 },
+  { day: "Wed", pct: 38, taps: 115 },
+  { day: "Thu", pct: 62, taps: 185 },
+  { day: "Fri", pct: 55, taps: 165 },
+  { day: "Sat", pct: 78, taps: 235 },
+  { day: "Sun", pct: 100, taps: 300 },
+];
+
 export default function ShowcaseBlocks() {
   return (
     <div id="showcase">
       {/* ── 01 · CREATE ── */}
-      <section className="relative bg-paper-soft px-4 py-24 h-[590px]">
+      <section className="relative bg-paper-soft px-4 py-24 lg:h-[590px]">
         <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
           <motion.div {...reveal}>
             <span className={`${eyebrow} bg-yellow text-dark`}>
@@ -42,34 +52,24 @@ export default function ShowcaseBlocks() {
             </a>
           </motion.div>
 
-          <div className="absolute right-40 top-0 mx-auto w-full max-w-xl overflow-hidden ">
+          <div className="mx-auto mt-10 w-full max-w-xl overflow-hidden lg:absolute lg:right-40 lg:top-0 lg:mt-0">
             <TemplateCarousel />
           </div>
         </div>
       </section>
 
       {/* ── 02 · SHARE ── */}
-      <section className="bg-dark px-4 py-24 text-white">
+      <section className="bg-dark px-4 py-24 text-white lg:h-[590px]">
         <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
           <motion.div
             {...reveal}
-            className="relative order-2 mx-auto w-fit lg:order-1"
+            className="relative order-2 mx-auto w-fit pb-4 pl-6 pt-4 lg:order-1"
           >
-            <div className="rounded-[28px] bg-white p-8 shadow-soft-lg">
-              <QRCodeSVG
-                value="https://clickcard.app/you"
-                size={180}
-                bgColor="#ffffff"
-                fgColor="#0B2E2B"
-              />
-              <p className="mt-4 rounded-full bg-primary px-4 py-1.5 text-center text-sm font-bold text-white">
-                clickcard.app/you
-              </p>
-            </div>
-            {[
-              { label: "Tap · NFC", cls: "-right-6 -top-4" },
-              { label: "In your bio", cls: "-left-8 top-1/3" },
-              { label: "On print", cls: "-bottom-4 -right-2" },
+            <ShareCardStack />
+            {/* {[
+              { label: "Tap · NFC", cls: "-right-4 top-0" },
+              { label: "In your bio", cls: "-left-2 top-1/3" },
+              { label: "On print", cls: "-bottom-2 -right-2" },
             ].map((chip) => (
               <span
                 key={chip.label}
@@ -77,7 +77,7 @@ export default function ShowcaseBlocks() {
               >
                 {chip.label}
               </span>
-            ))}
+            ))} */}
           </motion.div>
 
           <motion.div {...reveal} className="order-1 lg:order-2">
@@ -138,14 +138,23 @@ export default function ShowcaseBlocks() {
                 </span>
               </div>
               <div className="mt-6 flex h-40 items-end gap-2.5">
-                {[30, 48, 38, 62, 55, 78, 100].map((h, i) => (
+                {TAP_DATA.map((d, i) => (
                   <div
                     key={i}
-                    style={{ height: `${h}%` }}
-                    className={`flex-1 rounded-t-lg ${
+                    style={{ height: `${d.pct}%` }}
+                    className={`group relative flex-1 origin-bottom cursor-pointer rounded-t-lg transition-transform duration-200 hover:scale-y-105 ${
                       i === 6 ? "bg-dark" : "bg-secondary"
                     }`}
-                  />
+                  >
+                    <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-dark px-2.5 py-1.5 text-center opacity-0 shadow-soft transition-opacity duration-200 group-hover:opacity-100">
+                      <span className="block text-xs font-extrabold text-white">
+                        {d.taps}
+                      </span>
+                      <span className="block text-[9px] font-semibold text-white/60">
+                        {d.day}
+                      </span>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

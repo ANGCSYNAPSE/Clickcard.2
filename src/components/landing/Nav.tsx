@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { LOGIN_URL, WEBAPP_URL } from "@/lib/site";
+import Img1 from "../../images/Untitled design (1).png";
+
 
 const LINKS = [
   { label: "Features", href: "/#features" },
@@ -35,13 +37,10 @@ export default function Nav() {
           href="/"
           className="flex items-center gap-2.5 text-lg font-extrabold tracking-tight text-dark"
         >
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-base font-extrabold text-white">
-            C
-          </span>
-          ClickCard
+          <img src={Img1.src} alt="Clickcard logo" className="h-10" />
         </Link>
 
-        <div className="hidden items-center gap-1 md:flex">
+        <div className="hidden items-center gap-1 lg:flex">
           {LINKS.map((l) => (
             <Link
               key={l.href}
@@ -53,7 +52,7 @@ export default function Nav() {
           ))}
         </div>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <a
             href={LOGIN_URL}
             className="rounded-full px-4 py-2.5 text-sm font-bold text-dark transition hover:bg-dark/5"
@@ -68,14 +67,14 @@ export default function Nav() {
         <button
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
-          className="grid h-10 w-10 place-items-center rounded-full border border-line bg-dark/5 text-dark md:hidden"
+          className="grid h-10 w-10 place-items-center rounded-full border border-line bg-dark/5 text-dark lg:hidden"
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </nav>
 
       {open && (
-        <div className="mx-auto mt-2 max-w-5xl rounded-3xl border border-line bg-paper/95 p-4 shadow-soft-lg backdrop-blur-xl md:hidden">
+        <div className="mx-auto mt-2 max-w-5xl rounded-3xl border border-line bg-paper/95 p-4 shadow-soft-lg backdrop-blur-xl lg:hidden">
           <div className="flex flex-col">
             {LINKS.map((l) => (
               <Link

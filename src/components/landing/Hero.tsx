@@ -224,12 +224,12 @@ export default function Hero() {
           transition={{ duration: 0.6 }}
           className="relative z-10 mx-auto max-w-7xl text-center"
         >
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/70 px-4 py-1.5 text-xs font-semibold text-dark backdrop-blur">
-            <Sparkles className="h-3.5 w-3.5 text-secondary" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/70 px-3 py-1 text-[11px] font-semibold text-dark backdrop-blur sm:px-4 sm:py-1.5 sm:text-xs">
+            <Sparkles className="h-3 w-3 text-secondary sm:h-3.5 sm:w-3.5" />
             Your identity, one tap away
           </span>
 
-          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-extrabold leading-[1.05] text-dark sm:text-5xl lg:text-6xl">
+          <h1 className="mx-auto mt-4 max-w-4xl text-[2rem] font-extrabold leading-[1.1] text-dark sm:mt-6 sm:text-5xl sm:leading-[1.05] lg:text-6xl">
             The Future Doesn&apos;t Exchange Cards.
             <br />
             It Shares{" "}
@@ -238,11 +238,11 @@ export default function Hero() {
             </span>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-md text-lg font-medium leading-relaxed text-subtle">
+          <p className="mx-auto mt-4 max-w-md text-base font-medium leading-relaxed text-subtle sm:mt-6 sm:text-lg">
             Create yours in minutes.
           </p>
 
-          <div className="mt-9 flex justify-center px-4">
+          <div className="mt-7 flex justify-center sm:mt-9">
             <ClaimBar variant="light" />
           </div>
 

@@ -10,7 +10,7 @@ type Card = { src: string; heightClass: string };
 // Fixed pixel heights don't scale down for narrow screens, so each card's
 // height is a responsive Tailwind class instead — shorter on mobile,
 // taller from sm/lg up.
-const H = "h-32 sm:h-40 lg:h-52";
+const H = "h-32 sm:h-40 lg:h-80";
 
 const COLUMN_1: Card[] = [
   { src: Img1.src, heightClass: H },
@@ -54,7 +54,7 @@ function ImageCard({ src, heightClass }: Card) {
 
 export default function TemplateCarousel() {
   return (
-    <div className="relative mx-auto h-[380px] w-full overflow-hidden sm:h-[460px] lg:h-[590px]">
+    <div className="relative mx-auto h-[480px] w-full overflow-hidden sm:h-[560px] lg:h-[590px]">
       {/* blur masks so rows fade into a soft blur at the top and bottom edges */}
       <div
         className="pointer-events-none absolute inset-x-0 top-0 z-10 h-10 backdrop-blur-md"
