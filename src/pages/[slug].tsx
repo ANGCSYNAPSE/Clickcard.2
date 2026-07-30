@@ -22,9 +22,9 @@ export default function SlugPage({ profile, slug, shareUrl }: Props) {
           <title>{isPrivate ? "Private profile" : "Profile not found"} · ClickCard</title>
           <meta name="robots" content="noindex" />
         </Head>
-        <div className="grid min-h-screen place-items-center bg-mist px-6 text-center">
+        <div className="grid min-h-screen place-items-center bg-paper-soft px-6 text-center">
           <div>
-            <span className="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-brand-gradient text-white shadow-glow">
+            <span className="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-primary to-secondary text-white shadow-soft-lg">
               <Ghost size={34} />
             </span>
             <h1 className="mt-6 font-display text-2xl font-black text-ink">
@@ -35,7 +35,7 @@ export default function SlugPage({ profile, slug, shareUrl }: Props) {
                 ? "The owner has hidden this page from the public."
                 : "Be the one to claim this link and make it yours."}
             </p>
-            <a href={WEBAPP_URL} className="mt-6 inline-flex rounded-2xl bg-brand-gradient px-6 py-3 text-sm font-bold text-white shadow-soft">
+            <a href={WEBAPP_URL} className="mt-6 inline-flex rounded-2xl bg-gradient-to-br from-primary to-secondary px-6 py-3 text-sm font-bold text-white shadow-soft">
               {isPrivate ? "Create your ClickCard" : `Claim /${slug}`}
             </a>
           </div>

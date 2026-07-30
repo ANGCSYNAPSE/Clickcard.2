@@ -12,7 +12,7 @@ export default function App({ Component, pageProps }: AppProps) {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="font-sans min-h-screen bg-white text-ink antialiased">
+      <div className="font-sans min-h-screen bg-paper text-dark antialiased">
         <Component {...pageProps} />
       </div>
     </>

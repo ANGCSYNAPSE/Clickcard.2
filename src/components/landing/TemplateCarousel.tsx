@@ -59,6 +59,34 @@ const TEMPLATES = [
     bg: "bg-[#F0F0FF]",
     miniBg: "from-[#0A0A1A] to-[#1A1A30]",
   },
+  {
+    title: "Photographer",
+    tagline: "Capture. Memories. Forever.",
+    image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&h=400&fit=crop",
+    tabs: ["Portfolio", "Services", "Book"],
+    features: ["High Quality", "Professional"],
+    cta: "Book a Shoot",
+    miniTitle: "Professional Photography",
+    miniDesc: "Capture your best moments with our professional photography services.",
+    miniCta: "View Portfolio",
+    accent: "#E11D48",
+    bg: "bg-[#FFF1F2]",
+    miniBg: "from-[#4C0519] to-[#881337]",
+  },
+  {
+    title: "Fitness Coach",
+    tagline: "Train. Sweat. Achieve.",
+    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&h=400&fit=crop",
+    tabs: ["Workouts", "Nutrition", "Plans"],
+    features: ["Personalized", "Effective"],
+    cta: "Start Training",
+    miniTitle: "Fitness Coaching",
+    miniDesc: "Get in shape with our personalized fitness plans.",
+    miniCta: "Join Now",
+    accent: "#16A34A",
+    bg: "bg-[#F0FDF4]",
+    miniBg: "from-[#052E16] to-[#14532D]",
+  },
 ];
 
 export default function TemplateCarousel() {
@@ -74,7 +102,7 @@ export default function TemplateCarousel() {
   const t = TEMPLATES[index];
 
   return (
-    <div className="relative w-full max-w-[320px] mx-auto" style={{ perspective: "1200px" }}>
+    <div className="relative w-full mx-auto" style={{ perspective: "1200px" }}>
       {/* Progress dots */}
       <div className="flex justify-center gap-2 mb-5">
         {TEMPLATES.map((_, i) => (

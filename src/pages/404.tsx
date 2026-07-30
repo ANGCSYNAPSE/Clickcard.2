@@ -19,10 +19,10 @@ export default function NotFoundPage() {
         <meta name="robots" content="noindex" />
       </Head>
 
-      <div className="relative grid min-h-screen place-items-center overflow-hidden bg-mist px-4 py-16">
-        <div className="pointer-events-none absolute inset-0 bg-mesh opacity-70" />
-        <div className="pointer-events-none absolute -left-32 top-10 h-80 w-80 rounded-full bg-brand-400/20 blur-3xl" />
-        <div className="pointer-events-none absolute -right-32 bottom-10 h-80 w-80 rounded-full bg-candy-pink/20 blur-3xl" />
+      <div className="relative grid min-h-screen place-items-center overflow-hidden bg-paper-soft px-4 py-16">
+        <div className="pointer-events-none absolute inset-0 dots-bg opacity-70" />
+        <div className="pointer-events-none absolute -left-32 top-10 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
+        <div className="pointer-events-none absolute -right-32 bottom-10 h-80 w-80 rounded-full bg-secondary/20 blur-3xl" />
 
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -30,7 +30,7 @@ export default function NotFoundPage() {
           transition={{ duration: 0.5 }}
           className="relative mx-auto w-full max-w-2xl text-center"
         >
-          <span className="inline-block rounded-full bg-white/70 px-4 py-1 text-xs font-black uppercase tracking-[0.18em] text-brand-700 shadow-soft backdrop-blur">
+          <span className="inline-block rounded-full bg-white/70 px-4 py-1 text-xs font-black uppercase tracking-[0.18em] text-primary shadow-soft backdrop-blur">
             404 · Not found
           </span>
           <h1 className="mt-6 font-display text-5xl font-black leading-[1.05] text-ink sm:text-6xl">
@@ -44,13 +44,13 @@ export default function NotFoundPage() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 rounded-2xl bg-brand-gradient px-6 py-3 text-sm font-bold text-white shadow-glow transition hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-br from-primary to-secondary px-6 py-3 text-sm font-bold text-white shadow-soft-lg transition hover:scale-105"
             >
               <Home size={16} /> Go home
             </Link>
             <a
               href="mailto:support@clickcard.app"
-              className="inline-flex items-center gap-2 rounded-2xl border-2 border-brand-100 bg-white px-6 py-3 text-sm font-bold text-ink transition hover:bg-brand-50"
+              className="inline-flex items-center gap-2 rounded-2xl border-2 border-primary/20 bg-white px-6 py-3 text-sm font-bold text-dark transition hover:bg-primary/10"
             >
               <LifeBuoy size={16} /> Contact support
             </a>
@@ -65,7 +65,7 @@ export default function NotFoundPage() {
                 <Link
                   key={d.href}
                   href={d.href}
-                  className="group flex items-center justify-between rounded-2xl bg-white p-4 text-left shadow-soft ring-1 ring-black/[0.03] transition hover:-translate-y-0.5 hover:shadow-card"
+                  className="group flex items-center justify-between rounded-2xl bg-white p-4 text-left shadow-soft ring-1 ring-black/[0.03] transition hover:-translate-y-0.5 hover:shadow-soft-lg"
                 >
                   <span>
                     <span className="block font-bold text-ink">{d.label}</span>
@@ -73,7 +73,7 @@ export default function NotFoundPage() {
                   </span>
                   <ArrowRight
                     size={16}
-                    className="text-ink/30 transition group-hover:translate-x-0.5 group-hover:text-brand-500"
+                    className="text-ink/30 transition group-hover:translate-x-0.5 group-hover:text-primary"
                   />
                 </Link>
               ))}

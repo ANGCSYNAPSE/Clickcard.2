@@ -3,19 +3,24 @@
 @tailwind utilities;
 
 :root {
-  --primary: #d2e823;
-  --secondary: #42e661;
-  --dark: #1e2330;
+  --primary: #be5103;
+  --primary-dark: #b7410e;
+  --secondary: #069494;
+  --secondary-dark: #057a7a;
+  --yellow: #ffce1b;
+  --yellow-dark: #e6b800;
+  --dark: #0b2e2b;
+  --dark-hover: #12403c;
   --black: #010401;
-  --bg: #ffffff;
-  --bg-soft: #f8f8f6;
-  --bg-tint: #f2f2ef;
-  --text: #1e2330;
-  --text-light: #6b7280;
-  --text-muted: #9ca3af;
-  --border: #e5e7eb;
+  --bg: #fefaf3;
+  --bg-soft: #fbf1e1;
+  --bg-tint: #f4e2c4;
+  --text: #16241f;
+  --text-light: #6b6255;
+  --text-muted: #9a9285;
+  --border: #ecdfc7;
   --radius: 18px;
-  --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --shadow: 0 8px 30px rgba(50, 30, 0, 0.08);
   --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
@@ -53,15 +58,23 @@ body {
   color: #fff;
 }
 .btn-primary:hover {
-  background: #2c3343;
+  background: var(--dark-hover);
 }
 
 .btn-accent {
   background: var(--primary);
-  color: var(--dark);
+  color: #fff;
 }
 .btn-accent:hover {
-  background: #c4dd1f;
+  background: var(--primary-dark);
+}
+
+.btn-secondary {
+  background: var(--secondary);
+  color: #fff;
+}
+.btn-secondary:hover {
+  background: var(--secondary-dark);
 }
 
 .btn-outline {

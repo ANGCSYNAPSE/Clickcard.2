@@ -27,7 +27,7 @@ export default function BentoGrid() {
     <section id="features" className="bg-paper px-4 py-24">
       <div className="mx-auto max-w-6xl">
         <motion.div {...reveal} className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-subtle">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary">
             What we do
           </p>
           <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-dark sm:text-5xl">
@@ -43,17 +43,17 @@ export default function BentoGrid() {
         >
           {/* Smart link — hero tile */}
           <div
-            className={`${tile} bg-dark text-white sm:col-span-2 lg:row-span-2`}
+            className={`${tile} bg-primary text-white sm:col-span-2 lg:row-span-2`}
             style={{ borderColor: "transparent" }}
           >
             <div className="flex items-center gap-3">
-              <span className={`${iconBox} bg-primary text-dark`}>
+              <span className={`${iconBox} bg-dark text-yellow`}>
                 <Link2 className="h-5 w-5" />
               </span>
               <h3 className="text-lg font-extrabold">One smart link</h3>
             </div>
-            <p className="mt-4 text-sm font-medium leading-relaxed text-white/70">
-              Claim <strong className="text-primary">clickcard.app/you</strong>{" "}
+            <p className="mt-4 text-sm font-medium leading-relaxed text-white/80">
+              Claim <strong className="text-yellow">clickcard.app/you</strong>{" "}
               and route people to everything — socials, work, shop, contact —
               from a single URL.
             </p>
@@ -66,7 +66,7 @@ export default function BentoGrid() {
               ].map((l) => (
                 <div
                   key={l}
-                  className="group flex cursor-pointer items-center justify-between rounded-full bg-white px-5 py-3 text-sm font-bold text-dark transition hover:bg-primary"
+                  className="group flex cursor-pointer items-center justify-between rounded-full bg-white px-5 py-3 text-sm font-bold text-dark transition hover:bg-dark hover:text-white"
                 >
                   {l}
                   <ArrowUpRight className="h-4 w-4 opacity-40 transition group-hover:opacity-100" />
@@ -82,7 +82,7 @@ export default function BentoGrid() {
                 value="https://clickcard.app/you"
                 size={86}
                 bgColor="#ffffff"
-                fgColor="#1E2330"
+                fgColor="#0B2E2B"
               />
             </div>
             <h3 className="mt-4 text-base font-extrabold text-dark">
@@ -94,7 +94,7 @@ export default function BentoGrid() {
           </div>
 
           {/* Card Studio */}
-          <div className={`${tile} bg-primary`} style={{ borderColor: "transparent" }}>
+          <div className={`${tile} bg-yellow`} style={{ borderColor: "transparent" }}>
             <span className={`${iconBox} bg-dark text-primary`}>
               <Sparkles className="h-5 w-5" />
             </span>
@@ -126,7 +126,7 @@ export default function BentoGrid() {
                     key={i}
                     style={{ height: `${h}px` }}
                     className={`w-5 rounded-t-lg ${
-                      i === 6 ? "bg-dark" : "bg-primary"
+                      i === 6 ? "bg-dark" : "bg-secondary"
                     }`}
                   />
                 ))}
@@ -149,13 +149,13 @@ export default function BentoGrid() {
 
           {/* Referrals */}
           <div className={`${tile} bg-secondary`} style={{ borderColor: "transparent" }}>
-            <span className={`${iconBox} bg-dark text-secondary`}>
+            <span className={`${iconBox} bg-dark text-white`}>
               <Gift className="h-5 w-5" />
             </span>
-            <h3 className="mt-4 text-base font-extrabold text-dark">
+            <h3 className="mt-4 text-base font-extrabold text-white">
               Referral rewards
             </h3>
-            <p className="mt-1 text-sm font-medium text-dark/70">
+            <p className="mt-1 text-sm font-medium text-white/75">
               Share your code, grow the network, unlock premium perks.
             </p>
           </div>
@@ -176,7 +176,7 @@ export default function BentoGrid() {
 
           {/* Offline-ready */}
           <div className={`${tile} bg-dark text-white`} style={{ borderColor: "transparent" }}>
-            <span className={`${iconBox} bg-primary text-dark`}>
+            <span className={`${iconBox} bg-primary text-white`}>
               <Smartphone className="h-5 w-5" />
             </span>
             <h3 className="mt-4 text-base font-extrabold">Works offline</h3>

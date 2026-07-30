@@ -32,15 +32,23 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
 
 export default function FooterMega() {
   return (
-    <footer className="overflow-hidden bg-black px-4 pt-20 text-white">
-      <div className="mx-auto max-w-6xl">
+    <footer className="relative overflow-hidden bg-dark px-4 pt-20 text-white">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-24 -left-24 h-[22rem] w-[22rem] rounded-full bg-primary/25 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-24 -right-24 h-[22rem] w-[22rem] rounded-full bg-yellow/15 blur-3xl"
+      />
+      <div className="relative z-10 mx-auto max-w-6xl">
         <div className="grid gap-12 md:grid-cols-[1.4fr_repeat(3,1fr)]">
           <div>
             <Link
               href="/"
               className="flex items-center gap-2.5 text-lg font-extrabold tracking-tight text-white"
             >
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-base font-extrabold text-dark">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-base font-extrabold text-white">
                 C
               </span>
               ClickCard
@@ -59,7 +67,7 @@ export default function FooterMega() {
                   key={label}
                   href="#"
                   aria-label={label}
-                  className="grid h-11 w-11 place-items-center rounded-full border border-white/15 text-white/60 transition hover:border-primary hover:bg-primary hover:text-dark"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-white/15 text-white/60 transition hover:border-primary hover:bg-primary hover:text-white"
                 >
                   <Icon size={18} />
                 </a>

@@ -28,7 +28,7 @@ export default function Home() {
       <main className="relative bg-paper text-dark">
         <Nav />
         <Hero />
-        <Marquee />
+        {/* <Marquee /> */}
         <BentoGrid />
         <ShowcaseBlocks />
         <Audiences />

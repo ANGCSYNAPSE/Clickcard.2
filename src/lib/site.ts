@@ -119,13 +119,13 @@ export const featuresBySegment = {
       icon: Sparkles,
       title: "Services Directory",
       desc: "List all your services with descriptions, pricing & booking links.",
-      tint: "linear-gradient(135deg, #f43f5e, #fb923c)",
+      tint: "linear-gradient(135deg, #f43f5e, #069494)",
     },
     {
       icon: BarChart3,
       title: "Sales Analytics",
       desc: "Track clicks, conversions & customer engagement in real-time.",
-      tint: "linear-gradient(135deg, #fb923c, #ec4899)",
+      tint: "linear-gradient(135deg, #069494, #ec4899)",
     },
     {
       icon: Link2,
@@ -143,7 +143,7 @@ export const featuresBySegment = {
       icon: Gift,
       title: "Loyalty Programs",
       desc: "Reward customers with referral codes and exclusive offers.",
-      tint: "linear-gradient(135deg, #fb923c, #ec4899)",
+      tint: "linear-gradient(135deg, #069494, #ec4899)",
     },
   ],
   Creators: [
@@ -151,37 +151,37 @@ export const featuresBySegment = {
       icon: Megaphone,
       title: "Fan Hub",
       desc: "All your content, socials & shop links for fans in one place.",
-      tint: "linear-gradient(135deg, #f59e0b, #d97706)",
+      tint: "linear-gradient(135deg, #069494, #069494)",
     },
     {
       icon: Palette,
       title: "Brand Showcase",
       desc: "Display your best work, collaborations & creative achievements.",
-      tint: "linear-gradient(135deg, #d97706, #f59e0b)",
+      tint: "linear-gradient(135deg, #069494, #069494)",
     },
     {
       icon: Rocket,
       title: "Monetization Hub",
       desc: "Sell courses, digital products, merch & subscriptions.",
-      tint: "linear-gradient(135deg, #f59e0b, #fbbf24)",
+      tint: "linear-gradient(135deg, #069494, #069494)",
     },
     {
       icon: TrendingUp,
       title: "Performance Stats",
       desc: "See which content drives engagement and monetization.",
-      tint: "linear-gradient(135deg, #fbbf24, #f59e0b)",
+      tint: "linear-gradient(135deg, #069494, #069494)",
     },
     {
       icon: Users,
       title: "Community Tools",
       desc: "Engage fans with polls, updates, exclusive content & more.",
-      tint: "linear-gradient(135deg, #d97706, #fbbf24)",
+      tint: "linear-gradient(135deg, #069494, #069494)",
     },
     {
       icon: Award,
       title: "Creator Collab",
       desc: "Showcase partnerships, sponsorships & brand collaborations.",
-      tint: "linear-gradient(135deg, #f59e0b, #d97706)",
+      tint: "linear-gradient(135deg, #069494, #069494)",
     },
   ],
 };
@@ -197,7 +197,7 @@ export const features = [
     icon: Sparkles,
     title: "Card Studio",
     desc: "Build branded business cards, resumes & flyers from gorgeous templates.",
-    tint: "linear-gradient(135deg, #ff5db1, #ff9d4d)",
+    tint: "linear-gradient(135deg, #ff5db1, #069494)",
   },
   {
     icon: Link2,
@@ -215,7 +215,7 @@ export const features = [
     icon: FileText,
     title: "PDF Resume",
     desc: "Export a clean, recruiter-ready PDF of your profile in one tap.",
-    tint: "linear-gradient(135deg, #ff9d4d, #ff5db1)",
+    tint: "linear-gradient(135deg, #069494, #ff5db1)",
   },
   {
     icon: BarChart3,
@@ -241,7 +241,7 @@ export const segments = [
   { icon: GraduationCap, label: "Students", color: "bg-cyan-500" },
   { icon: Briefcase, label: "Professionals", color: "bg-purple-600" },
   { icon: Building2, label: "Businesses", color: "bg-pink-500" },
-  { icon: Palette, label: "Creators", color: "bg-amber-500" },
+  { icon: Palette, label: "Creators", color: "bg-primary" },
 ];
 
 export type TemplateKind = "Visiting Card" | "Resume" | "Profile" | "QR Poster";
@@ -271,7 +271,7 @@ export const templates: TemplateCard[] = [
   },
   {
     id: "sunset", name: "Sunset", kind: "Resume",
-    gradient: "linear-gradient(135deg,#ff5db1,#ff9d4d)", accent: "#ff9d4d",
+    gradient: "linear-gradient(135deg,#ff5db1,#069494)", accent: "#069494",
     person: "Sara Khan", role: "Frontend Engineer", handle: "clickcard.app/sara",
     avatar: avatar(45), initials: "SK", meta: ["React", "TypeScript", "Node", "Figma"],
   },
@@ -289,7 +289,7 @@ export const templates: TemplateCard[] = [
   },
   {
     id: "coral", name: "Coral", kind: "QR Poster",
-    gradient: "linear-gradient(135deg,#ff9d4d,#ffd84d)", accent: "#ff9d4d",
+    gradient: "linear-gradient(135deg,#069494,#ffd84d)", accent: "#069494",
     person: "Café Lumière", role: "Scan our menu", handle: "clickcard.app/lumiere",
     avatar: avatar(20), initials: "CL", meta: ["Open · 8am–10pm"],
   },
@@ -318,7 +318,7 @@ export const steps = [
     n: "02",
     title: "Design in the Studio",
     desc: "Pick a template and generate a branded card, resume or QR — fully yours in minutes.",
-    tint: "linear-gradient(135deg, #ff5db1, #ff9d4d)",
+    tint: "linear-gradient(135deg, #ff5db1, #069494)",
   },
   {
     n: "03",

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { testimonials } from "@/lib/site";
 
-const FRAME_BG = ["bg-primary", "bg-secondary", "bg-paper-tint"];
+const FRAME_BG = ["bg-primary", "bg-secondary", "bg-yellow", "bg-paper-tint"];
 const AUTO_INTERVAL = 4000;
 
 export default function Wall() {

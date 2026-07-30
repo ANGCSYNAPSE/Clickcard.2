@@ -1,0 +1,8 @@
+/*
+ * Arc_Carousel
+ *
+ * Learn More: https://www.framer.com/asset-urls
+ */
+
+export * from "https://framerusercontent.com/modules/RVSdRWIIvB3aVlQrWrf4/xg99ZSFiTdUH00xA0XNI/Arc_Carousel.js"
+export { default } from "https://framerusercontent.com/modules/RVSdRWIIvB3aVlQrWrf4/xg99ZSFiTdUH00xA0XNI/Arc_Carousel.js"

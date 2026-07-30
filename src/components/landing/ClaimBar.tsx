@@ -51,7 +51,7 @@ export default function ClaimBar({ variant = "light" }: Props) {
       <button
         type="submit"
         className={`btn group shrink-0 px-6 py-3.5 text-sm ${
-          onDark ? "btn-accent" : "btn-primary"
+          onDark ? "btn-accent" : "btn-secondary"
         }`}
       >
         Claim it

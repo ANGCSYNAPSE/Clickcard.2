@@ -22,7 +22,7 @@ export default function ShowcaseBlocks() {
       <section className="bg-paper-soft px-4 py-24">
         <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
           <motion.div {...reveal}>
-            <span className={`${eyebrow} bg-primary text-dark`}>
+            <span className={`${eyebrow} bg-yellow text-dark`}>
               01 · Create
             </span>
             <h2 className="mt-5 text-4xl font-extrabold tracking-tight text-dark sm:text-5xl">
@@ -60,9 +60,9 @@ export default function ShowcaseBlocks() {
                 value="https://clickcard.app/you"
                 size={180}
                 bgColor="#ffffff"
-                fgColor="#1E2330"
+                fgColor="#0B2E2B"
               />
-              <p className="mt-4 rounded-full bg-primary px-4 py-1.5 text-center text-sm font-bold text-dark">
+              <p className="mt-4 rounded-full bg-primary px-4 py-1.5 text-center text-sm font-bold text-white">
                 clickcard.app/you
               </p>
             </div>
@@ -81,7 +81,7 @@ export default function ShowcaseBlocks() {
           </motion.div>
 
           <motion.div {...reveal} className="order-1 lg:order-2">
-            <span className={`${eyebrow} bg-primary text-dark`}>
+            <span className={`${eyebrow} bg-yellow text-dark`}>
               02 · Share
             </span>
             <h2 className="mt-5 text-4xl font-extrabold tracking-tight sm:text-5xl">
@@ -107,7 +107,7 @@ export default function ShowcaseBlocks() {
       <section className="bg-paper px-4 py-24">
         <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
           <motion.div {...reveal}>
-            <span className={`${eyebrow} bg-secondary text-dark`}>
+            <span className={`${eyebrow} bg-yellow text-dark`}>
               03 · Grow
             </span>
             <h2 className="mt-5 text-4xl font-extrabold tracking-tight text-dark sm:text-5xl">
@@ -133,7 +133,7 @@ export default function ShowcaseBlocks() {
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">
                   Link taps · last 7 days
                 </p>
-                <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-extrabold text-dark">
+                <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-extrabold text-white">
                   +32%
                 </span>
               </div>
@@ -143,7 +143,7 @@ export default function ShowcaseBlocks() {
                     key={i}
                     style={{ height: `${h}%` }}
                     className={`flex-1 rounded-t-lg ${
-                      i === 6 ? "bg-dark" : "bg-primary"
+                      i === 6 ? "bg-dark" : "bg-secondary"
                     }`}
                   />
                 ))}

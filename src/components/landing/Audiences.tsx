@@ -12,7 +12,7 @@ export default function Audiences() {
     <section className="bg-paper-soft px-4 py-24">
       <div className="mx-auto max-w-6xl">
         <div className="max-w-2xl">
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-subtle">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary">
             Who it&apos;s for
           </p>
           <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-dark sm:text-5xl">
@@ -30,7 +30,7 @@ export default function Audiences() {
                 onClick={() => setActive(key)}
                 className={`flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-bold transition ${
                   isActive
-                    ? "border-dark bg-dark text-white"
+                    ? "border-secondary bg-secondary text-white"
                     : "border-line bg-white text-subtle hover:border-line-strong hover:text-dark"
                 }`}
               >
@@ -53,7 +53,7 @@ export default function Audiences() {
             {featuresBySegment[active].map((f) => (
               <div key={f.title} className="card card-hover p-6">
                 <span className="grid h-11 w-11 place-items-center rounded-card bg-primary">
-                  <f.icon className="h-5 w-5 text-dark" />
+                  <f.icon className="h-5 w-5 text-white" />
                 </span>
                 <h3 className="mt-4 text-base font-extrabold text-dark">
                   {f.title}

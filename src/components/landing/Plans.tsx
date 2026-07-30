@@ -98,7 +98,7 @@ export default function Plans() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-2xl text-center"
         >
-          <span className="inline-block rounded-full bg-primary px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-dark">
+          <span className="inline-block rounded-full bg-yellow px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-dark">
             Pricing
           </span>
           <h2 className="mt-5 text-4xl font-extrabold tracking-tight text-dark sm:text-5xl">
@@ -131,7 +131,7 @@ export default function Plans() {
                       {plan.name}
                     </p>
                     {isRec && (
-                      <span className="mt-1 shrink-0 rounded-full bg-primary px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-dark">
+                      <span className="mt-1 shrink-0 rounded-full bg-yellow px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-dark">
                         Best value
                       </span>
                     )}
