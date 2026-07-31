@@ -4,11 +4,19 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Sparkles, Star } from "lucide-react";
-import Img1 from "../../images/hero1.png";
-import Img2 from "../../images/hero2.png";
-import Img3 from "../../images/hero3.png";
-import Img4 from "../../images/hero4.png";
-import Img5 from "../../images/hero5.png";
+
+import Img1 from "@/images/hero/1_designer.png";
+import Img2 from "@/images/hero/2_founder.png";
+import Img3 from "@/images/hero/3_influncer.png";
+import Img4 from "@/images/hero/4_singer.png";
+import Img5 from "@/images/hero/5_gym.png";
+import Img6 from "@/images/hero/6_student.png";
+import Img7 from "@/images/hero/7_dev.png";
+import Img8 from "@/images/hero/8_freelancer.png";
+import Img9 from "@/images/hero/9_standup.png";
+import Img10 from "@/images/hero/10_tattoo.png";
+import Img11 from "@/images/hero/11_makeover.png";
+
 import ClaimBar from "./ClaimBar";
 import { heroAvatars } from "@/lib/site";
 
@@ -18,13 +26,15 @@ const IMAGES = [
   { id: "img3", src: Img1.src },
   { id: "img4", src: Img4.src },
   { id: "img5", src: Img5.src },
-  { id: "img6", src: Img3.src },
-  { id: "img7", src: Img1.src },
-  { id: "img8", src: Img4.src },
-  { id: "img9", src: Img2.src },
+  { id: "img6", src: Img9.src },
+  { id: "img7", src: Img11.src },
+  { id: "img8", src: Img10.src },
+  { id: "img9", src: Img6.src },
+  { id: "img10", src: Img7.src },
+  { id: "img11", src: Img8.src },
 ];
 
-// A 9-slot arc: the outermost slot on each side is a fully transparent
+// A 10-slot arc: the outermost slot on each side is a fully transparent
 // "parking" position. Cards fade out into it before they wrap around,
 // so the wrap itself always happens while invisible — never a visible
 // jump across the row. Only the cards at the very start and end of the
@@ -34,7 +44,7 @@ const IMAGES = [
 // Positions are placed by angle around a circle (not hand-picked pixel
 // values), so every card sits evenly spaced on the same circular arc and
 // is rotated to match its tangent — a true circular carousel.
-const SLOT_COUNT = 9;
+const SLOT_COUNT = 10;
 const CENTER_SLOT = (SLOT_COUNT - 1) / 2;
 const ANGLE_STEP_DEG = 12;
 const RADIUS_X = 600; // % — horizontal circle radius
@@ -46,11 +56,14 @@ const SLOT_META = [
   { scale: 0.9, zIndex: 0, hideMobile: true, opacity: 1, blurSide: "left" }, // offset -3
   { scale: 1, zIndex: 1, hideMobile: true, opacity: 1, blurSide: "none" }, // offset -2
   { scale: 1, zIndex: 2, hideMobile: false, opacity: 1, blurSide: "none" }, // offset -1
-  { scale: 1.15, zIndex: 3, hideMobile: false, opacity: 1, blurSide: "none", isCenter: true }, // offset 0
   { scale: 1, zIndex: 2, hideMobile: false, opacity: 1, blurSide: "none" }, // offset 1
+  { scale: 1.15, zIndex: 3, hideMobile: false, opacity: 1, blurSide: "none", isCenter: true }, // offset 0
   { scale: 1, zIndex: 1, hideMobile: true, opacity: 1, blurSide: "none" }, // offset 2
   { scale: 0.9, zIndex: 0, hideMobile: true, opacity: 1, blurSide: "right" }, // offset 3
-  { scale: 0.8, zIndex: 0, hideMobile: true, opacity: 0, blurSide: "right" }, // offset 4 (buffer)
+  { scale: 0.8, zIndex: 0, hideMobile: true, opacity: 0, blurSide: "right" }, // offset 4 
+  { scale: 0.7, zIndex: 0, hideMobile: true, opacity: 0, blurSide: "right" }, // offset 5 (buffer)
+  { scale: 0.6, zIndex: 0, hideMobile: true, opacity: 0, blurSide: "right" }, // offset 6 (buffer)
+
 ];
 
 const POSITIONS = SLOT_META.map((meta, i) => {
