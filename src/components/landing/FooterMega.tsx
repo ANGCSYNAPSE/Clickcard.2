@@ -32,7 +32,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
 
 export default function FooterMega() {
   return (
-    <footer className="relative overflow-hidden bg-dark px-4 pt-20 text-white">
+    <footer className="relative overflow-hidden bg-black px-4 pt-20 text-white">
       <div
         aria-hidden
         className="pointer-events-none absolute -bottom-24 -left-24 h-[22rem] w-[22rem] rounded-full bg-primary/25 blur-3xl"

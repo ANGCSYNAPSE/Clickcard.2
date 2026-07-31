@@ -34,7 +34,7 @@ export default function ClaimBar({ variant = "light" }: Props) {
             onDark ? "text-white/50" : "text-muted"
           }`}
         >
-          clickcard.app/
+          clickcard/
         </span>
         <input
           value={name}

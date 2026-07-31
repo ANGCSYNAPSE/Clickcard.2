@@ -4,10 +4,11 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Sparkles, Star } from "lucide-react";
-import Img1 from "../../images/img1.png";
-import Img2 from "../../images/img2.png";
-import Img3 from "../../images/img3.png";
-import Img4 from "../../images/img4.png";
+import Img1 from "../../images/hero1.png";
+import Img2 from "../../images/hero2.png";
+import Img3 from "../../images/hero3.png";
+import Img4 from "../../images/hero4.png";
+import Img5 from "../../images/hero5.png";
 import ClaimBar from "./ClaimBar";
 import { heroAvatars } from "@/lib/site";
 
@@ -16,7 +17,7 @@ const IMAGES = [
   { id: "img2", src: Img3.src },
   { id: "img3", src: Img1.src },
   { id: "img4", src: Img4.src },
-  { id: "img5", src: Img2.src },
+  { id: "img5", src: Img5.src },
   { id: "img6", src: Img3.src },
   { id: "img7", src: Img1.src },
   { id: "img8", src: Img4.src },
@@ -122,9 +123,14 @@ export default function Hero() {
                 }}
                 transition={{ duration: 1.1, ease: [0.45, 0, 0.2, 1] }}
                 className={`absolute w-32 h-32 sm:w-48 sm:h-48 md:w-60 md:h-60 ${pos.hideMobile ? "hidden md:block" : "block"}`}
-                style={{ zIndex: pos.zIndex }}
+                style={{ zIndex: pos.zIndex, perspective: 800 }}
               >
-                  <div className="relative w-full h-full rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-soft-lg bg-white border border-line">
+                  <motion.div
+                    whileHover={{ rotateY: 180 }}
+                    transition={{ duration: 0.6, ease: [0.45, 0, 0.2, 1] }}
+                    style={{ transformStyle: "preserve-3d" }}
+                    className="relative w-full h-full rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-soft-lg bg-white border border-line"
+                  >
                     <img
                       src={img.src}
                       alt={`Hero ${img.id}`}
@@ -148,7 +154,7 @@ export default function Hero() {
                         }}
                       />
                     )}
-                  </div>
+                  </motion.div>
 
                   {/* Badges for the center image */}
                   {/* <AnimatePresence>
