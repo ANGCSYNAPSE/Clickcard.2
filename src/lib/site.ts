@@ -26,7 +26,7 @@ import {
 // The ClickCard web app is a separate application (own deploy/origin).
 // The landing site deep-links into it. Override per environment via env.
 export const WEB_URL =
-  process.env.NEXT_PUBLIC_WEB_URL?.replace(/\/$/, "") ?? "https://clickcard-webb.vercel.app/login";
+  process.env.NEXT_PUBLIC_WEB_URL || "http://localhost:3001";
 export const WEBAPP_URL = `${WEB_URL}/signup`;
 export const LOGIN_URL = `${WEB_URL}/login`;
 export const PLANS_URL = `${WEB_URL}/billing`;
