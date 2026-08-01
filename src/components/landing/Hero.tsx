@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Sparkles, Star } from "lucide-react";
 
@@ -34,56 +34,126 @@ const IMAGES = [
   { id: "img11", src: Img8.src },
 ];
 
-// A 10-slot arc: the outermost slot on each side is a fully transparent
-// "parking" position. Cards fade out into it before they wrap around,
-// so the wrap itself always happens while invisible — never a visible
-// jump across the row. Only the cards at the very start and end of the
-// screen carry a "blurSide": just the outer half of that card (the half
-// facing off-screen) is blurred, fading into a sharp inner half.
+// An arc of slots, symmetric around a center slot at angle 0. The outer
+// slots on each side are fully transparent "parking" positions. Cards fade
+// out into them before they wrap around, so the wrap itself always happens
+// while invisible — never a visible jump across the row. Only the cards at
+// the very start and end of the screen carry a "blurSide": just the outer
+// half of that card (the half facing off-screen) is blurred, fading into a
+// sharp inner half.
 //
 // Positions are placed by angle around a circle (not hand-picked pixel
 // values), so every card sits evenly spaced on the same circular arc and
 // is rotated to match its tangent — a true circular carousel.
-const SLOT_COUNT = 10;
-const CENTER_SLOT = (SLOT_COUNT - 1) / 2;
 const ANGLE_STEP_DEG = 12;
-const RADIUS_X = 600; // % — horizontal circle radius
-const RADIUS_Y = 660; // px — vertical circle radius (curvature depth)
 const CENTER_Y = -10; // px — vertical offset of the center card
+const RADIUS_Y_RATIO = 2.1; // vertical radius as a multiple of card size, so the
+// curvature of the arc stays the same at every card size
 
-const SLOT_META = [
-  { scale: 0.8, zIndex: 0, hideMobile: true, opacity: 0, blurSide: "left" }, // offset -4 (buffer)
-  { scale: 0.9, zIndex: 0, hideMobile: true, opacity: 1, blurSide: "left" }, // offset -3
-  { scale: 1, zIndex: 1, hideMobile: true, opacity: 1, blurSide: "none" }, // offset -2
-  { scale: 1, zIndex: 2, hideMobile: false, opacity: 1, blurSide: "none" }, // offset -1
-  { scale: 1, zIndex: 2, hideMobile: false, opacity: 1, blurSide: "none" }, // offset 1
-  { scale: 1.15, zIndex: 3, hideMobile: false, opacity: 1, blurSide: "none", isCenter: true }, // offset 0
-  { scale: 1, zIndex: 1, hideMobile: true, opacity: 1, blurSide: "none" }, // offset 2
-  { scale: 0.9, zIndex: 0, hideMobile: true, opacity: 1, blurSide: "right" }, // offset 3
-  { scale: 0.8, zIndex: 0, hideMobile: true, opacity: 0, blurSide: "right" }, // offset 4 
-  { scale: 0.7, zIndex: 0, hideMobile: true, opacity: 0, blurSide: "right" }, // offset 5 (buffer)
-  { scale: 0.6, zIndex: 0, hideMobile: true, opacity: 0, blurSide: "right" }, // offset 6 (buffer)
+const PARK_OFFSET = 5; // outermost slot overall — invisible, this is where cards wrap
+const SLOT_COUNT = PARK_OFFSET * 2 + 1; // must stay equal to IMAGES.length
+const CENTER_SLOT = (SLOT_COUNT - 1) / 2;
 
+// The outermost drawn card is centered on the screen edge, so it straddles it
+// and its blurred outer half bleeds off — the arc spans the full viewport.
+const EDGE_RATIO = 0.5;
+
+// Both the arc radius and the card size are driven by the viewport width, which
+// is what lets the carousel be full-bleed *and* keep a gap between neighbouring
+// cards. Those two goals fight each other: the arc has to reach the screen edge
+// by `visibleDepth` steps, so the wider the arc is drawn the more cards have to
+// fit inside it. A fixed card size cannot satisfy both (9 cards of 240px with a
+// 20px gap would need a ~1860px viewport), so narrower screens draw a shallower
+// arc with fewer cards, and `cardRatio` is set per tier to stay comfortably
+// below that tier's neighbour spacing.
+// The binding constraint is the *outer* pair, not the center one: x = R·sin(nθ)
+// compresses as the angle grows, so the depth 3→4 spacing is the narrowest on
+// the arc and it sets the card size for the whole tier.
+// `cardRatio` is set just under the ratio at which that tier's tightest pair
+// would touch (0.116 / 0.164 / 0.238 / 0.465), which is what trades gap width
+// for card size — pushing a ratio past its limit makes the cards overlap again.
+const TIERS = [
+  { minWidth: 1280, visibleDepth: 4, cardRatio: 0.11, maxCard: 290 },
+  { minWidth: 1024, visibleDepth: 3, cardRatio: 0.156, maxCard: 250 },
+  { minWidth: 640, visibleDepth: 2, cardRatio: 0.225, maxCard: 230 },
+  { minWidth: 0, visibleDepth: 1, cardRatio: 0.42, maxCard: 210 },
 ];
 
-const POSITIONS = SLOT_META.map((meta, i) => {
-  const offset = i - CENTER_SLOT;
-  const angleDeg = offset * ANGLE_STEP_DEG;
-  const angleRad = (angleDeg * Math.PI) / 180;
-  return {
-    id: `pos${i}`,
-    rotate: angleDeg,
-    x: `${(RADIUS_X * Math.sin(angleRad)).toFixed(1)}%`,
-    y: Math.round(CENTER_Y + RADIUS_Y * (1 - Math.cos(angleRad))),
-    ...meta,
-  };
-});
+const DEFAULT_WIDTH = 1280; // used for SSR and the first client render
+
+function buildLayout(viewportWidth: number) {
+  const tier = TIERS.find((t) => viewportWidth >= t.minWidth) ?? TIERS[TIERS.length - 1];
+  const { visibleDepth } = tier;
+
+  const cardSize = Math.round(Math.min(viewportWidth * tier.cardRatio, tier.maxCard));
+  const radiusY = cardSize * RADIUS_Y_RATIO;
+  const radiusX =
+    (EDGE_RATIO * viewportWidth) /
+    Math.sin((visibleDepth * ANGLE_STEP_DEG * Math.PI) / 180);
+
+  const positions = Array.from({ length: SLOT_COUNT }, (_, i) => {
+    const offset = i - CENTER_SLOT;
+    const depth = Math.abs(offset);
+    const angleDeg = offset * ANGLE_STEP_DEG;
+    const angleRad = (angleDeg * Math.PI) / 180;
+    // Anything past the visible depth sits in a parking slot: still animating
+    // along the arc, but fully transparent, so the wrap happens unseen.
+    const drawn = depth <= visibleDepth;
+
+    return {
+      rotate: angleDeg,
+      x: Math.round(radiusX * Math.sin(angleRad)),
+      y: Math.round(CENTER_Y + radiusY * (1 - Math.cos(angleRad))),
+      scale: depth === 0 ? 1.15 : 1 - (depth - 1) * 0.04,
+      opacity: drawn ? 1 : 0,
+      // Strictly decreasing with depth so a nearer card always paints over a
+      // farther one, rather than stacking by DOM order (which is fixed per
+      // image while the slots rotate, and would flicker). Stays under the
+      // z-10 the headline block sits on.
+      zIndex: drawn ? visibleDepth + 2 - depth : 0,
+      blurSide: depth === visibleDepth ? (offset < 0 ? "left" : "right") : "none",
+      isCenter: depth === 0,
+    };
+  });
+
+  // Cards are centered in the track and then translated by `y`, so the track
+  // has to be twice the furthest card's reach to keep the arc from spilling
+  // into the headline below.
+  const outerDepth = Math.min(visibleDepth, PARK_OFFSET);
+  const outer = positions[CENTER_SLOT + outerDepth];
+  const trackHeight = Math.round(
+    Math.max(
+      2 * (outer.y + (cardSize * outer.scale) / 2),
+      cardSize * 1.15 - 2 * CENTER_Y,
+    ),
+  );
+
+  return { cardSize, trackHeight, positions };
+}
+
+function useViewportWidth() {
+  const [width, setWidth] = useState(DEFAULT_WIDTH);
+
+  useEffect(() => {
+    const update = () => setWidth(window.innerWidth);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return width;
+}
 
 const ROTATE_INTERVAL = 3500;
 const N = IMAGES.length;
 
 export default function Hero() {
   const [rotation, setRotation] = useState(0);
+  const viewportWidth = useViewportWidth();
+  const { cardSize, trackHeight, positions } = useMemo(
+    () => buildLayout(viewportWidth),
+    [viewportWidth],
+  );
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -107,15 +177,18 @@ export default function Hero() {
 
       <div className="relative mx-auto w-full px-4 flex flex-col items-center">
         {/* Arc Carousel Area */}
-        <div className="relative flex justify-center items-center h-[250px] sm:h-[350px] md:h-[400px] mb-8 md:mb-16 w-screen">
+        <div
+          className="relative flex justify-center items-center mb-2 md:mb-4 w-screen"
+          style={{ height: trackHeight }}
+        >
           {IMAGES.map((img, originalIndex) => {
             // Every tick, each card glides one slot to the left along the
-            // arc. The two outer slots are fully transparent, so the card
-            // that wraps from the first slot back to the last one always
-            // does it while already invisible — the motion stays one
-            // continuous, evenly-timed glide with no visible cut.
+            // arc. The outer slots are fully transparent, so the card that
+            // wraps from the first slot back to the last one always does it
+            // while already invisible — the motion stays one continuous,
+            // evenly-timed glide with no visible cut.
             const slot = ((originalIndex - rotation) % N + N) % N;
-            const pos = POSITIONS[slot];
+            const pos = positions[slot];
 
             return (
               <motion.div
@@ -135,14 +208,24 @@ export default function Hero() {
                   scale: pos.scale,
                 }}
                 transition={{ duration: 1.1, ease: [0.45, 0, 0.2, 1] }}
-                className={`absolute w-32 h-32 sm:w-48 sm:h-48 md:w-60 md:h-60 ${pos.hideMobile ? "hidden md:block" : "block"}`}
-                style={{ zIndex: pos.zIndex, perspective: 800 }}
+                className="absolute block"
+                style={{
+                  width: cardSize,
+                  height: cardSize,
+                  zIndex: pos.zIndex,
+                  perspective: 800,
+                }}
               >
                   <motion.div
                     whileHover={{ rotateY: 180 }}
                     transition={{ duration: 0.6, ease: [0.45, 0, 0.2, 1] }}
-                    style={{ transformStyle: "preserve-3d" }}
-                    className="relative w-full h-full rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-soft-lg bg-white border border-line"
+                    style={{
+                      transformStyle: "preserve-3d",
+                      // Scales with the card so the corners keep the same
+                      // proportion now that the card size follows the viewport.
+                      borderRadius: Math.round(cardSize * 0.17),
+                    }}
+                    className="relative w-full h-full overflow-hidden shadow-soft-lg bg-white border border-line"
                   >
                     <img
                       src={img.src}
