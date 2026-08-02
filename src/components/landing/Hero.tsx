@@ -73,10 +73,10 @@ const EDGE_RATIO = 0.5;
 // would touch (0.116 / 0.164 / 0.238 / 0.465), which is what trades gap width
 // for card size — pushing a ratio past its limit makes the cards overlap again.
 const TIERS = [
-  { minWidth: 1280, visibleDepth: 4, cardRatio: 0.11, maxCard: 290 },
-  { minWidth: 1024, visibleDepth: 3, cardRatio: 0.156, maxCard: 250 },
-  { minWidth: 640, visibleDepth: 2, cardRatio: 0.225, maxCard: 230 },
-  { minWidth: 0, visibleDepth: 1, cardRatio: 0.42, maxCard: 210 },
+  { minWidth: 1280, visibleDepth: 4, cardRatio: 0.11, maxCard: 340 },
+  { minWidth: 1024, visibleDepth: 3, cardRatio: 0.156, maxCard: 290 },
+  { minWidth: 640, visibleDepth: 2, cardRatio: 0.225, maxCard: 270 },
+  { minWidth: 0, visibleDepth: 1, cardRatio: 0.42, maxCard: 250 },
 ];
 
 const DEFAULT_WIDTH = 1280; // used for SSR and the first client render
@@ -164,7 +164,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative overflow-hidden bg-paper-soft pt-10 pb-20 min-h-screen flex flex-col items-center justify-center">
+    <section className="relative overflow-hidden bg-paper-soft pt-4 pb-20 min-h-screen flex flex-col items-center justify-center">
       {/* Background ambient light */}
       <div
         aria-hidden
@@ -178,7 +178,7 @@ export default function Hero() {
       <div className="relative mx-auto w-full px-4 flex flex-col items-center">
         {/* Arc Carousel Area */}
         <div
-          className="relative flex justify-center items-center mb-2 md:mb-4 w-screen"
+          className="relative flex justify-center items-center mb-0 md:mb-2 w-screen"
           style={{ height: trackHeight }}
         >
           {IMAGES.map((img, originalIndex) => {
@@ -331,7 +331,7 @@ export default function Hero() {
             Your identity, one tap away
           </span>
 
-          <h1 className="mx-auto mt-4 max-w-4xl text-[2rem] font-extrabold leading-[1.1] text-dark sm:mt-6 sm:text-5xl sm:leading-[1.05] lg:text-6xl">
+          <h1 className="mx-auto mt-2 max-w-4xl text-[2rem] font-extrabold leading-[1.1] text-dark sm:mt-3 sm:text-5xl sm:leading-[1.05] lg:text-6xl">
             The Future Doesn&apos;t Exchange Cards.
             <br />
             It Shares{" "}

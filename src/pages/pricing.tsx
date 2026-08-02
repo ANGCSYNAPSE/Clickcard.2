@@ -16,7 +16,7 @@ export default function PricingPage() {
       </Head>
       <main className="relative bg-paper text-coal">
         <Nav />
-        <div className="pt-20">
+        <div className="pt-8 md:pt-12">
           <Plans />
         </div>
         <BigCTA />
