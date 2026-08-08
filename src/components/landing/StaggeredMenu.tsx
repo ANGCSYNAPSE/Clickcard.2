@@ -62,9 +62,9 @@ export const StaggeredMenu = ({
   const preLayerElsRef = useRef<HTMLElement[]>([]);
   const plusHRef = useRef<HTMLSpanElement | null>(null);
   const plusVRef = useRef<HTMLSpanElement | null>(null);
+  const iconMidRef = useRef<HTMLSpanElement | null>(null);
   const iconRef = useRef<HTMLSpanElement | null>(null);
   const textInnerRef = useRef<HTMLSpanElement | null>(null);
-  const textWrapRef = useRef<HTMLSpanElement | null>(null);
   const [textLines, setTextLines] = useState<string[]>(["Menu", "Close"]);
 
   const openTlRef = useRef<gsap.core.Timeline | null>(null);
@@ -81,9 +81,10 @@ export const StaggeredMenu = ({
       const preContainer = preLayersRef.current;
       const plusH = plusHRef.current;
       const plusV = plusVRef.current;
+      const iconMid = iconMidRef.current;
       const icon = iconRef.current;
       const textInner = textInnerRef.current;
-      if (!panel || !plusH || !plusV || !icon || !textInner) return;
+      if (!panel || !plusH || !plusV || !iconMid || !icon) return;
 
       let preLayers: HTMLElement[] = [];
       if (preContainer) {
@@ -98,10 +99,13 @@ export const StaggeredMenu = ({
       if (preContainer) {
         gsap.set(preContainer, { xPercent: 0, opacity: 1 });
       }
-      gsap.set(plusH, { transformOrigin: "50% 50%", rotate: 0 });
-      gsap.set(plusV, { transformOrigin: "50% 50%", rotate: 90 });
+      gsap.set(plusH, { transformOrigin: "50% 50%", rotate: 0, y: 0 });
+      gsap.set(plusV, { transformOrigin: "50% 50%", rotate: 0, y: 0 });
+      gsap.set(iconMid, { opacity: 1 });
       gsap.set(icon, { rotate: 0, transformOrigin: "50% 50%" });
-      gsap.set(textInner, { yPercent: 0 });
+      if (textInner) {
+        gsap.set(textInner, { yPercent: 0 });
+      }
       if (toggleBtnRef.current) {
         gsap.set(toggleBtnRef.current, { color: menuButtonColor });
       }
@@ -278,22 +282,54 @@ export const StaggeredMenu = ({
   }, [position]);
 
   const animateIcon = useCallback((opening: boolean) => {
-    const icon = iconRef.current;
-    if (!icon) return;
+    const plusH = plusHRef.current;
+    const plusV = plusVRef.current;
+    const iconMid = iconMidRef.current;
+    if (!plusH || !plusV || !iconMid) return;
     spinTweenRef.current?.kill();
-    spinTweenRef.current = opening
-      ? gsap.to(icon, {
-          rotate: 225,
-          duration: 0.8,
-          ease: "power4.out",
-          overwrite: "auto",
-        })
-      : gsap.to(icon, {
-          rotate: 0,
-          duration: 0.35,
-          ease: "power3.inOut",
-          overwrite: "auto",
-        });
+    if (opening) {
+      spinTweenRef.current = gsap.to(plusH, {
+        y: 7,
+        rotate: 45,
+        duration: 0.8,
+        ease: "power4.out",
+        overwrite: "auto",
+      });
+      gsap.to(plusV, {
+        y: -7,
+        rotate: -45,
+        duration: 0.8,
+        ease: "power4.out",
+        overwrite: "auto",
+      });
+      gsap.to(iconMid, {
+        opacity: 0,
+        duration: 0.3,
+        ease: "power2.out",
+        overwrite: "auto",
+      });
+    } else {
+      spinTweenRef.current = gsap.to(plusH, {
+        y: 0,
+        rotate: 0,
+        duration: 0.35,
+        ease: "power3.inOut",
+        overwrite: "auto",
+      });
+      gsap.to(plusV, {
+        y: 0,
+        rotate: 0,
+        duration: 0.35,
+        ease: "power3.inOut",
+        overwrite: "auto",
+      });
+      gsap.to(iconMid, {
+        opacity: 1,
+        duration: 0.35,
+        ease: "power3.inOut",
+        overwrite: "auto",
+      });
+    }
   }, []);
 
   const animateColor = useCallback(
@@ -474,18 +510,10 @@ export const StaggeredMenu = ({
           onClick={toggleMenu}
           type="button"
         >
-          <span ref={textWrapRef} className="sm-toggle-textWrap" aria-hidden="true">
-            <span ref={textInnerRef} className="sm-toggle-textInner">
-              {textLines.map((l, i) => (
-                <span className="sm-toggle-line" key={i}>
-                  {l}
-                </span>
-              ))}
-            </span>
-          </span>
           <span ref={iconRef} className="sm-icon" aria-hidden="true">
-            <span ref={plusHRef} className="sm-icon-line" />
-            <span ref={plusVRef} className="sm-icon-line sm-icon-line-v" />
+            <span ref={plusHRef} className="sm-icon-line sm-icon-line-top" />
+            <span ref={iconMidRef} className="sm-icon-line sm-icon-line-mid" />
+            <span ref={plusVRef} className="sm-icon-line sm-icon-line-bottom" />
           </span>
         </button>
       </header>

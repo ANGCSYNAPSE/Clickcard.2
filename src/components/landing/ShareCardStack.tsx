@@ -46,7 +46,7 @@ export default function ShareCardStack() {
   }, []);
 
   return (
-    <div className="relative h-[260px] w-[220px] sm:h-[300px] sm:w-[250px]">
+    <div className="relative h-[260px] w-[220px] sm:h-[300px] sm:w-[250px] mt-10 lg:mt-0">
       {order.map((id, i) => {
         const card = CARDS.find((c) => c.id === id)!;
         const pos = STACK[i];
@@ -94,7 +94,7 @@ export default function ShareCardStack() {
       })}
 
       {/* floating handle pill */}
-      <span className="absolute bottom-10 -right-20 z-20 flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-lg font-bold text-dark shadow-soft-lg">
+      <span className="absolute bottom-10 -right-10 lg:-right-20 z-20 flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-lg font-bold text-dark shadow-soft-lg">
         <span className="text-primary">#</span> clickcard.app/you
       </span>
     </div>

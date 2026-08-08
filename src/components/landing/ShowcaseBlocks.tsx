@@ -66,18 +66,6 @@ export default function ShowcaseBlocks() {
             className="relative order-2 mx-auto w-fit pb-4 pl-6 pt-4 lg:order-1"
           >
             <ShareCardStack />
-            {/* {[
-              { label: "Tap · NFC", cls: "-right-4 top-0" },
-              { label: "In your bio", cls: "-left-2 top-1/3" },
-              { label: "On print", cls: "-bottom-2 -right-2" },
-            ].map((chip) => (
-              <span
-                key={chip.label}
-                className={`absolute rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white backdrop-blur ${chip.cls}`}
-              >
-                {chip.label}
-              </span>
-            ))} */}
           </motion.div>
 
           <motion.div {...reveal} className="order-1 lg:order-2">

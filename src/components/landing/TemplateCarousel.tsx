@@ -10,7 +10,7 @@ type Card = { src: string; heightClass: string };
 // Fixed pixel heights don't scale down for narrow screens, so each card's
 // height is a responsive Tailwind class instead — shorter on mobile,
 // taller from sm/lg up.
-const H = "h-32 sm:h-40 lg:h-80";
+const H = "h-55 lg:h-80";
 
 const COLUMN_1: Card[] = [
   { src: Img1.src, heightClass: H },

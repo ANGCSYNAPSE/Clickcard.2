@@ -164,7 +164,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative overflow-hidden bg-paper-soft pt-4 pb-20 min-h-screen flex flex-col items-center justify-center">
+    <section className="relative overflow-x-clip bg-paper-soft pt-4 pb-20 min-h-screen flex flex-col items-center justify-center">
       {/* Background ambient light */}
       <div
         aria-hidden
@@ -252,68 +252,6 @@ export default function Hero() {
                     )}
                   </motion.div>
 
-                  {/* Badges for the center image */}
-                  {/* <AnimatePresence>
-                    {pos.isCenter && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0, transition: { duration: 0.2 } }}
-                        className="absolute inset-0 pointer-events-none"
-                      >
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.5, x: -20 }}
-                          animate={{ opacity: 1, scale: 1, x: 0 }}
-                          transition={{ delay: 0.4, type: "spring" }}
-                          className="absolute -left-12 sm:-left-20 top-1/3 z-20 flex items-center gap-2 rounded-full sm:rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-1.5 sm:p-2 shadow-xl pointer-events-auto"
-                        >
-                          <img
-                            src={Img3.src}
-                            alt="Avatar"
-                            className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover"
-                          />
-                          <div className="hidden sm:block pr-2">
-                            <p className="text-[10px] sm:text-xs font-bold text-white leading-tight">
-                              LoraJason
-                            </p>
-                            <p className="text-[8px] sm:text-[10px] text-white/70">
-                              You are the inspiration
-                            </p>
-                          </div>
-                        </motion.div>
-
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.5, x: 20 }}
-                          animate={{ opacity: 1, scale: 1, x: 0 }}
-                          transition={{ delay: 0.5, type: "spring" }}
-                          className="absolute -right-10 sm:-right-16 top-1/4 z-20 flex items-center gap-2 rounded-full sm:rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-1.5 sm:p-2 shadow-xl pointer-events-auto"
-                        >
-                          <img
-                            src={Img4.src}
-                            alt="Avatar"
-                            className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover"
-                          />
-                          <div className="hidden sm:block pr-2">
-                            <p className="text-[10px] sm:text-xs font-bold text-white leading-tight">
-                              JPG
-                            </p>
-                            <p className="text-[8px] sm:text-[10px] text-white/70">
-                              Killing it brother!
-                            </p>
-                          </div>
-                        </motion.div>
-
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.5, y: 20 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          transition={{ delay: 0.6, type: "spring" }}
-                          className="absolute -right-2 sm:-right-4 -bottom-2 sm:-bottom-4 z-20 grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-full sm:rounded-2xl bg-gradient-to-tr from-red-500 to-rose-400 shadow-xl border border-white/20 pointer-events-auto"
-                        >
-                          <Heart className="h-5 w-5 sm:h-6 sm:w-6 fill-white text-white" />
-                        </motion.div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence> */}
                 </motion.div>
             );
           })}
@@ -324,14 +262,14 @@ export default function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="relative z-10 mx-auto max-w-7xl text-center"
+          className="relative z-10 w-full max-w-2xl mx-auto px-5 text-center flex flex-col items-center"
         >
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/70 px-3 py-1 text-[11px] font-semibold text-dark backdrop-blur sm:px-4 sm:py-1.5 sm:text-xs">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/70 px-3 py-1 text-xs font-semibold text-dark backdrop-blur sm:px-4 sm:py-1.5">
             <Sparkles className="h-3 w-3 text-secondary sm:h-3.5 sm:w-3.5" />
             Your identity, one tap away
           </span>
 
-          <h1 className="mx-auto mt-2 max-w-4xl text-[2rem] font-extrabold leading-[1.1] text-dark sm:mt-3 sm:text-5xl sm:leading-[1.05] lg:text-6xl">
+          <h1 className="mx-auto mt-2  text-[1.5rem] font-extrabold leading-[1.1] text-dark sm:mt-3 sm:text-3xl sm:leading-[1.05] lg:text-6xl">
             The Future Doesn&apos;t Exchange Cards.
             <br />
             It Shares{" "}
@@ -344,7 +282,7 @@ export default function Hero() {
             Create yours in minutes.
           </p>
 
-          <div className="mt-7 flex justify-center sm:mt-9">
+          <div className="mt-7 flex w-full justify-center sm:mt-9">
             <ClaimBar variant="light" />
           </div>
 

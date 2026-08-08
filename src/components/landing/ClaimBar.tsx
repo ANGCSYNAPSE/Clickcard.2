@@ -22,7 +22,7 @@ export default function ClaimBar({ variant = "light" }: Props) {
         e.preventDefault();
         claim();
       }}
-      className={`flex w-full max-w-lg items-center gap-2 rounded-full p-2 ${
+      className={`flex w-full max-w-lg items-center gap-2 rounded-full p-2 min-w-0 ${
         onDark
           ? "border border-white/15 bg-white/10 backdrop-blur"
           : "border border-line bg-white shadow-soft"
@@ -50,7 +50,7 @@ export default function ClaimBar({ variant = "light" }: Props) {
       </label>
       <button
         type="submit"
-        className={`btn group shrink-0 px-6 py-3.5 text-sm ${
+        className={`btn group shrink-0 px-4 py-3 text-sm sm:px-6 sm:py-3.5 ${
           onDark ? "btn-accent" : "btn-secondary"
         }`}
       >
