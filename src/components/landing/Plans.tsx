@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { WEBAPP_URL } from "@/lib/site";
+import { WEBAPP_URL, pricing as PRICING } from "@/lib/site";
 
 type Feature = { emoji: string; title: string; desc?: string };
 type Group = { label?: string; items: Feature[] };
@@ -19,7 +19,7 @@ const PLANS: Plan[] = [
   {
     name: "Free",
     blurb: "Get started with your own personal ClickCard",
-    price: "₹0",
+    price: PRICING[0].price,
     priceNote: "Free, forever",
     cta: "Get started",
     intro: "Key features:",
@@ -38,7 +38,7 @@ const PLANS: Plan[] = [
   {
     name: "Pro",
     blurb: "For professionals & creators looking to grow",
-    price: "₹299",
+    price: PRICING[1].price,
     priceNote: "INR/mo · cancel anytime",
     cta: "Go Pro",
     recommended: true,
@@ -64,7 +64,7 @@ const PLANS: Plan[] = [
   {
     name: "Business",
     blurb: "For teams & storefronts that sell",
-    price: "₹599",
+    price: PRICING[2].price,
     priceNote: "INR/mo · cancel anytime",
     cta: "Scale up",
     intro: "Everything in Pro, plus:",

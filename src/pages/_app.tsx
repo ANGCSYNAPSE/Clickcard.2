@@ -4,6 +4,7 @@ import "@/styles/globals.css";
 // Next.js Pages Router only allows global CSS to be imported from _app, so the
 // StaggeredMenu stylesheet lives here rather than beside its component.
 import "@/components/landing/StaggeredMenu.css";
+import Providers from "@/store/Providers";
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
@@ -15,9 +16,11 @@ export default function App({ Component, pageProps }: AppProps) {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="font-sans min-h-screen bg-paper text-dark antialiased">
-        <Component {...pageProps} />
-      </div>
+      <Providers>
+        <div className="font-sans min-h-screen bg-paper text-dark antialiased">
+          <Component {...pageProps} />
+        </div>
+      </Providers>
     </>
   );
 }

@@ -30,7 +30,6 @@ import {
   shareTargets,
   trackEvent,
 } from "@/lib/publicProfile";
-import { WEBAPP_URL } from "@/lib/site";
 
 export default function PublicProfile({
   profile,
@@ -224,7 +223,7 @@ export default function PublicProfile({
           {profile.updatedAt && <span>Updated {new Date(profile.updatedAt).toLocaleDateString()}</span>}
         </div>
 
-        <a href={WEBAPP_URL} className="mt-5 flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/25 py-3 text-sm font-bold text-primary transition hover:border-primary/50 hover:bg-white">
+        <a href="/signup" className="mt-5 flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/25 py-3 text-sm font-bold text-primary transition hover:border-primary/50 hover:bg-white">
           <span className="grid h-6 w-7 place-items-center rounded-md bg-gradient-to-br from-primary to-secondary text-[10px] font-black text-white">CK</span>
           Create your own ClickCard — free
         </a>

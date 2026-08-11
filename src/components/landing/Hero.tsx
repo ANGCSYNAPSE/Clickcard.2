@@ -262,10 +262,10 @@ export default function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="relative z-10 w-full max-w-2xl mx-auto px-5 text-center flex flex-col items-center"
+          className="relative z-10 w-full max-w-5xl mx-auto px-5 text-center flex flex-col items-center"
         >
           <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/70 px-3 py-1 text-xs font-semibold text-dark backdrop-blur sm:px-4 sm:py-1.5">
-            <Sparkles className="h-3 w-3 text-secondary sm:h-3.5 sm:w-3.5" />
+            
             Your identity, one tap away
           </span>
 

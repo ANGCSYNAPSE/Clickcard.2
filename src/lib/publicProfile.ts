@@ -67,8 +67,9 @@ export interface PublicProfile {
   updatedAt?: string;
 }
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "https://clickcard-backend.vercel.app"; // set NEXT_PUBLIC_API_BASE_URL in Vercel env
+import { API_BASE_URL } from "./config";
+
+const API_BASE = API_BASE_URL;
 
 /** Public profile endpoint: resolves by slug, short code, or user id. */
 export const publicProfilePath = (slug: string) =>

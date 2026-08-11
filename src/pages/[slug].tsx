@@ -3,9 +3,7 @@ import Head from "next/head";
 import { Ghost } from "lucide-react";
 import PublicProfile from "@/components/public/PublicProfile";
 import { fetchPublicProfile, PublicProfile as TProfile } from "@/lib/publicProfile";
-import { WEBAPP_URL } from "@/lib/site";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://clickcard.app";
+import { SITE_URL } from "@/lib/config";
 
 interface Props {
   profile: TProfile | null;
@@ -35,7 +33,7 @@ export default function SlugPage({ profile, slug, shareUrl }: Props) {
                 ? "The owner has hidden this page from the public."
                 : "Be the one to claim this link and make it yours."}
             </p>
-            <a href={WEBAPP_URL} className="mt-6 inline-flex rounded-2xl bg-gradient-to-br from-primary to-secondary px-6 py-3 text-sm font-bold text-white shadow-soft">
+            <a href={`/signup?username=${encodeURIComponent(slug)}`} className="mt-6 inline-flex rounded-2xl bg-gradient-to-br from-primary to-secondary px-6 py-3 text-sm font-bold text-white shadow-soft">
               {isPrivate ? "Create your ClickCard" : `Claim /${slug}`}
             </a>
           </div>
