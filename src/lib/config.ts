@@ -5,7 +5,7 @@
 
 // API Configuration
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "https://clickcard-backend.vercel.app";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://click-card-backend.vercel.app";
 
 // Site URLs
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://clickcard-2.vercel.app";
