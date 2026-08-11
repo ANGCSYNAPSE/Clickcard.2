@@ -8,9 +8,9 @@ export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "https://clickcard-backend.vercel.app";
 
 // Site URLs
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-export const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL || "http://localhost:3001";
-export const SHARE_BASE_URL = process.env.NEXT_PUBLIC_SHARE_BASE || "http://localhost:3000/s";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://clickcard-2.vercel.app";
+export const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL || "https://clickcard-2.vercel.app";
+export const SHARE_BASE_URL = process.env.NEXT_PUBLIC_SHARE_BASE || "https://clickcard-2.vercel.app/s";
 
 // Authentication
 export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
