@@ -233,6 +233,24 @@ export default function StudioPage() {
             <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">Customize</p>
           </div>
 
+          {/* Templates Option */}
+          <button className="w-full border-b border-ink/5 px-5 py-4 transition hover:bg-mist dark:border-white/5 dark:hover:bg-white/[0.02]">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                  <QrCode size={16} />
+                </span>
+                <p className="text-sm font-bold text-ink dark:text-white">Templates</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-ink/60 dark:text-white/60">
+                  {templates.length} {templates.length === 1 ? "template" : "templates"}
+                </span>
+                <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
+              </div>
+            </div>
+          </button>
+
           {/* Theme Light/Dark Option */}
           <div className="border-b border-ink/5 px-5 py-4 dark:border-white/5">
             <div className="flex items-center justify-between gap-3">
