@@ -51,6 +51,7 @@ export default function StudioPage() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [exporting, setExporting] = useState<StudioFormat | null>(null);
   const [expandedSection, setExpandedSection] = useState<string | null>("palette");
+  const [detailView, setDetailView] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -180,216 +181,256 @@ export default function StudioPage() {
             <h3 className="font-display text-lg font-black text-ink dark:text-white">Design</h3>
           </div>
 
-          {/* Palette Option */}
-          <button
-            onClick={() => setExpandedSection(expandedSection === "palette" ? null : "palette")}
-            className="w-full border-b border-ink/5 px-5 py-4 transition hover:bg-mist dark:border-white/5 dark:hover:bg-white/[0.02]"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-600 text-white">
-                  <Palette size={16} />
-                </span>
-                <p className="text-sm font-bold text-ink dark:text-white">Palette</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-ink/60 dark:text-white/60">
-                  {PALETTES.find((p) => p.primary === primary && p.accent === accent)?.name || "Custom"}
-                </span>
-                <ChevronRight
-                  size={16}
-                  className={`transition dark:text-white/40 text-ink/40 ${
-                    expandedSection === "palette" ? "rotate-90" : ""
-                  }`}
-                />
-              </div>
-            </div>
-          </button>
-
-          {/* Palette Options (Expanded) */}
-          {expandedSection === "palette" && (
-            <div className="border-b border-ink/5 bg-mist px-5 py-4 dark:border-white/5 dark:bg-white/[0.02]">
-              <div className="grid grid-cols-4 gap-2">
-                {PALETTES.map((p) => {
-                  const active = p.primary === primary && p.accent === accent;
-                  return (
-                    <button
-                      key={p.name}
-                      onClick={() => {
-                        setPrimary(p.primary);
-                        setAccent(p.accent);
-                      }}
-                      className={`flex flex-col items-center gap-1 rounded-xl border p-2 transition ${
-                        active
-                          ? "border-brand-400 shadow-soft"
-                          : "border-ink/10 hover:border-brand-200 dark:border-white/10"
-                      }`}
-                      title={p.name}
-                    >
-                      <div
-                        className="h-6 w-full rounded-lg"
-                        style={{ background: `linear-gradient(135deg, ${p.primary}, ${p.accent})` }}
-                      />
-                      <span className="text-[9px] font-bold text-ink/60 dark:text-white/60">{p.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          {detailView === null && (
+            <>
+              {/* Palette Option */}
+              <button
+                onClick={() => setDetailView("palette")}
+                className="w-full border-b border-ink/5 px-5 py-4 transition hover:bg-mist dark:border-white/5 dark:hover:bg-white/[0.02]"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-600 text-white">
+                      <Palette size={16} />
+                    </span>
+                    <p className="text-sm font-bold text-ink dark:text-white">Palette</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-ink/60 dark:text-white/60">
+                      {PALETTES.find((p) => p.primary === primary && p.accent === accent)?.name || "Custom"}
+                    </span>
+                    <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
+                  </div>
+                </div>
+              </button>
 
           {/* Customize Heading */}
           <div className="border-b border-ink/5 px-5 py-3 dark:border-white/5">
             <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">Customize</p>
           </div>
 
-          {/* Templates Option */}
-          <button
-            onClick={() => setExpandedSection(expandedSection === "templates" ? null : "templates")}
-            className="w-full border-b border-ink/5 px-5 py-4 transition hover:bg-mist dark:border-white/5 dark:hover:bg-white/[0.02]"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                  <QrCode size={16} />
-                </span>
-                <p className="text-sm font-bold text-ink dark:text-white">Templates</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-ink/60 dark:text-white/60">
-                  {templates.length} {templates.length === 1 ? "template" : "templates"}
-                </span>
-                <ChevronRight
-                  size={16}
-                  className={`transition dark:text-white/40 text-ink/40 ${
-                    expandedSection === "templates" ? "rotate-90" : ""
-                  }`}
-                />
+              {/* Templates Option */}
+              <button
+                onClick={() => setDetailView("templates")}
+                className="w-full border-b border-ink/5 px-5 py-4 transition hover:bg-mist dark:border-white/5 dark:hover:bg-white/[0.02]"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                      <QrCode size={16} />
+                    </span>
+                    <p className="text-sm font-bold text-ink dark:text-white">Templates</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-ink/60 dark:text-white/60">
+                      {templates.length} {templates.length === 1 ? "template" : "templates"}
+                    </span>
+                    <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
+                  </div>
+                </div>
+              </button>
+
+              {/* Theme Option */}
+              <button
+                onClick={() => setDetailView("theme")}
+                className="w-full border-b border-ink/5 px-5 py-4 transition hover:bg-mist dark:border-white/5 dark:hover:bg-white/[0.02]"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                      {theme === "light" ? <Sun size={16} /> : <Moon size={16} />}
+                    </span>
+                    <p className="text-sm font-bold text-ink dark:text-white">Theme</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-ink/60 dark:text-white/60 capitalize">{theme}</span>
+                    <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
+                  </div>
+                </div>
+              </button>
+
+              {/* Export Option */}
+              <button
+                onClick={() => setDetailView("export")}
+                className="w-full px-5 py-4 transition hover:bg-mist dark:hover:bg-white/[0.02]"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-500 text-white">
+                      <Download size={16} />
+                    </span>
+                    <p className="text-sm font-bold text-ink dark:text-white">Export</p>
+                  </div>
+                  <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
+                </div>
+              </button>
+            </>
+          )}
+
+          {/* Palette Detail View */}
+          {detailView === "palette" && (
+            <div className="space-y-4">
+              {/* Back Button */}
+              <button
+                onClick={() => setDetailView(null)}
+                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
+              >
+                ← Palette
+              </button>
+
+              {/* Palette Options */}
+              <div className="px-5 py-4 space-y-4">
+                <div>
+                  <p className="mb-3 text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
+                    Select Palette
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {PALETTES.map((p) => {
+                      const active = p.primary === primary && p.accent === accent;
+                      return (
+                        <button
+                          key={p.name}
+                          onClick={() => {
+                            setPrimary(p.primary);
+                            setAccent(p.accent);
+                          }}
+                          className={`flex flex-col items-center gap-2 rounded-2xl border p-3 transition ${
+                            active
+                              ? "border-brand-400 shadow-soft"
+                              : "border-ink/10 hover:border-brand-200 dark:border-white/10"
+                          }`}
+                          title={p.name}
+                        >
+                          <div
+                            className="h-10 w-full rounded-lg"
+                            style={{ background: `linear-gradient(135deg, ${p.primary}, ${p.accent})` }}
+                          />
+                          <span className="text-[10px] font-bold text-ink/60 dark:text-white/60">{p.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
-          </button>
+          )}
 
-          {/* Templates List (Expanded) */}
-          {expandedSection === "templates" && (
-            <div className="border-b border-ink/5 bg-mist px-5 py-4 dark:border-white/5 dark:bg-white/[0.02]">
-              <p className="text-xs text-ink/60 dark:text-white/60 mb-3">
-                {templates.length} {templates.length === 1 ? "template available" : "templates available"} for{" "}
-                <span className="font-bold capitalize">{category.replace("_", " ")}</span>
-              </p>
-              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                {templates.map((t) => (
+          {/* Templates Detail View */}
+          {detailView === "templates" && (
+            <div className="space-y-4">
+              {/* Back Button */}
+              <button
+                onClick={() => setDetailView(null)}
+                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
+              >
+                ← Templates
+              </button>
+
+              {/* Templates List */}
+              <div className="px-5 py-4">
+                <p className="mb-3 text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
+                  {templates.length} {templates.length === 1 ? "template available" : "templates available"}
+                </p>
+                <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                  {templates.map((t) => (
+                    <button
+                      key={t.slug}
+                      onClick={() => setSelectedSlug(t.slug)}
+                      className={`rounded-xl border p-2 text-left text-xs transition ${
+                        selectedSlug === t.slug
+                          ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
+                          : "border-ink/10 hover:border-brand-200 dark:border-white/10"
+                      }`}
+                    >
+                      <div
+                        className="h-14 w-full rounded-lg mb-2"
+                        style={{ background: `linear-gradient(135deg, ${t.primary_color}, ${t.accent_color})` }}
+                      />
+                      <p className="font-bold text-ink dark:text-white text-[10px]">{t.name}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Theme Detail View */}
+          {detailView === "theme" && (
+            <div className="space-y-4">
+              {/* Back Button */}
+              <button
+                onClick={() => setDetailView(null)}
+                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
+              >
+                ← Theme
+              </button>
+
+              {/* Theme Options */}
+              <div className="px-5 py-4">
+                <p className="mb-4 text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
+                  Select Theme
+                </p>
+                <div className="grid grid-cols-2 gap-3">
                   <button
-                    key={t.slug}
-                    onClick={() => setSelectedSlug(t.slug)}
-                    className={`rounded-lg border p-2 text-left text-xs transition ${
-                      selectedSlug === t.slug
-                        ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
+                    onClick={() => setTheme("light")}
+                    className={`flex flex-col items-center gap-3 rounded-2xl border p-4 transition ${
+                      theme === "light"
+                        ? "border-brand-400 shadow-soft"
                         : "border-ink/10 hover:border-brand-200 dark:border-white/10"
                     }`}
                   >
-                    <div
-                      className="h-12 w-full rounded-lg mb-1"
-                      style={{ background: `linear-gradient(135deg, ${t.primary_color}, ${t.accent_color})` }}
-                    />
-                    <p className="font-bold text-ink dark:text-white text-[10px]">{t.name}</p>
+                    <Sun size={24} className="text-brand-500" />
+                    <span className="text-xs font-bold text-ink dark:text-white">Light</span>
                   </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Theme Option */}
-          <button
-            onClick={() => setExpandedSection(expandedSection === "theme" ? null : "theme")}
-            className="w-full border-b border-ink/5 px-5 py-4 transition hover:bg-mist dark:border-white/5 dark:hover:bg-white/[0.02]"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                  {theme === "light" ? <Sun size={16} /> : <Moon size={16} />}
-                </span>
-                <p className="text-sm font-bold text-ink dark:text-white">Theme</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-ink/60 dark:text-white/60 capitalize">{theme}</span>
-                <ChevronRight
-                  size={16}
-                  className={`transition dark:text-white/40 text-ink/40 ${
-                    expandedSection === "theme" ? "rotate-90" : ""
-                  }`}
-                />
-              </div>
-            </div>
-          </button>
-
-          {/* Theme Options (Expanded) */}
-          {expandedSection === "theme" && (
-            <div className="border-b border-ink/5 bg-mist px-5 py-4 dark:border-white/5 dark:bg-white/[0.02]">
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setTheme("light")}
-                  className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 text-xs font-bold transition ${
-                    theme === "light"
-                      ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
-                      : "border-ink/10 hover:border-brand-200 dark:border-white/10 dark:hover:bg-white/5"
-                  }`}
-                >
-                  <Sun size={14} /> Light
-                </button>
-                <button
-                  onClick={() => setTheme("dark")}
-                  className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 text-xs font-bold transition ${
-                    theme === "dark"
-                      ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
-                      : "border-ink/10 hover:border-brand-200 dark:border-white/10 dark:hover:bg-white/5"
-                  }`}
-                >
-                  <Moon size={14} /> Dark
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Export Option */}
-          <button
-            onClick={() => setExpandedSection(expandedSection === "export" ? null : "export")}
-            className="w-full px-5 py-4 transition hover:bg-mist dark:hover:bg-white/[0.02]"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-500 text-white">
-                  <Download size={16} />
-                </span>
-                <p className="text-sm font-bold text-ink dark:text-white">Export</p>
-              </div>
-              <ChevronRight
-                size={16}
-                className={`transition dark:text-white/40 text-ink/40 ${
-                  expandedSection === "export" ? "rotate-90" : ""
-                }`}
-              />
-            </div>
-          </button>
-
-          {/* Export Options (Expanded) */}
-          {expandedSection === "export" && (
-            <div className="bg-mist px-5 py-4 dark:bg-white/[0.02]">
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                {(["pdf", "png", "svg"] as StudioFormat[]).map((f) => (
                   <button
-                    key={f}
-                    disabled={!selected || exporting !== null}
-                    onClick={() => exportFile(f)}
-                    className="inline-flex flex-col items-center gap-1 rounded-lg bg-brand-500 px-2.5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-soft transition hover:bg-brand-600 disabled:opacity-60"
+                    onClick={() => setTheme("dark")}
+                    className={`flex flex-col items-center gap-3 rounded-2xl border p-4 transition ${
+                      theme === "dark"
+                        ? "border-brand-400 shadow-soft"
+                        : "border-ink/10 hover:border-brand-200 dark:border-white/10"
+                    }`}
                   >
-                    <Download size={14} />
-                    {exporting === f ? "…" : f}
+                    <Moon size={24} className="text-brand-500" />
+                    <span className="text-xs font-bold text-ink dark:text-white">Dark</span>
                   </button>
-                ))}
+                </div>
               </div>
-              <p className="text-[9px] text-ink/45 dark:text-white/45">
-                SVG renders without server Chromium. PDF/PNG require it on the host.
-              </p>
+            </div>
+          )}
+
+          {/* Export Detail View */}
+          {detailView === "export" && (
+            <div className="space-y-4">
+              {/* Back Button */}
+              <button
+                onClick={() => setDetailView(null)}
+                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
+              >
+                ← Export
+              </button>
+
+              {/* Export Options */}
+              <div className="px-5 py-4">
+                <p className="mb-4 text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
+                  Export Format
+                </p>
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {(["pdf", "png", "svg"] as StudioFormat[]).map((f) => (
+                    <button
+                      key={f}
+                      disabled={!selected || exporting !== null}
+                      onClick={() => exportFile(f)}
+                      className="inline-flex flex-col items-center gap-2 rounded-xl bg-brand-500 px-3 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-soft transition hover:bg-brand-600 disabled:opacity-60"
+                    >
+                      <Download size={16} />
+                      {exporting === f ? "…" : f}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[9px] text-ink/45 dark:text-white/45">
+                  SVG renders without server Chromium. PDF/PNG require it on the host.
+                </p>
+              </div>
             </div>
           )}
         </div>
