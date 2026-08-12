@@ -117,40 +117,14 @@ export default function StudioPage() {
         <title>Studio · ClickCard</title>
       </Head>
 
-      <div className="mb-4">
+      <div className="mb-6">
         <h1 className="font-display text-2xl font-black text-ink dark:text-white">Studio</h1>
         <p className="text-sm text-ink/55 dark:text-white/55">
-          Build resumes, visiting cards & QR posters from admin-published templates with a live preview, then export PDF/PNG/SVG.
+          Design your profile with live preview and export options.
         </p>
       </div>
 
-      {/* category tabs */}
-      <div className="mb-6 grid gap-2 sm:grid-cols-3">
-        {CATEGORIES.map((c) => {
-          const active = category === c.key;
-          return (
-            <button
-              key={c.key}
-              onClick={() => setCategory(c.key)}
-              className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${
-                active
-                  ? "border-brand-400 bg-brand-50 shadow-soft dark:bg-brand-500/10"
-                  : "border-ink/10 bg-white hover:border-brand-200 dark:border-white/10 dark:bg-[#12403c]"
-              }`}
-            >
-              <span className={`grid h-10 w-10 place-items-center rounded-xl ${active ? "bg-brand-500 text-white" : "bg-mist text-brand-500 dark:bg-white/5"}`}>
-                <c.icon size={18} />
-              </span>
-              <div>
-                <p className="font-bold text-ink dark:text-white">{c.label}</p>
-                <p className="text-xs text-ink/55 dark:text-white/55">{c.description}</p>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1fr_500px]">
+      <div className="grid gap-6 xl:grid-cols-[1fr_720px]">
         {/* preview + gallery */}
         <div className="space-y-5">
           {/* live preview */}
@@ -458,7 +432,7 @@ function PreviewCard({
     <div
       className="relative rounded-3xl shadow-card overflow-hidden flex flex-col items-center justify-between"
       style={{
-        width: 280,
+        width: 320,
         height: 520,
         background: bg,
         color: textColor,
