@@ -170,37 +170,6 @@ export default function StudioPage() {
             )}
           </div>
 
-          {/* gallery */}
-          <div>
-            <h3 className="mb-3 font-display text-sm font-black uppercase tracking-wide text-ink/60 dark:text-white/60">
-              Templates ({templates.length})
-            </h3>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {templates.map((t) => (
-                <button
-                  key={t.slug}
-                  onClick={() => setSelectedSlug(t.slug)}
-                  className={`rounded-2xl border p-3 text-left text-xs transition ${
-                    selectedSlug === t.slug
-                      ? "border-brand-400 bg-brand-50 shadow-soft dark:bg-brand-500/10"
-                      : "border-ink/10 bg-white hover:border-brand-200 dark:border-white/10 dark:bg-[#12403c]"
-                  }`}
-                >
-                  <div
-                    className="h-20 w-full rounded-lg"
-                    style={{ background: `linear-gradient(135deg, ${t.primary_color}, ${t.accent_color})` }}
-                  />
-                  <p className="mt-2 font-bold text-ink dark:text-white">{t.name}</p>
-                  <p className="line-clamp-2 text-[10px] text-ink/50 dark:text-white/50">{t.description}</p>
-                  {t.is_premium && (
-                    <span className="mt-1 inline-block rounded-full bg-candy-yellow/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-brand-600">
-                      Pro
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* controls */}
