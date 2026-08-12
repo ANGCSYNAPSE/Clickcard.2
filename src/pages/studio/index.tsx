@@ -149,7 +149,7 @@ export default function StudioPage() {
         })}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+      <div className="grid gap-6 xl:grid-cols-[1fr_500px]">
         {/* preview + gallery */}
         <div className="space-y-5">
           {/* live preview */}
