@@ -157,12 +157,10 @@ export default function StudioPage() {
           <div className="grid place-items-center rounded-3xl border border-ink/5 bg-mist p-6 dark:border-white/5 dark:bg-white/[0.02]">
             {selected ? (
               <PreviewCard
-                template={selected}
                 primary={primary}
                 accent={accent}
                 theme={theme}
                 name={draft.personal?.fullName || "Your name"}
-                tagline={draft.personal?.tagline || ""}
                 username={user?.username}
               />
             ) : (
@@ -440,74 +438,90 @@ export default function StudioPage() {
 }
 
 function PreviewCard({
-  template,
   primary,
   accent,
   theme,
   name,
-  tagline,
   username,
 }: {
-  template: StudioTemplate;
   primary: string;
   accent: string;
   theme: "light" | "dark";
   name: string;
-  tagline: string;
   username?: string | null;
 }) {
-  const ratio = template.height / template.width;
-  const w = 340;
-  const h = w * ratio;
   const isDark = theme === "dark";
-  const bg = isDark ? "#0b0820" : "#ffffff";
-  const fg = isDark ? "#f7f5ff" : "#1a1138";
+  const bg = isDark ? "#000000" : "#ffffff";
+  const textColor = isDark ? "#ffffff" : "#000000";
 
   return (
     <div
-      className="rounded-2xl border border-ink/10 shadow-card dark:border-white/10"
-      style={{ width: w, height: h, background: bg, color: fg, overflow: "hidden", position: "relative" }}
+      className="relative rounded-3xl shadow-card overflow-hidden flex flex-col items-center justify-between"
+      style={{
+        width: 280,
+        height: 520,
+        background: bg,
+        color: textColor,
+      }}
     >
+      {/* Header with icons */}
+      <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 z-10">
+        <div
+          className="grid h-8 w-8 place-items-center rounded-full text-white"
+          style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
+        >
+          ✦
+        </div>
+        <div className="grid h-8 w-8 place-items-center rounded text-white" style={{ background: textColor }}>
+          ↗
+        </div>
+      </div>
+
+      {/* Gradient background area */}
       <div
+        className="w-full h-32"
         style={{
           background: `linear-gradient(135deg, ${primary}, ${accent})`,
-          height: template.category === "qr_poster" ? "100%" : "30%",
-          color: "#fff",
-          padding: 18,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: template.category === "qr_poster" ? "center" : "flex-start",
-          alignItems: template.category === "qr_poster" ? "center" : "flex-start",
+        }}
+      />
+
+      {/* Profile section */}
+      <div className="flex flex-col items-center justify-center flex-1 px-6 py-8">
+        {/* Avatar */}
+        <div
+          className="grid h-24 w-24 place-items-center rounded-full text-2xl font-black text-white -mt-16 mb-6 shadow-lg"
+          style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
+        >
+          {name[0]?.toUpperCase() || "Y"}
+        </div>
+
+        {/* Username */}
+        <p className="text-xl font-black text-center" style={{ color: textColor }}>
+          @{username || "username"}
+        </p>
+
+        {/* Name */}
+        <p className="text-sm font-semibold text-center mt-2 opacity-75" style={{ color: textColor }}>
+          {name}
+        </p>
+      </div>
+
+      {/* Action Button */}
+      <button
+        className="mb-6 px-8 py-2.5 rounded-full font-bold text-sm transition hover:opacity-90"
+        style={{
+          background: textColor,
+          color: bg,
         }}
       >
-        <div style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 900, opacity: 0.9 }}>
-          {template.name}
-        </div>
-        <div style={{ fontSize: template.category === "qr_poster" ? 26 : 20, fontWeight: 900, marginTop: 6, textAlign: template.category === "qr_poster" ? "center" : "left" }}>
-          {name}
-        </div>
-        {tagline && (
-          <div style={{ fontSize: 11, opacity: 0.9, marginTop: 2 }}>{tagline}</div>
-        )}
-        {template.category === "qr_poster" && (
-          <div style={{ marginTop: 16, background: "#fff", borderRadius: 12, padding: 8 }}>
-            <div style={{ width: 110, height: 110, background: "#0a0a0a", borderRadius: 4 }} />
-          </div>
-        )}
+        Join on Linktree
+      </button>
+
+      {/* Footer */}
+      <div className="pb-4 px-6 text-center text-[10px] opacity-60" style={{ color: textColor }}>
+        <p>Report • Privacy</p>
+        <p>More from Linktree</p>
       </div>
-      {template.category !== "qr_poster" && (
-        <div style={{ padding: 16, fontSize: 11 }}>
-          <p style={{ color: primary, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em" }}>
-            About
-          </p>
-          <p style={{ marginTop: 6, opacity: 0.75 }}>
-            Live preview of your {template.category.replace("_", " ")} — the exported file uses the full server-rendered template.
-          </p>
-          <p style={{ marginTop: 14, fontSize: 10, opacity: 0.5 }}>
-            clickcard.app/{username || "you"}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
