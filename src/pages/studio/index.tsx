@@ -9,6 +9,7 @@ import {
   Sun,
   Moon,
   Palette,
+  ChevronRight,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -203,98 +204,77 @@ export default function StudioPage() {
         </div>
 
         {/* controls */}
-        <div className="space-y-0">
-          {/* Design Section Header */}
-          <div className="rounded-t-3xl border border-b-0 border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#12403c]">
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-500 text-white">
-                <Palette size={18} />
-              </span>
-              <div>
-                <p className="font-bold text-ink dark:text-white">Design</p>
+        <div className="space-y-0 rounded-3xl border border-ink/5 bg-white dark:border-white/5 dark:bg-[#12403c]">
+          {/* Design Heading */}
+          <div className="border-b border-ink/5 px-5 py-4 dark:border-white/5">
+            <h3 className="font-display text-lg font-black text-ink dark:text-white">Design</h3>
+          </div>
+
+          {/* Theme Option */}
+          <button className="w-full border-b border-ink/5 px-5 py-4 transition hover:bg-mist dark:border-white/5 dark:hover:bg-white/[0.02]">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-600 text-white">
+                  <Palette size={16} />
+                </span>
+                <p className="text-sm font-bold text-ink dark:text-white">Palette</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-ink/60 dark:text-white/60">
+                  {PALETTES.find((p) => p.primary === primary && p.accent === accent)?.name || "Custom"}
+                </span>
+                <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
+              </div>
+            </div>
+          </button>
+
+          {/* Customize Heading */}
+          <div className="border-b border-ink/5 px-5 py-3 dark:border-white/5">
+            <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">Customize</p>
+          </div>
+
+          {/* Theme Light/Dark Option */}
+          <div className="border-b border-ink/5 px-5 py-4 dark:border-white/5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                  {theme === "light" ? <Sun size={16} /> : <Moon size={16} />}
+                </span>
+                <p className="text-sm font-bold text-ink dark:text-white">Theme</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-ink/60 dark:text-white/60 capitalize">{theme}</span>
+                <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
               </div>
             </div>
           </div>
 
-          {/* Customize Section */}
-          <div className="border-b border-ink/5 bg-white px-5 py-4 dark:border-white/5 dark:bg-[#12403c]">
-            <p className="mb-4 text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">Customize</p>
-            <div className="space-y-2">
-              {/* Palette Option */}
-              <div className="rounded-2xl border border-ink/10 bg-mist p-4 transition hover:border-brand-200 dark:border-white/10 dark:bg-white/[0.03]">
-                <p className="mb-2 text-sm font-bold text-ink dark:text-white">Palette</p>
-                <div className="grid grid-cols-4 gap-2">
-                  {PALETTES.map((p) => {
-                    const active = p.primary === primary && p.accent === accent;
-                    return (
-                      <button
-                        key={p.name}
-                        onClick={() => { setPrimary(p.primary); setAccent(p.accent); }}
-                        className={`flex flex-col items-center gap-1 rounded-xl border p-2 transition ${
-                          active ? "border-brand-400 shadow-soft" : "border-ink/10 hover:border-brand-200 dark:border-white/10"
-                        }`}
-                        title={p.name}
-                      >
-                        <div className="h-6 w-full rounded-lg" style={{ background: `linear-gradient(135deg, ${p.primary}, ${p.accent})` }} />
-                        <span className="text-[9px] font-bold text-ink/60 dark:text-white/60">{p.name}</span>
-                      </button>
-                    );
-                  })}
+          {/* Export Option */}
+          <button className="w-full px-5 py-4 transition hover:bg-mist dark:hover:bg-white/[0.02]">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-500 text-white">
+                  <Download size={16} />
+                </span>
+                <p className="text-sm font-bold text-ink dark:text-white">Export</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  {(["pdf", "png", "svg"] as StudioFormat[]).map((f) => (
+                    <button
+                      key={f}
+                      disabled={!selected || exporting !== null}
+                      onClick={() => exportFile(f)}
+                      className="rounded-lg bg-brand-500 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white transition hover:bg-brand-600 disabled:opacity-50"
+                    >
+                      {exporting === f ? "…" : f}
+                    </button>
+                  ))}
                 </div>
-              </div>
-
-              {/* Theme Option */}
-              <div className="rounded-2xl border border-ink/10 bg-mist p-4 transition hover:border-brand-200 dark:border-white/10 dark:bg-white/[0.03]">
-                <p className="mb-2 text-sm font-bold text-ink dark:text-white">Theme</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setTheme("light")}
-                    className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition ${
-                      theme === "light"
-                        ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
-                        : "border-ink/10 hover:border-brand-200 dark:border-white/10 dark:hover:bg-white/5"
-                    }`}
-                  >
-                    <Sun size={14} /> Light
-                  </button>
-                  <button
-                    onClick={() => setTheme("dark")}
-                    className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition ${
-                      theme === "dark"
-                        ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
-                        : "border-ink/10 hover:border-brand-200 dark:border-white/10 dark:hover:bg-white/5"
-                    }`}
-                  >
-                    <Moon size={14} /> Dark
-                  </button>
-                </div>
+                <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
               </div>
             </div>
-          </div>
-
-          {/* Export Section */}
-          <div className="rounded-b-3xl border border-t-0 border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#12403c]">
-            <div className="mb-4 flex items-center gap-2">
-              <Sparkles size={14} className="text-brand-500" />
-              <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">Export</p>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {(["pdf", "png", "svg"] as StudioFormat[]).map((f) => (
-                <button
-                  key={f}
-                  disabled={!selected || exporting !== null}
-                  onClick={() => exportFile(f)}
-                  className="inline-flex flex-col items-center gap-1 rounded-xl bg-brand-500 px-2.5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-soft transition hover:bg-brand-600 disabled:opacity-60"
-                >
-                  <Download size={14} />
-                  {exporting === f ? "…" : f}
-                </button>
-              ))}
-            </div>
-            <p className="mt-2.5 text-[9px] text-ink/45 dark:text-white/45">
-              SVG renders without server Chromium. PDF/PNG require it on the host.
-            </p>
-          </div>
+          </button>
         </div>
       </div>
     </AppShell>
