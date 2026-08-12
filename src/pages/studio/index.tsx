@@ -203,65 +203,98 @@ export default function StudioPage() {
         </div>
 
         {/* controls */}
-        <div className="space-y-5">
-          <section className="rounded-3xl border border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#12403c]">
-            <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-black uppercase tracking-wide text-ink/60 dark:text-white/60">
-              <Palette size={14} className="text-brand-500" /> Palette
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {PALETTES.map((p) => {
-                const active = p.primary === primary && p.accent === accent;
-                return (
+        <div className="space-y-0">
+          {/* Design Section Header */}
+          <div className="rounded-t-3xl border border-b-0 border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#12403c]">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-500 text-white">
+                <Palette size={18} />
+              </span>
+              <div>
+                <p className="font-bold text-ink dark:text-white">Design</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Customize Section */}
+          <div className="border-b border-ink/5 bg-white px-5 py-4 dark:border-white/5 dark:bg-[#12403c]">
+            <p className="mb-4 text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">Customize</p>
+            <div className="space-y-2">
+              {/* Palette Option */}
+              <div className="rounded-2xl border border-ink/10 bg-mist p-4 transition hover:border-brand-200 dark:border-white/10 dark:bg-white/[0.03]">
+                <p className="mb-2 text-sm font-bold text-ink dark:text-white">Palette</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {PALETTES.map((p) => {
+                    const active = p.primary === primary && p.accent === accent;
+                    return (
+                      <button
+                        key={p.name}
+                        onClick={() => { setPrimary(p.primary); setAccent(p.accent); }}
+                        className={`flex flex-col items-center gap-1 rounded-xl border p-2 transition ${
+                          active ? "border-brand-400 shadow-soft" : "border-ink/10 hover:border-brand-200 dark:border-white/10"
+                        }`}
+                        title={p.name}
+                      >
+                        <div className="h-6 w-full rounded-lg" style={{ background: `linear-gradient(135deg, ${p.primary}, ${p.accent})` }} />
+                        <span className="text-[9px] font-bold text-ink/60 dark:text-white/60">{p.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Theme Option */}
+              <div className="rounded-2xl border border-ink/10 bg-mist p-4 transition hover:border-brand-200 dark:border-white/10 dark:bg-white/[0.03]">
+                <p className="mb-2 text-sm font-bold text-ink dark:text-white">Theme</p>
+                <div className="grid grid-cols-2 gap-2">
                   <button
-                    key={p.name}
-                    onClick={() => { setPrimary(p.primary); setAccent(p.accent); }}
-                    className={`flex flex-col items-center gap-1 rounded-2xl border p-2.5 transition ${
-                      active ? "border-brand-400 shadow-soft" : "border-ink/10 hover:border-brand-200 dark:border-white/10"
+                    onClick={() => setTheme("light")}
+                    className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition ${
+                      theme === "light"
+                        ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
+                        : "border-ink/10 hover:border-brand-200 dark:border-white/10 dark:hover:bg-white/5"
                     }`}
                   >
-                    <div className="h-8 w-full rounded-lg" style={{ background: `linear-gradient(135deg, ${p.primary}, ${p.accent})` }} />
-                    <span className="text-[10px] font-bold text-ink/70 dark:text-white/70">{p.name}</span>
+                    <Sun size={14} /> Light
                   </button>
-                );
-              })}
+                  <button
+                    onClick={() => setTheme("dark")}
+                    className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition ${
+                      theme === "dark"
+                        ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
+                        : "border-ink/10 hover:border-brand-200 dark:border-white/10 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    <Moon size={14} /> Dark
+                  </button>
+                </div>
+              </div>
             </div>
-          </section>
+          </div>
 
-          <section className="rounded-3xl border border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#12403c]">
-            <h3 className="mb-3 font-display text-sm font-black uppercase tracking-wide text-ink/60 dark:text-white/60">
-              Theme
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => setTheme("light")} className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-sm font-bold transition ${theme === "light" ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10" : "border-ink/10 dark:border-white/10"}`}>
-                <Sun size={16} /> Light
-              </button>
-              <button onClick={() => setTheme("dark")} className={`flex items-center justify-center gap-2 rounded-2xl border p-3 text-sm font-bold transition ${theme === "dark" ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10" : "border-ink/10 dark:border-white/10"}`}>
-                <Moon size={16} /> Dark
-              </button>
+          {/* Export Section */}
+          <div className="rounded-b-3xl border border-t-0 border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#12403c]">
+            <div className="mb-4 flex items-center gap-2">
+              <Sparkles size={14} className="text-brand-500" />
+              <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">Export</p>
             </div>
-          </section>
-
-          <section className="rounded-3xl border border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#12403c]">
-            <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-black uppercase tracking-wide text-ink/60 dark:text-white/60">
-              <Sparkles size={14} className="text-brand-500" /> Export
-            </h3>
             <div className="grid grid-cols-3 gap-2">
               {(["pdf", "png", "svg"] as StudioFormat[]).map((f) => (
                 <button
                   key={f}
                   disabled={!selected || exporting !== null}
                   onClick={() => exportFile(f)}
-                  className="inline-flex flex-col items-center gap-1 rounded-2xl bg-brand-500 px-3 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-soft transition hover:bg-brand-600 disabled:opacity-60"
+                  className="inline-flex flex-col items-center gap-1 rounded-xl bg-brand-500 px-2.5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-soft transition hover:bg-brand-600 disabled:opacity-60"
                 >
-                  <Download size={16} />
+                  <Download size={14} />
                   {exporting === f ? "…" : f}
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-[10px] text-ink/45 dark:text-white/45">
+            <p className="mt-2.5 text-[9px] text-ink/45 dark:text-white/45">
               SVG renders without server Chromium. PDF/PNG require it on the host.
             </p>
-          </section>
+          </div>
         </div>
       </div>
     </AppShell>
