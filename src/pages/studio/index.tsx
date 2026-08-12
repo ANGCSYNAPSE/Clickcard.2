@@ -50,7 +50,7 @@ export default function StudioPage() {
   const [accent, setAccent] = useState(PALETTES[0].accent);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [exporting, setExporting] = useState<StudioFormat | null>(null);
-  const [expandedSection, setExpandedSection] = useState<string | null>("palette");
+  const [modalOpen, setModalOpen] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -182,7 +182,7 @@ export default function StudioPage() {
 
           {/* Palette Option */}
           <button
-            onClick={() => setExpandedSection(expandedSection === "palette" ? null : "palette")}
+            onClick={() => setModalOpen(modalOpen === "palette" ? null : "palette")}
             className="w-full border-b border-ink/5 px-5 py-4 transition hover:bg-mist dark:border-white/5 dark:hover:bg-white/[0.02]"
           >
             <div className="flex items-center justify-between gap-3">
@@ -196,47 +196,10 @@ export default function StudioPage() {
                 <span className="text-xs font-semibold text-ink/60 dark:text-white/60">
                   {PALETTES.find((p) => p.primary === primary && p.accent === accent)?.name || "Custom"}
                 </span>
-                <ChevronRight
-                  size={16}
-                  className={`transition dark:text-white/40 text-ink/40 ${
-                    expandedSection === "palette" ? "rotate-90" : ""
-                  }`}
-                />
+                <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
               </div>
             </div>
           </button>
-
-          {/* Palette Options (Expanded) */}
-          {expandedSection === "palette" && (
-            <div className="border-b border-ink/5 bg-mist px-5 py-4 dark:border-white/5 dark:bg-white/[0.02]">
-              <div className="grid grid-cols-4 gap-2">
-                {PALETTES.map((p) => {
-                  const active = p.primary === primary && p.accent === accent;
-                  return (
-                    <button
-                      key={p.name}
-                      onClick={() => {
-                        setPrimary(p.primary);
-                        setAccent(p.accent);
-                      }}
-                      className={`flex flex-col items-center gap-1 rounded-xl border p-2 transition ${
-                        active
-                          ? "border-brand-400 shadow-soft"
-                          : "border-ink/10 hover:border-brand-200 dark:border-white/10"
-                      }`}
-                      title={p.name}
-                    >
-                      <div
-                        className="h-6 w-full rounded-lg"
-                        style={{ background: `linear-gradient(135deg, ${p.primary}, ${p.accent})` }}
-                      />
-                      <span className="text-[9px] font-bold text-ink/60 dark:text-white/60">{p.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           {/* Customize Heading */}
           <div className="border-b border-ink/5 px-5 py-3 dark:border-white/5">
@@ -245,7 +208,7 @@ export default function StudioPage() {
 
           {/* Templates Option */}
           <button
-            onClick={() => setExpandedSection(expandedSection === "templates" ? null : "templates")}
+            onClick={() => setModalOpen(modalOpen === "templates" ? null : "templates")}
             className="w-full border-b border-ink/5 px-5 py-4 transition hover:bg-mist dark:border-white/5 dark:hover:bg-white/[0.02]"
           >
             <div className="flex items-center justify-between gap-3">
@@ -259,48 +222,14 @@ export default function StudioPage() {
                 <span className="text-xs font-semibold text-ink/60 dark:text-white/60">
                   {templates.length} {templates.length === 1 ? "template" : "templates"}
                 </span>
-                <ChevronRight
-                  size={16}
-                  className={`transition dark:text-white/40 text-ink/40 ${
-                    expandedSection === "templates" ? "rotate-90" : ""
-                  }`}
-                />
+                <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
               </div>
             </div>
           </button>
 
-          {/* Templates List (Expanded) */}
-          {expandedSection === "templates" && (
-            <div className="border-b border-ink/5 bg-mist px-5 py-4 dark:border-white/5 dark:bg-white/[0.02]">
-              <p className="text-xs text-ink/60 dark:text-white/60 mb-3">
-                {templates.length} {templates.length === 1 ? "template available" : "templates available"} for{" "}
-                <span className="font-bold capitalize">{category.replace("_", " ")}</span>
-              </p>
-              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                {templates.map((t) => (
-                  <button
-                    key={t.slug}
-                    onClick={() => setSelectedSlug(t.slug)}
-                    className={`rounded-lg border p-2 text-left text-xs transition ${
-                      selectedSlug === t.slug
-                        ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
-                        : "border-ink/10 hover:border-brand-200 dark:border-white/10"
-                    }`}
-                  >
-                    <div
-                      className="h-12 w-full rounded-lg mb-1"
-                      style={{ background: `linear-gradient(135deg, ${t.primary_color}, ${t.accent_color})` }}
-                    />
-                    <p className="font-bold text-ink dark:text-white text-[10px]">{t.name}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Theme Option */}
           <button
-            onClick={() => setExpandedSection(expandedSection === "theme" ? null : "theme")}
+            onClick={() => setModalOpen(modalOpen === "theme" ? null : "theme")}
             className="w-full border-b border-ink/5 px-5 py-4 transition hover:bg-mist dark:border-white/5 dark:hover:bg-white/[0.02]"
           >
             <div className="flex items-center justify-between gap-3">
@@ -312,47 +241,14 @@ export default function StudioPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-ink/60 dark:text-white/60 capitalize">{theme}</span>
-                <ChevronRight
-                  size={16}
-                  className={`transition dark:text-white/40 text-ink/40 ${
-                    expandedSection === "theme" ? "rotate-90" : ""
-                  }`}
-                />
+                <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
               </div>
             </div>
           </button>
 
-          {/* Theme Options (Expanded) */}
-          {expandedSection === "theme" && (
-            <div className="border-b border-ink/5 bg-mist px-5 py-4 dark:border-white/5 dark:bg-white/[0.02]">
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setTheme("light")}
-                  className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 text-xs font-bold transition ${
-                    theme === "light"
-                      ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
-                      : "border-ink/10 hover:border-brand-200 dark:border-white/10 dark:hover:bg-white/5"
-                  }`}
-                >
-                  <Sun size={14} /> Light
-                </button>
-                <button
-                  onClick={() => setTheme("dark")}
-                  className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 text-xs font-bold transition ${
-                    theme === "dark"
-                      ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
-                      : "border-ink/10 hover:border-brand-200 dark:border-white/10 dark:hover:bg-white/5"
-                  }`}
-                >
-                  <Moon size={14} /> Dark
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Export Option */}
           <button
-            onClick={() => setExpandedSection(expandedSection === "export" ? null : "export")}
+            onClick={() => setModalOpen(modalOpen === "export" ? null : "export")}
             className="w-full px-5 py-4 transition hover:bg-mist dark:hover:bg-white/[0.02]"
           >
             <div className="flex items-center justify-between gap-3">
@@ -362,38 +258,177 @@ export default function StudioPage() {
                 </span>
                 <p className="text-sm font-bold text-ink dark:text-white">Export</p>
               </div>
-              <ChevronRight
-                size={16}
-                className={`transition dark:text-white/40 text-ink/40 ${
-                  expandedSection === "export" ? "rotate-90" : ""
-                }`}
-              />
+              <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
             </div>
           </button>
-
-          {/* Export Options (Expanded) */}
-          {expandedSection === "export" && (
-            <div className="bg-mist px-5 py-4 dark:bg-white/[0.02]">
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                {(["pdf", "png", "svg"] as StudioFormat[]).map((f) => (
-                  <button
-                    key={f}
-                    disabled={!selected || exporting !== null}
-                    onClick={() => exportFile(f)}
-                    className="inline-flex flex-col items-center gap-1 rounded-lg bg-brand-500 px-2.5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-soft transition hover:bg-brand-600 disabled:opacity-60"
-                  >
-                    <Download size={14} />
-                    {exporting === f ? "…" : f}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[9px] text-ink/45 dark:text-white/45">
-                SVG renders without server Chromium. PDF/PNG require it on the host.
-              </p>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Palette Modal */}
+      {modalOpen === "palette" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 dark:bg-black/70">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 dark:bg-[#12403c]">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="font-display text-xl font-black text-ink dark:text-white">Select Palette</h2>
+              <button
+                onClick={() => setModalOpen(null)}
+                className="text-ink/60 transition hover:text-ink dark:text-white/60 dark:hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {PALETTES.map((p) => {
+                const active = p.primary === primary && p.accent === accent;
+                return (
+                  <button
+                    key={p.name}
+                    onClick={() => {
+                      setPrimary(p.primary);
+                      setAccent(p.accent);
+                      setModalOpen(null);
+                    }}
+                    className={`rounded-2xl border p-4 text-left transition ${
+                      active ? "border-brand-400 shadow-soft" : "border-ink/10 hover:border-brand-200 dark:border-white/10"
+                    }`}
+                  >
+                    <div
+                      className="mb-3 h-16 w-full rounded-lg"
+                      style={{ background: `linear-gradient(135deg, ${p.primary}, ${p.accent})` }}
+                    />
+                    <p className="font-bold text-ink dark:text-white">{p.name}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Templates Modal */}
+      {modalOpen === "templates" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 dark:bg-black/70">
+          <div className="w-full max-w-2xl rounded-3xl bg-white p-6 dark:bg-[#12403c]">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="font-display text-xl font-black text-ink dark:text-white">Select Template</h2>
+                <p className="mt-1 text-sm text-ink/60 dark:text-white/60">
+                  {templates.length} {templates.length === 1 ? "template" : "templates"} available
+                </p>
+              </div>
+              <button
+                onClick={() => setModalOpen(null)}
+                className="text-ink/60 transition hover:text-ink dark:text-white/60 dark:hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+              {templates.map((t) => (
+                <button
+                  key={t.slug}
+                  onClick={() => {
+                    setSelectedSlug(t.slug);
+                    setModalOpen(null);
+                  }}
+                  className={`rounded-2xl border p-3 text-left transition ${
+                    selectedSlug === t.slug
+                      ? "border-brand-400 shadow-soft"
+                      : "border-ink/10 hover:border-brand-200 dark:border-white/10"
+                  }`}
+                >
+                  <div
+                    className="mb-2 h-24 w-full rounded-lg"
+                    style={{ background: `linear-gradient(135deg, ${t.primary_color}, ${t.accent_color})` }}
+                  />
+                  <p className="font-bold text-ink dark:text-white">{t.name}</p>
+                  <p className="line-clamp-2 text-[11px] text-ink/50 dark:text-white/50">{t.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Theme Modal */}
+      {modalOpen === "theme" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 dark:bg-black/70">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 dark:bg-[#12403c]">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="font-display text-xl font-black text-ink dark:text-white">Select Theme</h2>
+              <button
+                onClick={() => setModalOpen(null)}
+                className="text-ink/60 transition hover:text-ink dark:text-white/60 dark:hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  setTheme("light");
+                  setModalOpen(null);
+                }}
+                className={`flex flex-col items-center gap-3 rounded-2xl border p-4 transition ${
+                  theme === "light"
+                    ? "border-brand-400 shadow-soft"
+                    : "border-ink/10 hover:border-brand-200 dark:border-white/10"
+                }`}
+              >
+                <Sun size={32} className="text-brand-500" />
+                <span className="font-bold text-ink dark:text-white">Light</span>
+              </button>
+              <button
+                onClick={() => {
+                  setTheme("dark");
+                  setModalOpen(null);
+                }}
+                className={`flex flex-col items-center gap-3 rounded-2xl border p-4 transition ${
+                  theme === "dark"
+                    ? "border-brand-400 shadow-soft"
+                    : "border-ink/10 hover:border-brand-200 dark:border-white/10"
+                }`}
+              >
+                <Moon size={32} className="text-brand-500" />
+                <span className="font-bold text-ink dark:text-white">Dark</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Modal */}
+      {modalOpen === "export" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 dark:bg-black/70">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 dark:bg-[#12403c]">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="font-display text-xl font-black text-ink dark:text-white">Export Format</h2>
+              <button
+                onClick={() => setModalOpen(null)}
+                className="text-ink/60 transition hover:text-ink dark:text-white/60 dark:hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {(["pdf", "png", "svg"] as StudioFormat[]).map((f) => (
+                <button
+                  key={f}
+                  disabled={!selected || exporting !== null}
+                  onClick={() => exportFile(f)}
+                  className="flex flex-col items-center gap-2 rounded-2xl bg-brand-500 p-4 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-brand-600 disabled:opacity-60"
+                >
+                  <Download size={24} />
+                  {exporting === f ? "…" : f}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-ink/45 dark:text-white/45">
+              SVG renders without server Chromium. PDF/PNG require it on the host.
+            </p>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
