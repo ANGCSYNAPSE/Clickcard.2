@@ -124,11 +124,11 @@ export default function StudioPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_720px]">
+      <div className="grid gap-6 xl:grid-cols-[1fr_720px] h-[calc(100vh-200px)]">
         {/* preview + gallery */}
-        <div className="space-y-5">
+        <div className="space-y-5 h-full flex flex-col">
           {/* live preview */}
-          <div className="grid place-items-center rounded-3xl border border-ink/5 bg-mist p-6 dark:border-white/5 dark:bg-white/[0.02]">
+          <div className="grid place-items-center rounded-3xl border border-ink/5 bg-mist p-6 dark:border-white/5 dark:bg-white/[0.02] flex-1">
             {selected ? (
               <PreviewCard
                 primary={primary}
@@ -147,7 +147,7 @@ export default function StudioPage() {
         </div>
 
         {/* controls */}
-        <div className="space-y-0 rounded-3xl border border-ink/5 bg-white dark:border-white/5 dark:bg-[#12403c]">
+        <div className="space-y-0 rounded-3xl border border-ink/5 bg-white dark:border-white/5 dark:bg-[#12403c] h-full overflow-y-auto">
           {/* Design Heading */}
           <div className="border-b border-ink/5 px-5 py-4 dark:border-white/5">
             <h3 className="font-display text-lg font-black text-ink dark:text-white">Design</h3>
