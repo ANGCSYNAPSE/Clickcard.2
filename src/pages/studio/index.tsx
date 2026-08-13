@@ -10,6 +10,8 @@ import {
   Moon,
   Palette,
   ChevronRight,
+  Share
+
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -433,7 +435,7 @@ function PreviewCard({
       className="relative rounded-3xl shadow-card overflow-hidden flex flex-col items-center justify-between"
       style={{
         width: 320,
-        height: 520,
+        height: 680,
         background: bg,
         color: textColor,
       }}
@@ -441,13 +443,13 @@ function PreviewCard({
       {/* Header with icons */}
       <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 z-10">
         <div
-          className="grid h-8 w-8 place-items-center rounded-full text-white"
-          style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
+          className="grid h-8 w-8 place-items-center rounded-full text-white bg-textColor"
+          style={{ background: textColor }}
         >
           ✦
         </div>
         <div className="grid h-8 w-8 place-items-center rounded text-white" style={{ background: textColor }}>
-          ↗
+          <Share className="w-5 h-5"/>
         </div>
       </div>
 
@@ -460,13 +462,13 @@ function PreviewCard({
       />
 
       {/* Profile section */}
-      <div className="flex flex-col items-center justify-center flex-1 px-6 py-8">
+      <div className=" absolute top-20 items-center justify-center flex-1 px-6 py-8">
         {/* Avatar */}
         <div
-          className="grid h-24 w-24 place-items-center rounded-full text-2xl font-black text-white -mt-16 mb-6 shadow-lg"
+          className="grid h-24 w-24 place-items-center rounded-full text-2xl font-black text-white -mt-16 mb-2 shadow-lg"
           style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
         >
-          {name[0]?.toUpperCase() || "Y"}
+          {name[0]?.toUpperCase() || "G"}
         </div>
 
         {/* Username */}
@@ -475,26 +477,26 @@ function PreviewCard({
         </p>
 
         {/* Name */}
-        <p className="text-sm font-semibold text-center mt-2 opacity-75" style={{ color: textColor }}>
+        {/* <p className="text-sm font-semibold text-center  opacity-75" style={{ color: textColor }}>
           {name}
-        </p>
+        </p> */}
       </div>
 
       {/* Action Button */}
       <button
-        className="mb-6 px-8 py-2.5 rounded-full font-bold text-sm transition hover:opacity-90"
+        className="absolute bottom-12 px-8 py-2.5 rounded-full font-bold text-sm transition hover:opacity-90"
         style={{
           background: textColor,
           color: bg,
         }}
       >
-        Join on Linktree
+        Join on ClickCard
       </button>
 
       {/* Footer */}
       <div className="pb-4 px-6 text-center text-[10px] opacity-60" style={{ color: textColor }}>
         <p>Report • Privacy</p>
-        <p>More from Linktree</p>
+        <p>More from ClickCard</p>
       </div>
     </div>
   );
