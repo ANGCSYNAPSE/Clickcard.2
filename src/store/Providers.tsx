@@ -4,6 +4,7 @@ import { makeStore, AppStore } from "./index";
 import { sessionRestored, fetchCurrentUser } from "./slices/authSlice";
 import { fetchSubscription } from "./slices/billingSlice";
 import { setTheme } from "./slices/uiSlice";
+import { hydrateDesign, STUDIO_DESIGN_KEY } from "./slices/designSlice";
 import { tokenService } from "@/lib/tokenService";
 import Toaster from "@/components/system/Toaster";
 
@@ -28,6 +29,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       "light";
     store.dispatch(setTheme(saved));
     document.documentElement.classList.toggle("dark", saved === "dark");
+
+    try {
+      const rawDesign = localStorage.getItem(STUDIO_DESIGN_KEY);
+      if (rawDesign) store.dispatch(hydrateDesign(JSON.parse(rawDesign)));
+    } catch {
+      /* ignore corrupt/blocked storage */
+    }
   }, []);
 
   return (

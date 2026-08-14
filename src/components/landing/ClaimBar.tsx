@@ -1,13 +1,36 @@
 "use client";
-import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { WEBAPP_URL } from "@/lib/site";
+import { authService } from "@/services/authService";
+import { USERNAME_REGEX } from "@/lib/validation";
 
 type Props = { variant?: "light" | "dark" };
 
 export default function ClaimBar({ variant = "light" }: Props) {
   const [name, setName] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [available, setAvailable] = useState<boolean | null>(null);
   const onDark = variant === "dark";
+
+  /* debounced username availability check — same API the signup page uses */
+  useEffect(() => {
+    const handle = name.trim().toLowerCase().replace(/[^a-z0-9-_]/g, "");
+    if (!USERNAME_REGEX.test(handle)) {
+      setAvailable(null);
+      setChecking(false);
+      return;
+    }
+    setChecking(true);
+    const t = setTimeout(() => {
+      authService
+        .checkUsername(handle)
+        .then(({ data }) => setAvailable(Boolean(data.data?.available)))
+        .catch(() => setAvailable(null))
+        .finally(() => setChecking(false));
+    }, 450);
+    return () => clearTimeout(t);
+  }, [name]);
 
   const claim = () => {
     const handle = name.trim().toLowerCase().replace(/[^a-z0-9-_]/g, "");
@@ -47,6 +70,9 @@ export default function ClaimBar({ variant = "light" }: Props) {
               : "text-dark placeholder:text-muted/60"
           }`}
         />
+        <span className="ml-2 shrink-0">
+          <UsernameStatus checking={checking} available={available} onDark={onDark} />
+        </span>
       </label>
       <button
         type="submit"
@@ -59,4 +85,21 @@ export default function ClaimBar({ variant = "light" }: Props) {
       </button>
     </form>
   );
+}
+
+function UsernameStatus({
+  checking,
+  available,
+  onDark,
+}: {
+  checking: boolean;
+  available: boolean | null;
+  onDark: boolean;
+}) {
+  if (checking)
+    return <Loader2 className={`h-4 w-4 animate-spin ${onDark ? "text-white/50" : "text-ink/40"}`} />;
+  if (available === true) return <Check className="h-5 w-5 text-candy-pink" />;
+  if (available === false)
+    return <span className="text-xs font-bold text-rose-500">taken</span>;
+  return null;
 }

@@ -27,7 +27,9 @@ const emptyProfile: FullProfile = {
 const initialState: ProfileState = {
   data: null,
   draft: emptyProfile,
-  isPublic: false,
+  // Profiles are public by default — visitors land on a working page unless
+  // the owner explicitly makes it private (from Settings).
+  isPublic: true,
   status: "idle",
   saving: false,
   error: null,
@@ -54,8 +56,12 @@ export const saveProfile = createAsyncThunk(
   ) => {
     try {
       await profileService.save(profile, picture);
-      // The draft we sent is the canonical new state (backend echoes snake_case).
-      return profile;
+      // Re-fetch the canonical, server-normalized profile (real picture URL,
+      // computed fields, etc.) so every screen sharing this store — live
+      // preview, dashboard, studio — updates immediately with the true saved
+      // state instead of just echoing back what we sent.
+      const { data } = await profileService.getFull();
+      return data.data ?? profile;
     } catch (e) {
       return rejectWithValue(extractError(e));
     }
@@ -102,7 +108,9 @@ const profileSlice = createSlice({
         s.status = "succeeded";
         s.data = a.payload;
         s.draft = { ...emptyProfile, ...a.payload };
-        s.isPublic = Boolean(a.payload.isPublic);
+        // Undefined/missing from the backend means "not set yet" — default to
+        // public rather than silently treating a new profile as private.
+        s.isPublic = a.payload.isPublic ?? true;
         s.dirty = false;
       })
       .addCase(fetchProfile.rejected, (s, a) => {

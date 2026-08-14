@@ -232,6 +232,31 @@ export async function fetchPublicProfile(
   return { profile: null, isDemo: false };
 }
 
+/**
+ * Fallback for a signed-in owner viewing their own "View public page" link
+ * before the unauthenticated public endpoint above has data for their slug.
+ * Uses the same authenticated full-profile endpoint the dashboard already
+ * relies on, so the customized profile always renders for its owner.
+ * Never throws.
+ */
+export async function fetchOwnProfile(accessToken: string): Promise<PublicProfile | null> {
+  try {
+    const res = await fetch(`${API_BASE}/api/users/profile/full`, {
+      headers: { Accept: "application/json", Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const data = json?.data ?? json;
+    const username = data?.username || data?.personal_identity?.username;
+    if (!username) return null;
+    const mapped = mapApiProfile(username, data);
+    mapped.isPublic = data.isPublic ?? data.is_public ?? true;
+    return mapped;
+  } catch {
+    return null;
+  }
+}
+
 /* ---------------- helpers ---------------- */
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

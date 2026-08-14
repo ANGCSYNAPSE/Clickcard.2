@@ -7,17 +7,16 @@ import {
   Briefcase,
   Building2,
   Package,
-  Link2,
   Save,
   Camera,
   Plus,
   Trash2,
-  Globe,
-  Lock,
-  Eye,
   ChevronLeft,
   ChevronRight,
+  Search,
+  X as CloseIcon,
 } from "lucide-react";
+import { SOCIAL_QUICK_ADD, ALL_SOCIAL_PLATFORMS, getSocialIcon } from "@/lib/socialPlatforms";
 import AppShell from "@/components/app/AppShell";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -27,7 +26,6 @@ import {
   fetchProfile,
   saveProfile,
   updateSection,
-  setVisibility,
 } from "@/store/slices/profileSlice";
 import { pushToast } from "@/store/slices/uiSlice";
 import type {
@@ -44,8 +42,7 @@ type SectionKey =
   | "education"
   | "experience"
   | "business"
-  | "products"
-  | "social";
+  | "products";
 
 const SECTIONS: { key: SectionKey; label: string; icon: typeof UserIcon }[] = [
   { key: "personal", label: "Personal", icon: UserIcon },
@@ -54,15 +51,18 @@ const SECTIONS: { key: SectionKey; label: string; icon: typeof UserIcon }[] = [
   { key: "experience", label: "Experience", icon: Briefcase },
   { key: "business", label: "Business", icon: Building2 },
   { key: "products", label: "Products", icon: Package },
-  { key: "social", label: "Social links", icon: Link2 },
 ];
 
 export default function ProfileEditorPage() {
   const dispatch = useAppDispatch();
-  const { draft, saving, isPublic, status } = useAppSelector((s) => s.profile);
+  const { draft, saving, status } = useAppSelector((s) => s.profile);
+  const authUser = useAppSelector((s) => s.auth.user);
   const [active, setActive] = useState<SectionKey>("personal");
   const [picture, setPicture] = useState<File | null>(null);
   const [pictureUrl, setPictureUrl] = useState<string | null>(null);
+  const [socialPickerOpen, setSocialPickerOpen] = useState(false);
+  const [socialQuery, setSocialQuery] = useState("");
+  const [editingSocial, setEditingSocial] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -71,6 +71,41 @@ export default function ProfileEditorPage() {
 
   const patch = <K extends keyof FullProfile>(section: K, value: FullProfile[K]) =>
     dispatch(updateSection({ section, value }));
+
+  const social = draft.social || [];
+  const findSocial = (platform: string) =>
+    social.find((s) => s.platform?.toLowerCase() === platform.toLowerCase());
+
+  /** Ensures a (possibly blank) entry exists for the platform, then opens its editor. */
+  const openSocialEditor = (platform: string) => {
+    if (!findSocial(platform)) {
+      patch("social", [...social, { platform, username: "", url: "", visible: true }]);
+    }
+    setEditingSocial(platform);
+    setSocialPickerOpen(false);
+    setSocialQuery("");
+  };
+
+  const updateSocial = (platform: string, patchValue: Partial<SocialLink>) =>
+    patch(
+      "social",
+      social.map((s) => (s.platform?.toLowerCase() === platform.toLowerCase() ? { ...s, ...patchValue } : s)),
+    );
+
+  const removeSocial = (platform: string) => {
+    patch("social", social.filter((s) => s.platform?.toLowerCase() !== platform.toLowerCase()));
+    setEditingSocial(null);
+  };
+
+  /** Fixed quick-add icons plus any extra platforms already added via the picker. */
+  const socialIconRow = [
+    ...SOCIAL_QUICK_ADD,
+    ...ALL_SOCIAL_PLATFORMS.filter(
+      (p) =>
+        !SOCIAL_QUICK_ADD.some((q) => q.platform === p.platform) &&
+        findSocial(p.platform),
+    ),
+  ];
 
   const onPickPicture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -84,17 +119,10 @@ export default function ProfileEditorPage() {
     if (saveProfile.fulfilled.match(res)) {
       dispatch(pushToast("Profile saved 🎉", "success"));
       setPicture(null);
+      setPictureUrl(null);
     } else {
       dispatch(pushToast((res.payload as string) || "Could not save", "error"));
     }
-  };
-
-  const toggleVisibility = async () => {
-    const res = await dispatch(setVisibility(!isPublic));
-    if (setVisibility.fulfilled.match(res))
-      dispatch(
-        pushToast(res.payload ? "Profile is now public" : "Profile is now private", "success"),
-      );
   };
 
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -109,12 +137,6 @@ export default function ProfileEditorPage() {
 
   const goToNext = () => {
     if (nextSection) setActive(nextSection.key);
-  };
-
-  const scrollTabs = (direction: "left" | "right") => {
-    if (tabsRef.current) {
-      tabsRef.current.scrollBy({ left: direction === "left" ? -180 : 180, behavior: "smooth" });
-    }
   };
 
   useEffect(() => {
@@ -143,73 +165,22 @@ export default function ProfileEditorPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
-          <button
-            onClick={toggleVisibility}
-            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold transition ${
-              isPublic
-                ? "bg-candy-pink/10 text-candy-pink dark:bg-candy-pink/20"
-                : "bg-ink/5 text-ink/60 dark:bg-white/5 dark:text-white/60"
-            }`}
-          >
-            {isPublic ? <Globe size={15} /> : <Lock size={15} />}
-            {isPublic ? "Public" : "Private"}
-          </button>
           <Button onClick={onSave} loading={saving} className="text-xs sm:text-sm">
             <Save size={17} /> Save changes
           </Button>
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_360px] 2xl:grid-cols-[1fr_400px]">
+      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_360px] 2xl:grid-cols-[1fr_300px]">
         {/* editor */}
-        <div className="min-w-0">
-          {/* section tabs with navigation controls */}
-          <div className="relative flex items-center gap-1.5 sm:gap-2">
-            <button
-              onClick={() => scrollTabs("left")}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-ink/60 ring-1 ring-ink/[0.06] transition hover:bg-brand-50 hover:text-brand-600 dark:bg-[#12403c] dark:text-white/60 dark:ring-white/[0.06] dark:hover:bg-white/10"
-              title="Scroll left"
-              aria-label="Scroll tabs left"
-            >
-              <ChevronLeft size={18} />
-            </button>
-
-            <div
-              ref={tabsRef}
-              className="no-scrollbar flex-1 flex gap-1.5 sm:gap-2 overflow-x-auto py-1 px-0.5 touch-pan-x scroll-smooth"
-            >
-              {SECTIONS.map((s) => (
-                <button
-                  key={s.key}
-                  data-tab-key={s.key}
-                  onClick={() => setActive(s.key)}
-                  className={`inline-flex shrink-0 items-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-bold transition active:scale-[0.98] ${
-                    active === s.key
-                      ? "bg-brand-500 text-white shadow-soft ring-2 ring-brand-500/20"
-                      : "bg-white text-ink/60 ring-1 ring-ink/[0.06] hover:text-brand-600 dark:bg-[#12403c] dark:text-white/60 dark:ring-white/[0.06]"
-                  }`}
-                >
-                  <s.icon size={15} /> {s.label}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => scrollTabs("right")}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-ink/60 ring-1 ring-ink/[0.06] transition hover:bg-brand-50 hover:text-brand-600 dark:bg-[#12403c] dark:text-white/60 dark:ring-white/[0.06] dark:hover:bg-white/10"
-              title="Scroll right"
-              aria-label="Scroll tabs right"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
-
-          <div className="mt-4 rounded-2xl sm:rounded-3xl border border-ink/[0.06] bg-white p-4 sm:p-6 lg:p-7 dark:border-white/[0.06] dark:bg-[#12403c]">
+        <div className="min-w-0 grid gap-4 lg:grid-cols-[180px_1fr] lg:items-start">
+          {/* section content */}
+          <div className="min-w-0 order-2 rounded-2xl sm:rounded-3xl border border-ink/[0.06] bg-white p-4 sm:p-6 lg:p-7 dark:border-white/[0.06] dark:bg-[#12403c]">
             {active === "personal" && (
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <div className="relative shrink-0">
-                    <span className="grid h-16 w-16 sm:h-20 sm:w-20 place-items-center overflow-hidden rounded-2xl bg-candy-pink text-xl sm:text-2xl font-black text-white">
+                    <span className="grid h-16 w-16 sm:h-20 sm:w-20 place-items-center overflow-hidden rounded-full bg-candy-pink text-xl sm:text-2xl font-black text-white">
                       {previewAvatar ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={previewAvatar} alt="" className="h-full w-full object-cover" />
@@ -219,7 +190,7 @@ export default function ProfileEditorPage() {
                     </span>
                     <button
                       onClick={() => fileRef.current?.click()}
-                      className="absolute -bottom-1 -right-1 grid h-7 w-7 sm:h-8 sm:w-8 place-items-center rounded-xl bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#12403c] dark:text-white"
+                      className="absolute -bottom-1 -right-1 grid h-7 w-7 sm:h-8 sm:w-8 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#12403c] dark:text-white"
                       aria-label="Upload photo"
                     >
                       <Camera size={14} />
@@ -232,6 +203,89 @@ export default function ProfileEditorPage() {
                     <span className="text-[11px] sm:text-xs">JPG or PNG, square works best.</span>
                   </div>
                 </div>
+
+                {/* quick-add social links */}
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold text-ink/50 dark:text-white/50">
+                    Link your socials
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {socialIconRow.map(({ platform, icon: Icon }) => {
+                      const added = Boolean(findSocial(platform));
+                      const isEditing = editingSocial === platform;
+                      return (
+                        <button
+                          key={platform}
+                          type="button"
+                          onClick={() => openSocialEditor(platform)}
+                          title={added ? `Edit ${platform}` : `Add ${platform}`}
+                          aria-label={added ? `Edit ${platform}` : `Add ${platform}`}
+                          className={`grid h-9 w-9 place-items-center rounded-full transition ${
+                            isEditing
+                              ? "bg-brand-500 text-white ring-2 ring-brand-500/30"
+                              : added
+                              ? "bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-white"
+                              : "bg-ink/5 text-ink/60 hover:bg-brand-50 hover:text-brand-600 dark:bg-white/10 dark:text-white/60 dark:hover:bg-white/20"
+                          }`}
+                        >
+                          <Icon size={15} />
+                        </button>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      onClick={() => setSocialPickerOpen(true)}
+                      title="Add another social link"
+                      aria-label="Add another social link"
+                      className="grid h-9 w-9 place-items-center rounded-full border border-dashed border-ink/15 text-ink/40 transition hover:border-brand-300 hover:text-brand-600 dark:border-white/15 dark:text-white/40"
+                    >
+                      <Plus size={15} />
+                    </button>
+                  </div>
+
+                  {/* edit panel for the clicked icon */}
+                  {editingSocial && findSocial(editingSocial) && (
+                    <div className="mt-3 space-y-3 rounded-2xl bg-mist p-3.5 sm:p-4 dark:bg-white/[0.03]">
+                      <div className="flex items-center justify-between">
+                        <span className="inline-flex items-center gap-2 text-sm font-bold text-ink dark:text-white">
+                          {(() => {
+                            const Icon = getSocialIcon(editingSocial);
+                            return <Icon size={16} />;
+                          })()}
+                          {editingSocial}
+                        </span>
+                        <button
+                          onClick={() => removeSocial(editingSocial)}
+                          className="flex items-center gap-1 text-xs font-semibold text-rose-500 transition hover:text-rose-600 dark:hover:text-rose-400"
+                        >
+                          <Trash2 size={14} /> Remove
+                        </button>
+                      </div>
+                      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+                        <Input
+                          label="Username"
+                          placeholder="@yourhandle"
+                          value={findSocial(editingSocial)?.username || ""}
+                          onChange={(e) => updateSocial(editingSocial, { username: e.target.value })}
+                        />
+                        <Input
+                          label="URL"
+                          placeholder="https://…"
+                          value={findSocial(editingSocial)?.url || ""}
+                          onChange={(e) => updateSocial(editingSocial, { url: e.target.value })}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingSocial(null)}
+                        className="text-xs font-bold text-brand-600 hover:text-brand-700"
+                      >
+                        Done
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <Input
                   label="Full name"
                   placeholder="Aarav Mehta"
@@ -373,22 +427,6 @@ export default function ProfileEditorPage() {
               />
             )}
 
-            {active === "social" && (
-              <ListEditor<SocialLink>
-                items={draft.social || []}
-                onChange={(v) => patch("social", v)}
-                empty="No social links yet."
-                blank={{ platform: "", url: "", visible: true }}
-                addLabel="Add link"
-                render={(item, set) => (
-                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-                    <Input label="Platform" placeholder="Instagram, GitHub…" value={item.platform} onChange={(e) => set({ platform: e.target.value })} />
-                    <Input label="URL" placeholder="https://…" value={item.url} onChange={(e) => set({ url: e.target.value })} />
-                  </div>
-                )}
-              />
-            )}
-
             {/* bottom section option switcher */}
             <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-ink/5 pt-5 dark:border-white/5">
               {prevSection ? (
@@ -416,18 +454,131 @@ export default function ProfileEditorPage() {
               )}
             </div>
           </div>
+
+          {/* section tabs, vertical, left side */}
+          <div
+            ref={tabsRef}
+            className="no-scrollbar order-1 flex gap-1.5 overflow-x-auto py-1 px-0.5 touch-pan-x scroll-smooth lg:flex-col lg:gap-2 lg:overflow-visible lg:px-0 lg:py-0"
+          >
+            {SECTIONS.map((s) => (
+              <button
+                key={s.key}
+                data-tab-key={s.key}
+                onClick={() => setActive(s.key)}
+                className={`inline-flex shrink-0 items-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-bold transition active:scale-[0.98] lg:w-full ${
+                  active === s.key
+                    ? "bg-brand-500 text-white shadow-soft ring-2 ring-brand-500/20"
+                    : "bg-white text-ink/60 ring-1 ring-ink/[0.06] hover:text-brand-600 dark:bg-[#12403c] dark:text-white/60 dark:ring-white/[0.06]"
+                }`}
+              >
+                <s.icon size={15} /> {s.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* live preview */}
         <div id="live-preview" className="xl:sticky xl:top-24 xl:self-start">
-          <div className="mb-2.5 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-ink/40 dark:text-white/40">
-            <span className="flex items-center gap-1.5"><Eye size={14} /> Live preview</span>
-            <span className="text-[10px] lowercase font-normal opacity-70">Updates live</span>
-          </div>
-          <ProfilePreview profile={draft} avatarUrl={previewAvatar} />
+          <ProfilePreview profile={draft} avatarUrl={previewAvatar} username={authUser?.username} />
         </div>
       </div>
+
+      {socialPickerOpen && (
+        <SocialIconPicker
+          query={socialQuery}
+          onQueryChange={setSocialQuery}
+          onBack={() => setSocialPickerOpen(false)}
+          onClose={() => setSocialPickerOpen(false)}
+          onPick={openSocialEditor}
+        />
+      )}
     </AppShell>
+  );
+}
+
+/* ---- "Add social icon" picker modal ---- */
+function SocialIconPicker({
+  query,
+  onQueryChange,
+  onBack,
+  onClose,
+  onPick,
+}: {
+  query: string;
+  onQueryChange: (v: string) => void;
+  onBack: () => void;
+  onClose: () => void;
+  onPick: (platform: string) => void;
+}) {
+  const filtered = ALL_SOCIAL_PLATFORMS.filter((p) =>
+    p.platform.toLowerCase().includes(query.trim().toLowerCase()),
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative flex w-full max-w-sm flex-col rounded-t-3xl bg-white shadow-soft-lg sm:max-h-[80vh] sm:rounded-3xl dark:bg-[#12403c]"
+      >
+        {/* header */}
+        <div className="flex items-center justify-between px-5 pt-5">
+          <button
+            onClick={onBack}
+            aria-label="Back"
+            className="grid h-8 w-8 place-items-center rounded-full text-ink/60 transition hover:bg-ink/5 dark:text-white/60 dark:hover:bg-white/10"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <h3 className="font-display text-base font-black text-ink dark:text-white">Add social icon</h3>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="grid h-8 w-8 place-items-center rounded-full text-ink/60 transition hover:bg-ink/5 dark:text-white/60 dark:hover:bg-white/10"
+          >
+            <CloseIcon size={18} />
+          </button>
+        </div>
+
+        {/* search */}
+        <div className="px-5 pt-4">
+          <div className="flex items-center gap-2 rounded-2xl bg-mist px-3.5 py-2.5 dark:bg-white/5">
+            <Search size={16} className="text-ink/40 dark:text-white/40" />
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => onQueryChange(e.target.value)}
+              placeholder="Search"
+              className="w-full bg-transparent text-sm font-medium text-ink outline-none placeholder:text-ink/40 dark:text-white dark:placeholder:text-white/40"
+            />
+          </div>
+        </div>
+
+        {/* list */}
+        <div className="mt-2 flex-1 overflow-y-auto px-2 pb-4">
+          {filtered.length === 0 ? (
+            <p className="px-3 py-8 text-center text-sm text-ink/45 dark:text-white/45">
+              No platforms match &ldquo;{query}&rdquo;
+            </p>
+          ) : (
+            filtered.map(({ platform, icon: Icon }) => (
+              <button
+                key={platform}
+                type="button"
+                onClick={() => onPick(platform)}
+                className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition hover:bg-mist dark:hover:bg-white/5"
+              >
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink/5 text-ink dark:bg-white/10 dark:text-white">
+                  <Icon size={17} />
+                </span>
+                <span className="flex-1 text-sm font-bold text-ink dark:text-white">{platform}</span>
+                <ChevronRight size={16} className="text-ink/30 dark:text-white/30" />
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

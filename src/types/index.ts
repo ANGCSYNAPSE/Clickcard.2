@@ -103,6 +103,7 @@ export interface ProductItem {
 export interface SocialLink {
   id?: string;
   platform: string;
+  username?: string;
   url: string;
   label?: string;
   visible?: boolean;

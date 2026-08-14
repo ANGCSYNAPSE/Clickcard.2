@@ -7,6 +7,7 @@ import billingReducer from "./slices/billingSlice";
 import notificationReducer from "./slices/notificationSlice";
 import analyticsReducer from "./slices/analyticsSlice";
 import uiReducer from "./slices/uiSlice";
+import designReducer from "./slices/designSlice";
 
 export const makeStore = () =>
   configureStore({
@@ -19,6 +20,7 @@ export const makeStore = () =>
       notifications: notificationReducer,
       analytics: analyticsReducer,
       ui: uiReducer,
+      design: designReducer,
     },
     middleware: (getDefault) =>
       getDefault({

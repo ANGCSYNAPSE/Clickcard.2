@@ -2,7 +2,7 @@ import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import { Ghost } from "lucide-react";
 import PublicProfile from "@/components/public/PublicProfile";
-import { fetchPublicProfile, PublicProfile as TProfile } from "@/lib/publicProfile";
+import { fetchPublicProfile, fetchOwnProfile, PublicProfile as TProfile } from "@/lib/publicProfile";
 import { SITE_URL } from "@/lib/config";
 
 interface Props {
@@ -71,7 +71,21 @@ export default function SlugPage({ profile, slug, shareUrl }: Props) {
 
 export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
   const slug = String(ctx.params?.slug || "");
-  const { profile } = await fetchPublicProfile(slug);
+  let { profile } = await fetchPublicProfile(slug);
+
+  // Fallback for the signed-in owner: the unauthenticated public endpoint may
+  // not have this slug yet, but "View public page" should still show their
+  // whole customized profile, so fetch it via their session cookie.
+  if (!profile) {
+    const accessToken = ctx.req.cookies["cc_access"];
+    if (accessToken) {
+      const own = await fetchOwnProfile(accessToken);
+      if (own && own.username.toLowerCase() === slug.toLowerCase()) {
+        profile = own;
+      }
+    }
+  }
+
   const shareUrl = `${SITE_URL}/${slug}`;
 
   // Don't let search engines index private/missing profiles.

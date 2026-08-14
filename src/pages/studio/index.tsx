@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Head from "next/head";
 import {
   FileText,
@@ -18,13 +18,15 @@ import {
   ArrowUp,
   ArrowDown,
   Target,
-  Share
-
+  Save,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
+import Button from "@/components/ui/Button";
+import LiveProfileCard from "@/components/app/LiveProfileCard";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProfile } from "@/store/slices/profileSlice";
 import { pushToast } from "@/store/slices/uiSlice";
+import { updateDesign, designSaved, STUDIO_DESIGN_KEY } from "@/store/slices/designSlice";
 import { useRequireAuth } from "@/lib/authGuards";
 import {
   studioService,
@@ -57,35 +59,48 @@ export default function StudioPage() {
   const dispatch = useAppDispatch();
   const draft = useAppSelector((s) => s.profile.draft);
   const user = useAppSelector((s) => s.auth.user);
+  const design = useAppSelector((s) => s.design);
+  const {
+    primary,
+    accent,
+    theme,
+    wallpaperType,
+    backgroundColor,
+    gradientColor,
+    gradientDirection,
+    noise,
+    patternIndex,
+    pageFont,
+    pageTextColor,
+    matchTitleFont,
+    titleFont,
+    titleColor,
+    dirty,
+  } = design;
+  const set = (patch: Partial<typeof design>) => dispatch(updateDesign(patch));
 
   const [category, setCategory] = useState<StudioCategory>("resume");
   const [templates, setTemplates] = useState<StudioTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
-  const [primary, setPrimary] = useState(PALETTES[0].primary);
-  const [accent, setAccent] = useState(PALETTES[0].accent);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [exporting, setExporting] = useState<StudioFormat | null>(null);
   const [expandedSection, setExpandedSection] = useState<string | null>("palette");
   const [detailView, setDetailView] = useState<string | null>(null);
-  const [pageFont, setPageFont] = useState(FONT_OPTIONS[0]);
-  const [pageTextColor, setPageTextColor] = useState("#FFEED5");
-  const [matchTitleFont, setMatchTitleFont] = useState(true);
-  const [titleFont, setTitleFont] = useState(FONT_OPTIONS[0]);
-  const [titleColor, setTitleColor] = useState("#FFEED5");
-  const [wallpaperType, setWallpaperType] = useState<
-    "fill" | "gradient" | "blur" | "pattern" | "image" | "video"
-  >("fill");
-  const [backgroundColor, setBackgroundColor] = useState("#301414");
-  const [patternIndex, setPatternIndex] = useState(0);
   const [gradientStyle, setGradientStyle] = useState<"custom" | "premade">("custom");
-  const [gradientColor, setGradientColor] = useState("#301414");
-  const [gradientDirection, setGradientDirection] = useState<"up" | "down" | "radial">("up");
-  const [noise, setNoise] = useState(true);
 
   useEffect(() => {
     dispatch(fetchProfile());
   }, [dispatch]);
+
+  const saveDesign = () => {
+    try {
+      localStorage.setItem(STUDIO_DESIGN_KEY, JSON.stringify(design));
+    } catch {
+      /* ignore blocked storage */
+    }
+    dispatch(designSaved());
+    dispatch(pushToast("Design saved", "success"));
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -150,9 +165,13 @@ export default function StudioPage() {
         <link href={GOOGLE_FONTS_HREF} rel="stylesheet" />
       </Head>
 
-      <div className="mb-6">
+      <div className="mb-6 flex items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-black text-ink dark:text-white">Studio</h1>
-        
+        {dirty && (
+          <Button onClick={saveDesign} className="text-xs sm:text-sm">
+            <Save size={16} /> Save changes
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_720px] h-[calc(100vh-200px)]">
@@ -160,28 +179,36 @@ export default function StudioPage() {
         <div className="space-y-5 h-full flex flex-col">
           {/* live preview */}
           <div className="grid place-items-center rounded-3xl border border-ink/5 bg-mist p-6 dark:border-white/5 dark:bg-white/[0.02] flex-1">
-            {selected ? (
-              <PreviewCard
-                primary={primary}
-                accent={accent}
-                theme={theme}
-                name={draft.personal?.fullName || "Your name"}
-                username={user?.username}
-                wallpaperType={wallpaperType}
-                backgroundColor={backgroundColor}
-                gradientColor={gradientColor}
-                gradientDirection={gradientDirection}
-                noise={noise}
-                patternIndex={patternIndex}
-                pageFont={pageFont}
-                pageTextColor={pageTextColor}
-                matchTitleFont={matchTitleFont}
-                titleFont={titleFont}
-                titleColor={titleColor}
-              />
-            ) : (
-              <p className="text-sm text-ink/55 dark:text-white/55">
-                {loading ? "Loading templates…" : "No templates published yet."}
+            <LiveProfileCard
+              primary={primary}
+              accent={accent}
+              theme={theme}
+              name={draft.personal?.fullName || "Your name"}
+              username={user?.username}
+              avatarUrl={draft.personal?.profilePicture}
+              tagline={draft.personal?.tagline}
+              bio={draft.personal?.bio}
+              socialLinks={(draft.social || []).filter((s) => s.url)}
+              contact={draft.contact}
+              experience={draft.experience}
+              education={draft.education}
+              products={draft.products}
+              business={draft.business}
+              wallpaperType={wallpaperType}
+              backgroundColor={backgroundColor}
+              gradientColor={gradientColor}
+              gradientDirection={gradientDirection}
+              noise={noise}
+              patternIndex={patternIndex}
+              pageFont={pageFont}
+              pageTextColor={pageTextColor}
+              matchTitleFont={matchTitleFont}
+              titleFont={titleFont}
+              titleColor={titleColor}
+            />
+            {!selected && (
+              <p className="mt-3 text-xs text-ink/45 dark:text-white/45">
+                {loading ? "Loading templates…" : "No export templates published yet."}
               </p>
             )}
           </div>
@@ -333,7 +360,7 @@ export default function StudioPage() {
                       return (
                         <button
                           key={w.key}
-                          onClick={() => setWallpaperType(w.key)}
+                          onClick={() => set({ wallpaperType: w.key })}
                           className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-2 transition ${
                             active
                               ? "border-ink dark:border-white"
@@ -399,7 +426,7 @@ export default function StudioPage() {
                       <input
                         type="color"
                         value={backgroundColor}
-                        onChange={(e) => setBackgroundColor(e.target.value)}
+                        onChange={(e) => set({ backgroundColor: e.target.value })}
                         className="sr-only"
                       />
                     </label>
@@ -447,7 +474,7 @@ export default function StudioPage() {
                         <input
                           type="color"
                           value={gradientColor}
-                          onChange={(e) => setGradientColor(e.target.value)}
+                          onChange={(e) => set({ gradientColor: e.target.value })}
                           className="sr-only"
                         />
                       </label>
@@ -461,7 +488,7 @@ export default function StudioPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => setGradientDirection("up")}
+                          onClick={() => set({ gradientDirection: "up" })}
                           className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
                             gradientDirection === "up"
                               ? "border-ink text-ink dark:border-white dark:text-white"
@@ -472,7 +499,7 @@ export default function StudioPage() {
                           Linear up
                         </button>
                         <button
-                          onClick={() => setGradientDirection("down")}
+                          onClick={() => set({ gradientDirection: "down" })}
                           className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
                             gradientDirection === "down"
                               ? "border-ink text-ink dark:border-white dark:text-white"
@@ -505,7 +532,7 @@ export default function StudioPage() {
                         type="button"
                         role="switch"
                         aria-checked={noise}
-                        onClick={() => setNoise((v) => !v)}
+                        onClick={() => set({ noise: !noise })}
                         className={`relative h-6 w-11 shrink-0 rounded-full transition ${
                           noise ? "bg-emerald-500" : "bg-ink/15 dark:bg-white/15"
                         }`}
@@ -533,7 +560,7 @@ export default function StudioPage() {
                       ].map((bg, i) => (
                         <button
                           key={i}
-                          onClick={() => setPatternIndex(i)}
+                          onClick={() => set({ patternIndex: i })}
                           className={`relative grid h-10 w-10 place-items-center rounded-xl border-2 bg-ink/10 dark:bg-white/10 ${
                             patternIndex === i ? "border-ink dark:border-white" : "border-transparent"
                           }`}
@@ -606,7 +633,7 @@ export default function StudioPage() {
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => setTheme("light")}
+                    onClick={() => set({ theme: "light" })}
                     className={`flex flex-col items-center gap-3 rounded-2xl border p-4 transition ${
                       theme === "light"
                         ? "border-brand-400 shadow-soft"
@@ -617,7 +644,7 @@ export default function StudioPage() {
                     <span className="text-xs font-bold text-ink dark:text-white">Light</span>
                   </button>
                   <button
-                    onClick={() => setTheme("dark")}
+                    onClick={() => set({ theme: "dark" })}
                     className={`flex flex-col items-center gap-3 rounded-2xl border p-4 transition ${
                       theme === "dark"
                         ? "border-brand-400 shadow-soft"
@@ -650,7 +677,7 @@ export default function StudioPage() {
                   <div className="relative">
                     <select
                       value={pageFont}
-                      onChange={(e) => setPageFont(e.target.value)}
+                      onChange={(e) => set({ pageFont: e.target.value })}
                       style={{ fontFamily: `"${pageFont}", sans-serif` }}
                       className="w-40 appearance-none rounded-xl border border-ink/10 bg-white px-4 py-2.5 text-sm font-medium text-ink dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
                     >
@@ -679,7 +706,7 @@ export default function StudioPage() {
                     <input
                       type="color"
                       value={pageTextColor}
-                      onChange={(e) => setPageTextColor(e.target.value)}
+                      onChange={(e) => set({ pageTextColor: e.target.value })}
                       className="sr-only"
                     />
                   </label>
@@ -699,7 +726,7 @@ export default function StudioPage() {
                       type="button"
                       role="switch"
                       aria-checked={matchTitleFont}
-                      onClick={() => setMatchTitleFont((v) => !v)}
+                      onClick={() => set({ matchTitleFont: !matchTitleFont })}
                       className={`relative h-6 w-11 shrink-0 rounded-full transition ${
                         matchTitleFont ? "bg-emerald-500" : "bg-ink/15 dark:bg-white/15"
                       }`}
@@ -720,7 +747,7 @@ export default function StudioPage() {
                     <select
                       value={titleFont}
                       disabled={matchTitleFont}
-                      onChange={(e) => setTitleFont(e.target.value)}
+                      onChange={(e) => set({ titleFont: e.target.value })}
                       style={{ fontFamily: `"${titleFont}", sans-serif` }}
                       className="w-40 appearance-none rounded-xl border border-ink/10 bg-white px-4 py-2.5 text-sm font-medium text-ink disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
                     >
@@ -749,7 +776,7 @@ export default function StudioPage() {
                     <input
                       type="color"
                       value={titleColor}
-                      onChange={(e) => setTitleColor(e.target.value)}
+                      onChange={(e) => set({ titleColor: e.target.value })}
                       className="sr-only"
                     />
                   </label>
@@ -796,153 +823,5 @@ export default function StudioPage() {
         </div>
       </div>
     </AppShell>
-  );
-}
-
-function PreviewCard({
-  primary,
-  accent,
-  theme,
-  name,
-  username,
-  wallpaperType = "fill",
-  backgroundColor = "#301414",
-  gradientColor = "#301414",
-  gradientDirection = "up",
-  noise = false,
-  patternIndex = 0,
-  pageFont = "Inter",
-  pageTextColor,
-  matchTitleFont = true,
-  titleFont = "Inter",
-  titleColor,
-}: {
-  primary: string;
-  accent: string;
-  theme: "light" | "dark";
-  name: string;
-  username?: string | null;
-  wallpaperType?: "fill" | "gradient" | "blur" | "pattern" | "image" | "video";
-  backgroundColor?: string;
-  gradientColor?: string;
-  gradientDirection?: "up" | "down" | "radial";
-  noise?: boolean;
-  patternIndex?: number;
-  pageFont?: string;
-  pageTextColor?: string;
-  matchTitleFont?: boolean;
-  titleFont?: string;
-  titleColor?: string;
-}) {
-  const isDark = theme === "dark";
-  const bg = isDark ? "#000000" : "#ffffff";
-  const textColor = isDark ? "#ffffff" : "#000000";
-  const pageColor = pageTextColor || textColor;
-  const titleTextColor = matchTitleFont ? pageColor : titleColor || pageColor;
-  const fontStack = (name: string) => `"${name}", sans-serif`;
-  const pageFontFamily = fontStack(pageFont);
-  const titleFontFamily = fontStack(matchTitleFont ? pageFont : titleFont);
-
-  const patternImages = [
-    `repeating-linear-gradient(45deg, ${backgroundColor}, ${backgroundColor} 3px, #ffffff33 3px, #ffffff33 6px)`,
-    `linear-gradient(#ffffff22 1px, transparent 1px), linear-gradient(90deg, #ffffff22 1px, transparent 1px)`,
-    `radial-gradient(#ffffff33 1.5px, transparent 1.5px)`,
-    `linear-gradient(135deg, ${primary}, ${accent})`,
-  ];
-
-  const wallpaperStyle: CSSProperties =
-    wallpaperType === "gradient"
-      ? {
-          background:
-            gradientDirection === "radial"
-              ? `radial-gradient(circle, ${gradientColor}, ${accent})`
-              : `linear-gradient(${gradientDirection === "down" ? "to bottom" : "to top"}, ${gradientColor}, ${accent})`,
-          backgroundImage: noise
-            ? `radial-gradient(#ffffff22 1px, transparent 1px), ${
-                gradientDirection === "radial"
-                  ? `radial-gradient(circle, ${gradientColor}, ${accent})`
-                  : `linear-gradient(${gradientDirection === "down" ? "to bottom" : "to top"}, ${gradientColor}, ${accent})`
-              }`
-            : undefined,
-          backgroundSize: noise ? "3px 3px, auto" : undefined,
-        }
-      : wallpaperType === "pattern"
-      ? {
-          background: backgroundColor,
-          backgroundImage: patternImages[patternIndex] ?? patternImages[0],
-          backgroundSize: patternIndex === 1 ? "6px 6px" : undefined,
-        }
-      : {
-          background: backgroundColor,
-        };
-
-  return (
-    <div
-      className="relative rounded-3xl shadow-card overflow-hidden flex flex-col items-center justify-between"
-      style={{
-        width: 320,
-        height: 680,
-        background: bg,
-        color: textColor,
-        fontFamily: pageFontFamily,
-      }}
-    >
-      {/* Header with icons */}
-      <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 z-10">
-        <div
-          className="grid h-8 w-8 place-items-center rounded-full text-white bg-textColor"
-          style={{ background: textColor }}
-        >
-          <h3 className="text-sm ">CC</h3>
-        </div>
-        <div className="grid h-8 w-8 place-items-center rounded text-white" style={{ background: textColor }}>
-          <Share className="w-5 h-5"/>
-        </div>
-      </div>
-
-      {/* Wallpaper background area (whole card, independent of the avatar) */}
-      <div className="absolute inset-0 w-full h-full" style={wallpaperStyle} />
-
-      {/* Profile section */}
-      <div className="absolute top-20 left-0 right-0 flex flex-col items-center text-center justify-center px-6 py-8">
-        {/* Avatar */}
-        <div
-          className="grid h-24 w-24 place-items-center rounded-full text-2xl font-black text-white -mt-16 mb-2 shadow-lg"
-          style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
-        >
-          {name[0]?.toUpperCase() || " "}
-        </div>
-
-        {/* Username */}
-        <p
-          className="text-xl font-black text-center"
-          style={{ color: titleTextColor, fontFamily: titleFontFamily }}
-        >
-          @{username || "username"}
-        </p>
-
-        {/* Name */}
-        {/* <p className="text-sm font-semibold text-center  opacity-75" style={{ color: textColor }}>
-          {name}
-        </p> */}
-      </div>
-
-      {/* Action Button */}
-      <button
-        className="absolute bottom-12 mb-2 px-8 py-2.5 rounded-full font-bold text-sm transition hover:opacity-90"
-        style={{
-          background: textColor,
-          color: bg,
-        }}
-      >
-        Join on ClickCard
-      </button>
-
-      {/* Footer */}
-      {/* <div className="pb-4 px-6 text-center text-[10px] opacity-60" style={{ color: pageColor, fontFamily: pageFont }}>
-        <p>Report • Privacy</p>
-        <p>More from ClickCard</p>
-      </div> */}
-    </div>
   );
 }

@@ -25,7 +25,7 @@ import {
 import { shareService } from "@/services/shareService";
 import { pushToast } from "@/store/slices/uiSlice";
 import { useEntitlement } from "@/lib/useEntitlement";
-import { SHARE_BASE_URL } from "@/lib/config";
+import { SHARE_BASE_URL, SITE_URL } from "@/lib/config";
 import { UpgradeHint, LimitReachedBanner } from "@/components/app/Upsell";
 import type { ShareLink } from "@/types";
 
@@ -37,9 +37,30 @@ const linkUrl = (l: ShareLink) =>
 export default function SharePage() {
   const dispatch = useAppDispatch();
   const { links, status, mutating } = useAppSelector((s) => s.share);
+  const user = useAppSelector((s) => s.auth.user);
   const { withinLimit, limit, isPaid } = useEntitlement();
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [profileCopied, setProfileCopied] = useState(false);
   const [showForm, setShowForm] = useState(false);
+
+  const profileUrl = user?.username ? `${SITE_URL}/${user.username}` : null;
+
+  const copyProfileUrl = async () => {
+    if (!profileUrl) return;
+    await navigator.clipboard.writeText(profileUrl);
+    setProfileCopied(true);
+    dispatch(pushToast("Profile link copied to clipboard", "success"));
+    setTimeout(() => setProfileCopied(false), 1500);
+  };
+
+  const downloadProfileQR = () => {
+    const canvas = document.getElementById("qr-profile") as HTMLCanvasElement | null;
+    if (!canvas) return;
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = `${user?.username || "profile"}-qr.png`;
+    a.click();
+  };
 
   const atLimit = !withinLimit("links", links.length);
   const linkCap = limit("links");
@@ -128,6 +149,30 @@ export default function SharePage() {
             title="You've hit your link limit"
             description="Upgrade to Pro for unlimited share links, custom QR & analytics."
           />
+        </div>
+      )}
+
+      {/* Your profile QR — always available, independent of custom share links */}
+      {profileUrl && (
+        <div className="mt-5 flex flex-col gap-4 rounded-3xl border border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#12403c] sm:flex-row sm:items-center">
+          <div className="grid h-24 w-24 shrink-0 place-items-center rounded-2xl bg-white p-2 ring-1 ring-ink/5 dark:bg-white">
+            <QRCodeCanvas id="qr-profile" value={profileUrl} size={80} level="M" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-bold text-ink dark:text-white">Your profile QR</p>
+            <p className="truncate text-xs font-mono text-ink/45 dark:text-white/45">{profileUrl}</p>
+            <p className="mt-1 text-sm text-ink/55 dark:text-white/55">
+              Scans open your live ClickCard profile.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <IconBtn onClick={copyProfileUrl} label="Copy">
+              {profileCopied ? <Check size={16} className="text-candy-pink" /> : <Copy size={16} />}
+            </IconBtn>
+            <IconBtn onClick={downloadProfileQR} label="Download QR">
+              <Download size={16} />
+            </IconBtn>
+          </div>
         </div>
       )}
 
