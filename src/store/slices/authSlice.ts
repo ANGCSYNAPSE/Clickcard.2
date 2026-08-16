@@ -150,6 +150,18 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(loginInitiate.pending, (s) => {
+        s.status = "loading";
+        s.error = null;
+      })
+      .addCase(loginInitiate.fulfilled, (s) => {
+        s.status = "succeeded";
+        s.error = null;
+      })
+      .addCase(loginInitiate.rejected, (s, a) => {
+        s.status = "failed";
+        s.error = a.payload as string;
+      })
       .addCase(loginVerify.pending, (s) => {
         s.status = "loading";
         s.error = null;

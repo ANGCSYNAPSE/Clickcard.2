@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowRight, Check, Loader2 } from "lucide-react";
+import { ArrowRight, Check, Loader2, XCircle } from "lucide-react";
 import { WEBAPP_URL } from "@/lib/site";
 import { authService } from "@/services/authService";
 import { USERNAME_REGEX } from "@/lib/validation";
@@ -33,7 +33,7 @@ export default function ClaimBar({ variant = "light" }: Props) {
           if (!cancelled) setAvailable(Boolean(data?.data?.available));
         })
         .catch((err) => {
-          if (!cancelled) setAvailable(null);
+          if (!cancelled) setAvailable(false);
           if (process.env.NODE_ENV !== "production") {
             // eslint-disable-next-line no-console
             console.error("checkUsername failed:", err);
@@ -55,51 +55,58 @@ export default function ClaimBar({ variant = "light" }: Props) {
   };
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        claim();
-      }}
-      className={`flex w-full max-w-lg items-center gap-2 rounded-full p-2 min-w-0 ${
-        onDark
-          ? "border border-white/15 bg-white/10 backdrop-blur"
-          : "border border-line bg-white shadow-soft"
-      }`}
-    >
-      <label className="flex min-w-0 flex-1 cursor-text items-center pl-4">
-        <span
-          className={`shrink-0 text-sm font-semibold sm:text-base ${
-            onDark ? "text-white/50" : "text-muted"
-          }`}
-        >
-          clickcard/
-        </span>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="yourname"
-          aria-label="Claim your ClickCard handle"
-          className={`min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none sm:text-base ${
-            onDark
-              ? "text-white placeholder:text-white/35"
-              : "text-dark placeholder:text-muted/60"
-          }`}
-        />
-        <span className="ml-2 shrink-0">
-          <UsernameStatus checking={checking} available={available} onDark={onDark} />
-        </span>
-      </label>
-      <button
-        type="submit"
-        disabled={taken}
-        className={`btn group shrink-0 px-4 py-3 text-sm sm:px-6 sm:py-3.5 ${
-          onDark ? "btn-accent" : "btn-secondary"
-        } disabled:cursor-not-allowed disabled:opacity-50`}
+    <div className="flex w-full flex-col items-center max-w-lg">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          claim();
+        }}
+        className={`flex w-full items-center gap-2 rounded-full p-2 min-w-0 ${
+          onDark
+            ? "border border-white/15 bg-white/10 backdrop-blur"
+            : "border border-line bg-white shadow-soft"
+        }`}
       >
-        Claim it
-        <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-      </button>
-    </form>
+        <label className="flex min-w-0 flex-1 cursor-text items-center pl-4">
+          <span
+            className={`shrink-0 text-sm font-semibold sm:text-base ${
+              onDark ? "text-white/50" : "text-muted"
+            }`}
+          >
+            clickcard/
+          </span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="yourname"
+            aria-label="Claim your ClickCard handle"
+            className={`min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none sm:text-base ${
+              onDark
+                ? "text-white placeholder:text-white/35"
+                : "text-dark placeholder:text-muted/60"
+            }`}
+          />
+          <span className="ml-2 shrink-0">
+            <UsernameStatus checking={checking} available={available} onDark={onDark} />
+          </span>
+        </label>
+        <button
+          type="submit"
+          disabled={taken || !handle || checking}
+          className={`btn group shrink-0 px-4 py-3 text-sm sm:px-6 sm:py-3.5 ${
+            onDark ? "btn-accent" : "btn-secondary"
+          } disabled:cursor-not-allowed disabled:opacity-50`}
+        >
+          Claim it
+          <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+        </button>
+      </form>
+      {taken && (
+        <p className="mt-2 text-xs font-bold text-rose-500 sm:text-sm text-center">
+          Username is already taken. Try another.
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -116,6 +123,6 @@ function UsernameStatus({
     return <Loader2 className={`h-4 w-4 animate-spin ${onDark ? "text-white/50" : "text-ink/40"}`} />;
   if (available === true) return <Check className="h-5 w-5 text-candy-pink" />;
   if (available === false)
-    return <span className="whitespace-nowrap text-xs font-bold text-rose-500">already taken</span>;
+    return <XCircle className="h-5 w-5 text-rose-500 shrink-0" />;
   return null;
 }

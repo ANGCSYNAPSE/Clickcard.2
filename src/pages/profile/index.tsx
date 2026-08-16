@@ -181,9 +181,9 @@ export default function ProfileEditorPage() {
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_360px] 2xl:grid-cols-[1fr_300px]">
+      <div className="mt-6 flex flex-col gap-6 xl:flex-row xl:items-start">
         {/* editor */}
-        <div className="min-w-0 grid gap-4 lg:grid-cols-[180px_1fr] lg:items-start">
+        <div className="min-w-0 flex flex-col gap-4 lg:grid lg:grid-cols-[180px_1fr] lg:items-start xl:flex-1">
           {/* section content */}
           <div className="min-w-0 order-2 rounded-2xl sm:rounded-3xl border border-ink/[0.06] bg-white p-4 sm:p-6 lg:p-7 dark:border-white/[0.06] dark:bg-[#12403c]">
             {active === "personal" && (
@@ -509,9 +509,11 @@ export default function ProfileEditorPage() {
           </div>
         </div>
 
-        {/* live preview */}
-        <div id="live-preview" className="xl:sticky xl:top-24 xl:self-start">
-          <ProfilePreview profile={draft} avatarUrl={previewAvatar} username={authUser?.username} />
+        {/* live preview — centered + scrollable on mobile, sticky sidebar on xl+ */}
+        <div id="live-preview" className="xl:sticky xl:top-24 xl:self-start xl:w-[340px] xl:shrink-0 2xl:w-[360px]">
+          <div className="flex justify-center overflow-x-auto xl:block xl:overflow-visible">
+            <ProfilePreview profile={draft} avatarUrl={previewAvatar} username={authUser?.username} />
+          </div>
         </div>
       </div>
 

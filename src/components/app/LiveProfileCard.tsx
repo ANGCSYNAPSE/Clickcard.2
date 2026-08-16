@@ -340,13 +340,11 @@ export default function LiveProfileCard({
             {contactActions.map((a) => (
               <div
                 key={a.label}
-                className="flex flex-col items-center gap-1 px-1 py-2.5 backdrop-blur-sm"
+                title={a.label}
+                className="flex items-center justify-center py-3 backdrop-blur-sm"
                 style={cardStyle}
               >
-                <a.icon size={14} style={{ color: cardText }} />
-                <span className="truncate text-[9px] font-bold" style={{ color: cardText }}>
-                  {a.label}
-                </span>
+                <a.icon size={18} style={{ color: cardText }} />
               </div>
             ))}
           </div>

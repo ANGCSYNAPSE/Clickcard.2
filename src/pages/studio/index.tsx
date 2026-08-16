@@ -277,11 +277,11 @@ export default function StudioPage() {
         )}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_720px] h-[calc(100vh-200px)]">
+      <div className="flex flex-col gap-6 xl:flex-row xl:h-[calc(100vh-160px)]">
         {/* preview + gallery */}
-        <div className="space-y-5 h-full flex flex-col">
+        <div className="flex flex-col min-h-0 xl:flex-1">
           {/* live preview */}
-          <div className="grid place-items-center rounded-3xl border border-ink/5 bg-mist p-6 dark:border-white/5 dark:bg-white/[0.02] flex-1">
+          <div className="grid place-items-center rounded-3xl  bg-mist p-4 sm:p-6 dark:border-white/5 dark:bg-white/[0.02] min-h-[340px] sm:min-h-[420px] xl:flex-1 xl:overflow-hidden">
             <LiveProfileCard
               primary={primary}
               accent={accent}
@@ -327,7 +327,7 @@ export default function StudioPage() {
         </div>
 
         {/* controls */}
-        <div className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#12403c] h-full overflow-y-auto">
+        <div className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#12403c] overflow-y-auto xl:w-[440px] xl:h-full xl:shrink-0 2xl:w-[520px]">
           {/* Design Heading */}
           <div className="px-5 py-4">
             <h3 className="font-display text-lg font-black text-ink dark:text-white">Design</h3>
