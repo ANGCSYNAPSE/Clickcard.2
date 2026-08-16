@@ -42,6 +42,9 @@ export interface DesignState {
   titleColor: string;
   headerLayout: HeaderLayout;
   titleStyle: TitleStyle;
+  titleFontSize: number;
+  bioFontSize: number;
+  bodyFontSize: number;
   dirty: boolean;
 }
 
@@ -69,10 +72,30 @@ export const DEFAULT_DESIGN: DesignState = {
   titleColor: "#FFEED5",
   headerLayout: "classic",
   titleStyle: "text",
+  titleFontSize: 20,
+  bioFontSize: 12,
+  bodyFontSize: 12,
   dirty: false,
 };
 
 export const STUDIO_DESIGN_KEY = "cc_studio_design_v1";
+
+// Font sizes used to be an "sm" | "md" | "lg" | "xl" bucket rather than a
+// literal px number. Anyone who saved a design in Studio before that changed
+// has these strings sitting in localStorage — hydrating them straight in
+// would set fontSize to an invalid CSS value (the browser just ignores it,
+// falling back to some inherited size, so the card no longer matches the
+// pre-sizing-feature default). Map old buckets back to the exact px value
+// each one used to render at, so existing saves still resolve to the
+// original look; anything else invalid falls back to the current default.
+const LEGACY_TITLE_PX: Record<string, number> = { sm: 16, md: 20, lg: 24, xl: 30 };
+const LEGACY_BODY_PX: Record<string, number> = { sm: 10, md: 12, lg: 14, xl: 16 };
+
+function coerceFontSize(value: unknown, legacyMap: Record<string, number>, fallback: number): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value in legacyMap) return legacyMap[value];
+  return fallback;
+}
 
 const designSlice = createSlice({
   name: "design",
@@ -80,7 +103,17 @@ const designSlice = createSlice({
   reducers: {
     /** Applies a saved/loaded design without marking it dirty. */
     hydrateDesign: (state, action: PayloadAction<Partial<DesignState>>) => {
-      Object.assign(state, action.payload, { dirty: false });
+      const payload = { ...action.payload };
+      if ("titleFontSize" in payload) {
+        payload.titleFontSize = coerceFontSize(payload.titleFontSize, LEGACY_TITLE_PX, DEFAULT_DESIGN.titleFontSize);
+      }
+      if ("bioFontSize" in payload) {
+        payload.bioFontSize = coerceFontSize(payload.bioFontSize, LEGACY_BODY_PX, DEFAULT_DESIGN.bioFontSize);
+      }
+      if ("bodyFontSize" in payload) {
+        payload.bodyFontSize = coerceFontSize(payload.bodyFontSize, LEGACY_BODY_PX, DEFAULT_DESIGN.bodyFontSize);
+      }
+      Object.assign(state, payload, { dirty: false });
     },
     updateDesign: (state, action: PayloadAction<Partial<Omit<DesignState, "dirty">>>) => {
       Object.assign(state, action.payload);

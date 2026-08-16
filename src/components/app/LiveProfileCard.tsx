@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useEffect, type CSSProperties } from "react";
 import { Share, Phone, MessageCircle, Mail, Globe, Briefcase, GraduationCap, Package, Building2, User } from "lucide-react";
 import { getSocialIcon } from "@/lib/socialPlatforms";
 
@@ -84,6 +84,9 @@ export default function LiveProfileCard({
   matchTitleFont = true,
   titleFont = "Inter",
   titleColor,
+  titleFontSize = 20,
+  bioFontSize = 12,
+  bodyFontSize = 12,
 }: {
   primary: string;
   accent: string;
@@ -118,7 +121,25 @@ export default function LiveProfileCard({
   matchTitleFont?: boolean;
   titleFont?: string;
   titleColor?: string;
+  titleFontSize?: number;
+  bioFontSize?: number;
+  bodyFontSize?: number;
 }) {
+  useEffect(() => {
+    const loadFont = (font: string) => {
+      if (!font || typeof document === "undefined") return;
+      const id = `gf-${font.replace(/ /g, "-").toLowerCase()}`;
+      if (document.getElementById(id)) return;
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, "+")}&display=swap`;
+      document.head.appendChild(link);
+    };
+    loadFont(pageFont);
+    if (!matchTitleFont && titleFont) loadFont(titleFont);
+  }, [pageFont, titleFont, matchTitleFont]);
+
   const isDark = theme === "dark";
   const bg = isDark ? "#000000" : "#ffffff";
   const textColor = isDark ? "#ffffff" : "#000000";
@@ -192,6 +213,15 @@ export default function LiveProfileCard({
     contact?.website && { icon: Globe, label: "Website" },
   ].filter(Boolean) as { icon: typeof Phone; label: string }[];
 
+  // Point sizes set directly in Studio (like a word processor's font-size
+  // box), not preset buckets — applied as inline font-size in px.
+  const titleSizeStyle: CSSProperties = { fontSize: titleFontSize };
+  const bioSizeStyle: CSSProperties = { fontSize: bioFontSize };
+  const bodySizeStyle: CSSProperties = { fontSize: bodyFontSize };
+  // One size down from bodyFontSize — used for the secondary/detail line
+  // under each body row (dates, degree, description, category…).
+  const bodySubSizeStyle: CSSProperties = { fontSize: Math.max(8, bodyFontSize - 2) };
+
   return (
     <div
       className="relative rounded-3xl shadow-card overflow-hidden"
@@ -263,8 +293,8 @@ export default function LiveProfileCard({
           /* Cutout — background-removed photo "stickered" onto the wallpaper, username above it */
           <div className="flex w-full shrink-0 flex-col items-center px-6 pt-16">
             <p
-              className="-mb-4 z-[1] text-[26px] font-black leading-none"
-              style={{ color: titleTextColor, fontFamily: titleFontFamily, transform: "rotate(-3deg)" }}
+              className="-mb-4 z-[1] font-black leading-none"
+              style={{ color: titleTextColor, fontFamily: titleFontFamily, transform: "rotate(-3deg)", ...titleSizeStyle }}
             >
               @{username || "username"}
             </p>
@@ -315,8 +345,8 @@ export default function LiveProfileCard({
         {/* Username — cutout renders its own username above the photo instead */}
         {!cutoutMode && (
           <p
-            className={`w-full shrink-0 px-6 text-center text-xl font-black ${heroMode ? "-mt-6" : ""}`}
-            style={{ color: titleTextColor, fontFamily: titleFontFamily }}
+            className={`w-full shrink-0 px-6 text-center font-black ${heroMode ? "-mt-6" : ""}`}
+            style={{ color: titleTextColor, fontFamily: titleFontFamily, ...titleSizeStyle }}
           >
             @{username || "username"}
           </p>
@@ -325,8 +355,8 @@ export default function LiveProfileCard({
         {/* Bio */}
         {bio && (
           <p
-            className="mt-2 line-clamp-3 max-w-[240px] mx-auto shrink-0 text-center text-xs leading-relaxed"
-            style={{ color: pageColor, opacity: 0.7 }}
+            className="mt-2 line-clamp-3 max-w-[240px] mx-auto shrink-0 text-center leading-relaxed"
+            style={{ color: pageColor, opacity: 0.7, ...bioSizeStyle }}
           >
             {bio}
           </p>
@@ -379,7 +409,7 @@ export default function LiveProfileCard({
                     style={cardStyle}
                   >
                     <Icon size={15} style={{ color: cardText }} />
-                    <span className="min-w-0 flex-1 truncate text-xs font-bold" style={{ color: cardText }}>
+                    <span className="min-w-0 flex-1 truncate font-bold" style={{ color: cardText, ...bodySizeStyle }}>
                       {s.username ? `@${s.username}` : s.platform}
                     </span>
                   </div>
@@ -403,15 +433,15 @@ export default function LiveProfileCard({
               >
                 <Briefcase size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-bold" style={{ color: cardText }}>
+                  <p className="truncate font-bold" style={{ color: cardText, ...bodySizeStyle }}>
                     {e.role || "Role"}
                   </p>
-                  <p className="truncate text-[10px] opacity-70" style={{ color: cardText }}>
+                  <p className="truncate opacity-70" style={{ color: cardText, ...bodySubSizeStyle }}>
                     {e.company}
                     {(e.startDate || e.endDate) && ` · ${[e.startDate, e.endDate].filter(Boolean).join(" – ")}`}
                   </p>
                   {e.description && (
-                    <p className="mt-1 line-clamp-3 text-[10px] leading-relaxed opacity-80" style={{ color: cardText }}>
+                    <p className="mt-1 line-clamp-3 leading-relaxed opacity-80" style={{ color: cardText, ...bodySubSizeStyle }}>
                       {e.description}
                     </p>
                   )}
@@ -435,10 +465,10 @@ export default function LiveProfileCard({
               >
                 <GraduationCap size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-bold" style={{ color: cardText }}>
+                  <p className="truncate font-bold" style={{ color: cardText, ...bodySizeStyle }}>
                     {e.institution || "Institution"}
                   </p>
-                  <p className="truncate text-[10px] opacity-70" style={{ color: cardText }}>
+                  <p className="truncate opacity-70" style={{ color: cardText, ...bodySubSizeStyle }}>
                     {[e.degree, e.field].filter(Boolean).join(", ")}
                     {(e.startYear || e.endYear) && ` · ${[e.startYear, e.endYear].filter(Boolean).join(" – ")}`}
                   </p>
@@ -462,17 +492,17 @@ export default function LiveProfileCard({
               >
                 <Package size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-bold" style={{ color: cardText }}>
+                  <p className="truncate font-bold" style={{ color: cardText, ...bodySizeStyle }}>
                     {p.name || "Product"}
                   </p>
                   {p.description && (
-                    <p className="truncate text-[10px] opacity-70" style={{ color: cardText }}>
+                    <p className="truncate opacity-70" style={{ color: cardText, ...bodySubSizeStyle }}>
                       {p.description}
                     </p>
                   )}
                 </div>
                 {p.price && (
-                  <span className="shrink-0 text-[10px] font-black" style={{ color: cardText }}>
+                  <span className="shrink-0 font-black" style={{ color: cardText, ...bodySubSizeStyle }}>
                     {p.price}
                   </span>
                 )}
@@ -493,11 +523,11 @@ export default function LiveProfileCard({
             >
               <Building2 size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-bold" style={{ color: cardText }}>
+                <p className="truncate font-bold" style={{ color: cardText, ...bodySizeStyle }}>
                   {business.name}
                 </p>
                 {(business.category || business.description) && (
-                  <p className="truncate text-[10px] opacity-70" style={{ color: cardText }}>
+                  <p className="truncate opacity-70" style={{ color: cardText, ...bodySubSizeStyle }}>
                     {business.category || business.description}
                   </p>
                 )}

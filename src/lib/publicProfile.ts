@@ -39,6 +39,38 @@ export interface PublicHours {
   closed?: boolean;
 }
 
+/**
+ * The Studio design, as saved into digitalCard.design (see
+ * store/slices/designSlice.ts DesignState for where it's written). Optional
+ * fields throughout since older/legacy profiles never saved one.
+ */
+export interface PublicCardDesign {
+  primary?: string;
+  accent?: string;
+  theme?: "light" | "dark";
+  wallpaperType?: "fill" | "gradient" | "blur" | "pattern" | "image" | "video";
+  backgroundColor?: string;
+  gradientColor?: string;
+  gradientColorEnd?: string;
+  gradientDirection?: "up" | "down" | "radial";
+  noise?: boolean;
+  patternIndex?: number;
+  buttonColor?: string;
+  buttonTextColor?: string;
+  buttonStyle?: "solid" | "glass" | "outline";
+  buttonRoundness?: "sharp" | "slight" | "medium" | "full";
+  buttonShadow?: "none" | "soft" | "strong" | "hard";
+  socialLinksStyle?: "buttons" | "icons";
+  pageFont?: string;
+  pageTextColor?: string;
+  matchTitleFont?: boolean;
+  titleFont?: string;
+  titleColor?: string;
+  titleFontSize?: number;
+  bioFontSize?: number;
+  bodyFontSize?: number;
+}
+
 export interface PublicProfile {
   username: string;
   isPublic: boolean;
@@ -65,6 +97,7 @@ export interface PublicProfile {
   };
   views?: number;
   updatedAt?: string;
+  design?: PublicCardDesign;
 }
 
 import { API_BASE_URL } from "./config";
@@ -111,6 +144,7 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
   const personal = d.personal_identity || {};
   const contact = d.contact_information || {};
   const biz = d.business_details || {};
+  const digitalCard = d.digital_card ?? d.digitalCard ?? {};
 
   // social_links may be an array [{platform,url}] or an object { platform: url }.
   let social: PublicSocial[] = [];
@@ -151,6 +185,7 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
       : undefined,
     views: d.views,
     updatedAt: d.updated_at,
+    design: digitalCard.design || undefined,
   };
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */

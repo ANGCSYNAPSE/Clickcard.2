@@ -22,6 +22,8 @@ import {
   Camera,
   User as UserIcon,
   Plus,
+  Minus,
+  X,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import Button from "@/components/ui/Button";
@@ -60,7 +62,82 @@ const PALETTES = [
   { name: "Forest", primary: "#10B981", accent: "#84CC16" },
 ];
 
-const FONT_OPTIONS = ["Inter", "Poppins", "Roboto", "Playfair Display", "Space Grotesk", "DM Sans"];
+export interface FontItem {
+  name: string;
+  pro?: boolean;
+}
+
+export const FONT_ITEMS: FontItem[] = [
+  { name: "Albert Sans" },
+  { name: "Alfa Slab One", pro: true },
+  { name: "Anton", pro: true },
+  { name: "Belanosima", pro: true },
+  { name: "BioRhyme", pro: true },
+  { name: "Black Han Sans" },
+  { name: "Bitter", pro: true },
+  { name: "Bricolage Grotesque", pro: true },
+  { name: "Caudex" },
+  { name: "Caveat" },
+  { name: "Chango", pro: true },
+  { name: "Chillax" },
+  { name: "Corben" },
+  { name: "Dancing Script", pro: true },
+  { name: "DM Sans" },
+  { name: "Domine" },
+  { name: "Epilogue" },
+  { name: "Fira Code" },
+  { name: "Fustat" },
+  { name: "Gasoek One", pro: true },
+  { name: "Great Vibes" },
+  { name: "Hahmlet" },
+  { name: "IBM Plex Sans" },
+  { name: "IBM Plex Serif", pro: true },
+  { name: "Inter" },
+  { name: "JetBrains Mono" },
+  { name: "Kaushan Script" },
+  { name: "Kavivanar" },
+  { name: "Lato", pro: true },
+  { name: "Link Sans" },
+  { name: "Lobster" },
+  { name: "Lora", pro: true },
+  { name: "M Plus Rounded", pro: true },
+  { name: "Manrope" },
+  { name: "Merriweather", pro: true },
+  { name: "Misto" },
+  { name: "Monofett", pro: true },
+  { name: "Noto Serif", pro: true },
+  { name: "Old Standard TT", pro: true },
+  { name: "Oswald" },
+  { name: "Oxanium" },
+  { name: "Pacifico", pro: true },
+  { name: "Playfair Display" },
+  { name: "Poppins", pro: true },
+  { name: "PT Serif", pro: true },
+  { name: "Red Hat Display" },
+  { name: "Roboto", pro: true },
+  { name: "Roboto Slab" },
+  { name: "Rubik", pro: true },
+  { name: "Salsa", pro: true },
+  { name: "Satisfy" },
+  { name: "Sonder" },
+  { name: "Space Grotesk", pro: true },
+  { name: "Space Mono" },
+  { name: "Summer Glow", pro: true },
+  { name: "Syne", pro: true },
+];
+
+export const FONT_OPTIONS = FONT_ITEMS.map((f) => f.name);
+
+export function loadGoogleFont(font: string) {
+  if (!font || typeof document === "undefined") return;
+  const id = `gf-${font.replace(/ /g, "-").toLowerCase()}`;
+  if (document.getElementById(id)) return;
+  const link = document.createElement("link");
+  link.id = id;
+  link.rel = "stylesheet";
+  link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, "+")}&display=swap`;
+  document.head.appendChild(link);
+}
 
 const HEADER_LAYOUTS: { key: HeaderLayout; label: string }[] = [
   { key: "classic", label: "Classic" },
@@ -70,9 +147,44 @@ const HEADER_LAYOUTS: { key: HeaderLayout; label: string }[] = [
   { key: "shape", label: "Shape" },
 ];
 
-const GOOGLE_FONTS_HREF = `https://fonts.googleapis.com/css2?${FONT_OPTIONS.map(
-  (f) => `family=${f.replace(/ /g, "+")}:wght@400;600;700;800;900`,
-).join("&")}&display=swap`;
+const MIN_FONT_SIZE = 8;
+const MAX_FONT_SIZE = 72;
+
+/** A Word-style font-size box: type a point size directly, or nudge it with +/-. */
+function FontSizeInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const clamp = (v: number) => Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, v));
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        type="button"
+        aria-label="Decrease size"
+        onClick={() => onChange(clamp(value - 1))}
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-ink/10 text-ink/60 transition hover:bg-ink/5 dark:border-white/10 dark:text-white/60 dark:hover:bg-white/10"
+      >
+        <Minus size={13} />
+      </button>
+      <input
+        type="number"
+        min={MIN_FONT_SIZE}
+        max={MAX_FONT_SIZE}
+        value={value}
+        onChange={(e) => {
+          const n = Number(e.target.value);
+          if (!Number.isNaN(n)) onChange(clamp(n));
+        }}
+        className="h-8 w-14 rounded-lg border border-ink/10 bg-white text-center text-sm font-bold text-ink outline-none transition focus:border-brand-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+      />
+      <button
+        type="button"
+        aria-label="Increase size"
+        onClick={() => onChange(clamp(value + 1))}
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-ink/10 text-ink/60 transition hover:bg-ink/5 dark:border-white/10 dark:text-white/60 dark:hover:bg-white/10"
+      >
+        <Plus size={13} />
+      </button>
+    </div>
+  );
+}
 
 export default function StudioPage() {
   const guard = useRequireAuth();
@@ -104,6 +216,9 @@ export default function StudioPage() {
     titleColor,
     headerLayout,
     titleStyle,
+    titleFontSize,
+    bioFontSize,
+    bodyFontSize,
     dirty,
   } = design;
   const set = (patch: Partial<typeof design>) => dispatch(updateDesign(patch));
@@ -127,6 +242,8 @@ export default function StudioPage() {
   const [cutoutAvatarUrl, setCutoutAvatarUrl] = useState<string | null>(null);
   const [removingBg, setRemovingBg] = useState(false);
   const cutoutProcessedFor = useRef<string | null>(null);
+
+  const [fontPickerTarget, setFontPickerTarget] = useState<"page" | "title" | null>(null);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -185,8 +302,15 @@ export default function StudioPage() {
   const displayAvatar = headerLayout === "cutout" ? cutoutAvatar || previewAvatar : previewAvatar;
 
   const saveAll = async () => {
-    if (profileDirty || picture) {
-      const res = await dispatch(saveProfile({ profile: draft, picture }));
+    // Design changes also ride along on the profile save (embedded in
+    // digitalCard.design) so the public page — viewed by anyone who scans
+    // the QR — can render with the same look Studio shows here, not just
+    // this browser's own localStorage cache.
+    if (profileDirty || picture || dirty) {
+      const profileToSave = dirty
+        ? { ...draft, digitalCard: { ...draft.digitalCard, design: design as unknown as Record<string, unknown> } }
+        : draft;
+      const res = await dispatch(saveProfile({ profile: profileToSave, picture }));
       if (!saveProfile.fulfilled.match(res)) {
         dispatch(pushToast((res.payload as string) || "Could not save profile", "error"));
         return;
@@ -265,7 +389,6 @@ export default function StudioPage() {
         <title>Customize · ClickCard</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href={GOOGLE_FONTS_HREF} rel="stylesheet" />
       </Head>
 
       <div className="mb-6 flex items-center justify-between gap-3">
@@ -316,6 +439,9 @@ export default function StudioPage() {
               matchTitleFont={matchTitleFont}
               titleFont={titleFont}
               titleColor={titleColor}
+              titleFontSize={titleFontSize}
+              bioFontSize={bioFontSize}
+              bodyFontSize={bodyFontSize}
             />
             {!selected && (
               <p className="mt-3 text-xs text-ink/45 dark:text-white/45">
@@ -1171,24 +1297,16 @@ export default function StudioPage() {
                 {/* Page font */}
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-sm font-semibold text-ink dark:text-white">Page font</p>
-                  <div className="relative">
-                    <select
-                      value={pageFont}
-                      onChange={(e) => set({ pageFont: e.target.value })}
-                      style={{ fontFamily: `"${pageFont}", sans-serif` }}
-                      className="w-40 appearance-none rounded-xl border border-ink/10 bg-white px-4 py-2.5 text-sm font-medium text-ink dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
-                    >
-                      {FONT_OPTIONS.map((f) => (
-                        <option key={f} value={f} style={{ fontFamily: `"${f}", sans-serif` }}>
-                          {f}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown
-                      size={14}
-                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 dark:text-white/40"
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFontPickerTarget("page")}
+                    className="flex w-44 items-center justify-between gap-2 rounded-xl border border-ink/10 bg-white px-4 py-2.5 text-sm font-medium text-ink transition hover:border-brand-300 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+                  >
+                    <span style={{ fontFamily: `"${pageFont}", sans-serif` }} className="truncate">
+                      {pageFont}
+                    </span>
+                    <ChevronRight size={16} className="shrink-0 text-ink/40 dark:text-white/40" />
+                  </button>
                 </div>
 
                 {/* Page text color */}
@@ -1240,25 +1358,17 @@ export default function StudioPage() {
                 {/* Title font */}
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-sm font-semibold text-ink dark:text-white">Title font</p>
-                  <div className="relative">
-                    <select
-                      value={titleFont}
-                      disabled={matchTitleFont}
-                      onChange={(e) => set({ titleFont: e.target.value })}
-                      style={{ fontFamily: `"${titleFont}", sans-serif` }}
-                      className="w-40 appearance-none rounded-xl border border-ink/10 bg-white px-4 py-2.5 text-sm font-medium text-ink disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
-                    >
-                      {FONT_OPTIONS.map((f) => (
-                        <option key={f} value={f} style={{ fontFamily: `"${f}", sans-serif` }}>
-                          {f}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown
-                      size={14}
-                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 dark:text-white/40"
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    disabled={matchTitleFont}
+                    onClick={() => setFontPickerTarget("title")}
+                    className="flex w-44 items-center justify-between gap-2 rounded-xl border border-ink/10 bg-white px-4 py-2.5 text-sm font-medium text-ink disabled:opacity-50 transition hover:border-brand-300 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+                  >
+                    <span style={{ fontFamily: `"${titleFont}", sans-serif` }} className="truncate">
+                      {titleFont}
+                    </span>
+                    <ChevronRight size={16} className="shrink-0 text-ink/40 dark:text-white/40" />
+                  </button>
                 </div>
 
                 {/* Title color */}
@@ -1277,6 +1387,32 @@ export default function StudioPage() {
                       className="sr-only"
                     />
                   </label>
+                </div>
+
+                {/* Title size */}
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm font-semibold text-ink dark:text-white">Title size</p>
+                  <FontSizeInput value={titleFontSize} onChange={(v) => set({ titleFontSize: v })} />
+                </div>
+
+                {/* Bio size */}
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-ink dark:text-white">Bio size</p>
+                    <p className="text-xs text-ink/50 dark:text-white/50">The intro line under the title</p>
+                  </div>
+                  <FontSizeInput value={bioFontSize} onChange={(v) => set({ bioFontSize: v })} />
+                </div>
+
+                {/* Body text size */}
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-ink dark:text-white">Body text size</p>
+                    <p className="text-xs text-ink/50 dark:text-white/50">
+                      Social links, experience, education, products &amp; business
+                    </p>
+                  </div>
+                  <FontSizeInput value={bodyFontSize} onChange={(v) => set({ bodyFontSize: v })} />
                 </div>
               </div>
             </div>
@@ -1330,6 +1466,97 @@ export default function StudioPage() {
           onConfirm={onCropConfirm}
         />
       )}
+
+      {fontPickerTarget && (
+        <FontPickerModal
+          title={fontPickerTarget === "page" ? "Page font" : "Title font"}
+          selectedFont={fontPickerTarget === "page" ? pageFont : titleFont}
+          onSelect={(font) => {
+            if (fontPickerTarget === "page") set({ pageFont: font });
+            else set({ titleFont: font });
+          }}
+          onClose={() => setFontPickerTarget(null)}
+        />
+      )}
     </AppShell>
+  );
+}
+
+/* ---- "Font Picker" popup modal matching user design ---- */
+function FontPickerModal({
+  title,
+  selectedFont,
+  onSelect,
+  onClose,
+}: {
+  title: string;
+  selectedFont: string;
+  onSelect: (font: string) => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    FONT_ITEMS.forEach((f) => loadGoogleFont(f.name));
+  }, []);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative flex w-full max-w-lg max-h-[85vh] flex-col rounded-3xl bg-white shadow-soft-lg dark:bg-[#12403c] overflow-hidden border border-ink/5 dark:border-white/5"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-ink/5 dark:border-white/5">
+          <div className="w-8" />
+          <h3 className="font-display text-base font-black text-ink dark:text-white text-center flex-1">
+            {title}
+          </h3>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="grid h-8 w-8 place-items-center rounded-full border border-ink/15 text-ink/70 transition hover:bg-ink/5 dark:border-white/20 dark:text-white/70 dark:hover:bg-white/10"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Font Grid */}
+        <div className="flex-1 overflow-y-auto p-5 grid grid-cols-2 gap-3 no-scrollbar">
+          {FONT_ITEMS.map((item) => {
+            const isSelected = item.name === selectedFont;
+            return (
+              <button
+                key={item.name}
+                type="button"
+                onClick={() => {
+                  loadGoogleFont(item.name);
+                  onSelect(item.name);
+                  onClose();
+                }}
+                className={`relative flex items-center justify-center rounded-2xl py-4 px-3 text-center transition ${
+                  isSelected
+                    ? "border-2 border-ink bg-white shadow-sm dark:border-white dark:bg-white/10"
+                    : "border-2 border-transparent bg-ink/[0.04] hover:bg-ink/[0.08] dark:bg-white/[0.05] dark:hover:bg-white/[0.1]"
+                }`}
+              >
+                <span
+                  style={{ fontFamily: `"${item.name}", sans-serif` }}
+                  className="text-sm font-semibold text-ink dark:text-white truncate"
+                >
+                  {item.name}
+                </span>
+                {item.pro && (
+                  <span className="absolute top-2.5 right-2.5 grid h-5 w-5 place-items-center rounded-full bg-ink/70 text-white dark:bg-white/30">
+                    <Zap size={10} />
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }

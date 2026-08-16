@@ -115,6 +115,14 @@ export interface DigitalCardSection {
   theme?: string;
   primaryColor?: string;
   accentColor?: string;
+  /**
+   * The full Studio design (colors, wallpaper, buttons, fonts…) as a plain
+   * JSON blob — this is a loose JSON column on the backend, so it round-trips
+   * whatever shape we send. See DesignState in store/slices/designSlice.ts
+   * for the shape Studio writes here on save, and PublicCardDesign in
+   * lib/publicProfile.ts for how the public page reads it back.
+   */
+  design?: Record<string, unknown>;
 }
 
 export interface FullProfile {

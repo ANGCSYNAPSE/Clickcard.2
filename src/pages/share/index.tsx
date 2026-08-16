@@ -12,16 +12,19 @@ import {
   Check,
   QrCode,
   Download,
+  Share2,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import SharePopup from "@/components/app/SharePopup";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchShareLinks,
   createShareLink,
   deleteShareLink,
 } from "@/store/slices/shareSlice";
+import { fetchProfile } from "@/store/slices/profileSlice";
 import { shareService } from "@/services/shareService";
 import { pushToast } from "@/store/slices/uiSlice";
 import { useEntitlement } from "@/lib/useEntitlement";
@@ -39,9 +42,11 @@ export default function SharePage() {
   const { links, status, mutating } = useAppSelector((s) => s.share);
   const user = useAppSelector((s) => s.auth.user);
   const { withinLimit, limit, isPaid } = useEntitlement();
+  const profileStatus = useAppSelector((s) => s.profile.status);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [profileCopied, setProfileCopied] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showSharePopup, setShowSharePopup] = useState(false);
 
   const profileUrl = user?.username ? `${SITE_URL}/${user.username}` : null;
 
@@ -67,7 +72,8 @@ export default function SharePage() {
 
   useEffect(() => {
     dispatch(fetchShareLinks());
-  }, [dispatch]);
+    if (profileStatus === "idle") dispatch(fetchProfile());
+  }, [dispatch, profileStatus]);
 
   const form = useFormik({
     initialValues: { custom_slug: "", expiry_days: 0, requires_password: false, share_password: "" },
@@ -128,13 +134,20 @@ export default function SharePage() {
             Create short links and QR codes for your profile.
           </p>
         </div>
-        {atLimit ? (
-          <UpgradeHint label="Upgrade for more links" />
-        ) : (
-          <Button onClick={() => setShowForm((v) => !v)}>
-            <Plus size={18} /> New link
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {profileUrl && (
+            <Button variant="outline" onClick={() => setShowSharePopup(true)}>
+              <Share2 size={18} /> Share
+            </Button>
+          )}
+          {atLimit ? (
+            <UpgradeHint label="Upgrade for more links" />
+          ) : (
+            <Button onClick={() => setShowForm((v) => !v)}>
+              <Plus size={18} /> New link
+            </Button>
+          )}
+        </div>
       </div>
 
       {!isPaid && linkCap !== -1 && (
@@ -293,6 +306,10 @@ export default function SharePage() {
           );
         })}
       </div>
+
+      {showSharePopup && profileUrl && (
+        <SharePopup profileUrl={profileUrl} onClose={() => setShowSharePopup(false)} />
+      )}
     </AppShell>
   );
 }
