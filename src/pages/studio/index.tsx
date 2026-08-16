@@ -42,18 +42,15 @@ import {
   ButtonShadow as ButtonShadowT,
 } from "@/store/slices/designSlice";
 import { useRequireAuth } from "@/lib/authGuards";
+import { STYLE_PRESETS, type StylePreset } from "@/lib/stylePresets";
+import { FONT_ITEMS, loadGoogleFont } from "@/lib/fonts";
+import { getContrastText } from "@/lib/color";
 import {
   studioService,
   StudioCategory,
   StudioFormat,
   StudioTemplate,
 } from "@/services/studioService";
-
-const CATEGORIES: { key: StudioCategory; label: string; icon: typeof FileText; description: string }[] = [
-  { key: "resume", label: "Resumes", icon: FileText, description: "Recruiter-ready" },
-  { key: "visiting_card", label: "Visiting Cards", icon: CreditCard, description: "Print-perfect" },
-  { key: "qr_poster", label: "QR Posters", icon: QrCode, description: "Scan to connect" },
-];
 
 const PALETTES = [
   { name: "Brand", primary: "#BE5103", accent: "#069494" },
@@ -62,82 +59,6 @@ const PALETTES = [
   { name: "Forest", primary: "#10B981", accent: "#84CC16" },
 ];
 
-export interface FontItem {
-  name: string;
-  pro?: boolean;
-}
-
-export const FONT_ITEMS: FontItem[] = [
-  { name: "Albert Sans" },
-  { name: "Alfa Slab One", pro: true },
-  { name: "Anton", pro: true },
-  { name: "Belanosima", pro: true },
-  { name: "BioRhyme", pro: true },
-  { name: "Black Han Sans" },
-  { name: "Bitter", pro: true },
-  { name: "Bricolage Grotesque", pro: true },
-  { name: "Caudex" },
-  { name: "Caveat" },
-  { name: "Chango", pro: true },
-  { name: "Chillax" },
-  { name: "Corben" },
-  { name: "Dancing Script", pro: true },
-  { name: "DM Sans" },
-  { name: "Domine" },
-  { name: "Epilogue" },
-  { name: "Fira Code" },
-  { name: "Fustat" },
-  { name: "Gasoek One", pro: true },
-  { name: "Great Vibes" },
-  { name: "Hahmlet" },
-  { name: "IBM Plex Sans" },
-  { name: "IBM Plex Serif", pro: true },
-  { name: "Inter" },
-  { name: "JetBrains Mono" },
-  { name: "Kaushan Script" },
-  { name: "Kavivanar" },
-  { name: "Lato", pro: true },
-  { name: "Link Sans" },
-  { name: "Lobster" },
-  { name: "Lora", pro: true },
-  { name: "M Plus Rounded", pro: true },
-  { name: "Manrope" },
-  { name: "Merriweather", pro: true },
-  { name: "Misto" },
-  { name: "Monofett", pro: true },
-  { name: "Noto Serif", pro: true },
-  { name: "Old Standard TT", pro: true },
-  { name: "Oswald" },
-  { name: "Oxanium" },
-  { name: "Pacifico", pro: true },
-  { name: "Playfair Display" },
-  { name: "Poppins", pro: true },
-  { name: "PT Serif", pro: true },
-  { name: "Red Hat Display" },
-  { name: "Roboto", pro: true },
-  { name: "Roboto Slab" },
-  { name: "Rubik", pro: true },
-  { name: "Salsa", pro: true },
-  { name: "Satisfy" },
-  { name: "Sonder" },
-  { name: "Space Grotesk", pro: true },
-  { name: "Space Mono" },
-  { name: "Summer Glow", pro: true },
-  { name: "Syne", pro: true },
-];
-
-export const FONT_OPTIONS = FONT_ITEMS.map((f) => f.name);
-
-export function loadGoogleFont(font: string) {
-  if (!font || typeof document === "undefined") return;
-  const id = `gf-${font.replace(/ /g, "-").toLowerCase()}`;
-  if (document.getElementById(id)) return;
-  const link = document.createElement("link");
-  link.id = id;
-  link.rel = "stylesheet";
-  link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/ /g, "+")}&display=swap`;
-  document.head.appendChild(link);
-}
 
 const HEADER_LAYOUTS: { key: HeaderLayout; label: string }[] = [
   { key: "classic", label: "Classic" },
@@ -197,6 +118,7 @@ export default function StudioPage() {
     accent,
     theme,
     wallpaperType,
+    backgroundImageUrl,
     backgroundColor,
     gradientColor,
     gradientColorEnd,
@@ -244,10 +166,22 @@ export default function StudioPage() {
   const cutoutProcessedFor = useRef<string | null>(null);
 
   const [fontPickerTarget, setFontPickerTarget] = useState<"page" | "title" | null>(null);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+
+  const applyPreset = (preset: StylePreset) => {
+    set(preset.values);
+    setActivePreset(preset.key);
+  };
 
   useEffect(() => {
     dispatch(fetchProfile());
   }, [dispatch]);
+
+  // Preload every preset's title font so the "Aa" swatch previews render
+  // correctly the first time the Templates panel opens.
+  useEffect(() => {
+    STYLE_PRESETS.forEach((p) => p.values.titleFont && loadGoogleFont(p.values.titleFont));
+  }, []);
 
   const onPickPicture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -422,6 +356,7 @@ export default function StudioPage() {
               business={draft.business}
               headerLayout={headerLayout}
               wallpaperType={wallpaperType}
+              backgroundImageUrl={backgroundImageUrl}
               backgroundColor={backgroundColor}
               gradientColor={gradientColor}
               gradientColorEnd={gradientColorEnd}
@@ -461,21 +396,41 @@ export default function StudioPage() {
 
           {detailView === null && (
             <div className="px-4 pb-4 space-y-3">
-               {/* Templates Option */}
+               {/* Templates Option — one-tap style presets (Aura, Sunset…) */}
               <button
-                onClick={() => setDetailView("templates")}
+                onClick={() => setDetailView("presets")}
                 className="w-full rounded-2xl bg-white px-5 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04]"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                      <QrCode size={16} />
+                    <span
+                      className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-lg border border-ink/10 dark:border-white/10"
+                      style={
+                        wallpaperType === "image" && backgroundImageUrl
+                          ? {
+                              backgroundImage: `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.55)), url(${backgroundImageUrl})`,
+                              backgroundSize: "cover",
+                              backgroundPosition: "center",
+                            }
+                          : wallpaperType === "gradient"
+                          ? {
+                              background: `linear-gradient(${gradientDirection === "down" ? "to bottom" : "to top"}, ${gradientColor}, ${gradientColorEnd})`,
+                            }
+                          : { background: backgroundColor }
+                      }
+                    >
+                      <span
+                        className="text-xs font-black"
+                        style={{ fontFamily: `"${titleFont}", sans-serif`, color: titleColor }}
+                      >
+                        Aa
+                      </span>
                     </span>
                     <p className="text-sm font-bold text-ink dark:text-white">Templates</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-ink/60 dark:text-white/60">
-                      {templates.length} {templates.length === 1 ? "template" : "templates"}
+                    <span className="text-xs font-semibold capitalize text-ink/60 dark:text-white/60">
+                      {STYLE_PRESETS.find((p) => p.key === activePreset)?.label || "Custom"}
                     </span>
                     <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
                   </div>
@@ -495,8 +450,8 @@ export default function StudioPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <span
-                      className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 text-white dark:border-white/10"
-                      style={{ background: backgroundColor }}
+                      className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 dark:border-white/10"
+                      style={{ background: backgroundColor, color: getContrastText(backgroundColor) }}
                     >
                       <Palette size={16} />
                     </span>
@@ -609,6 +564,73 @@ export default function StudioPage() {
                   <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
                 </div>
               </button>
+            </div>
+          )}
+
+          {/* Style Templates Detail View */}
+          {detailView === "presets" && (
+            <div className="space-y-4">
+              {/* Back Button */}
+              <button
+                onClick={() => setDetailView(null)}
+                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
+              >
+                ← Templates
+              </button>
+
+              <div className="px-5 pb-4">
+                <div className="grid grid-cols-3 gap-2">
+                  {STYLE_PRESETS.map((p) => {
+                    const active = activePreset === p.key;
+                    const v = p.values;
+                    return (
+                      <button
+                        key={p.key}
+                        disabled={p.locked}
+                        onClick={() => applyPreset(p)}
+                        className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-2 transition ${
+                          active ? "border-ink dark:border-white" : "border-transparent"
+                        } ${p.locked ? "opacity-70" : ""}`}
+                      >
+                        <span
+                          className="relative grid h-16 w-full place-items-center overflow-hidden rounded-xl"
+                          style={
+                            v.wallpaperType === "image" && v.backgroundImageUrl
+                              ? {
+                                  backgroundImage: `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.55)), url(${v.backgroundImageUrl})`,
+                                  backgroundSize: "cover",
+                                  backgroundPosition: "center",
+                                }
+                              : {
+                                  background:
+                                    v.wallpaperType === "gradient"
+                                      ? `linear-gradient(${v.gradientDirection === "down" ? "to bottom" : "to top"}, ${v.gradientColor}, ${v.gradientColorEnd})`
+                                      : v.backgroundColor,
+                                }
+                          }
+                        >
+                          <span
+                            className="text-lg font-black"
+                            style={{ fontFamily: `"${v.titleFont}", sans-serif`, color: v.titleColor }}
+                          >
+                            Aa
+                          </span>
+                          {p.locked && (
+                            <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-ink/70 text-white dark:bg-white/30">
+                              <Zap size={10} />
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-[11px] font-semibold text-ink/70 dark:text-white/70">{p.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-4 text-xs text-ink/45 dark:text-white/45">
+                  Applies colors, wallpaper, header layout, buttons and fonts all at once — you can still fine-tune
+                  anything afterward in the panels below.
+                </p>
+              </div>
             </div>
           )}
 
@@ -875,45 +897,6 @@ export default function StudioPage() {
                     </div>
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-
-          {/* Templates Detail View */}
-          {detailView === "templates" && (
-            <div className="space-y-4">
-              {/* Back Button */}
-              <button
-                onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
-              >
-                ← Templates
-              </button>
-
-              {/* Templates List */}
-              <div className="px-5 py-4">
-                <p className="mb-3 text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                  {templates.length} {templates.length === 1 ? "template available" : "templates available"}
-                </p>
-                <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-                  {templates.map((t) => (
-                    <button
-                      key={t.slug}
-                      onClick={() => setSelectedSlug(t.slug)}
-                      className={`rounded-xl border p-2 text-left text-xs transition ${
-                        selectedSlug === t.slug
-                          ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
-                          : "border-ink/10 hover:border-brand-200 dark:border-white/10"
-                      }`}
-                    >
-                      <div
-                        className="h-14 w-full rounded-lg mb-2"
-                        style={{ background: `linear-gradient(135deg, ${t.primary_color}, ${t.accent_color})` }}
-                      />
-                      <p className="font-bold text-ink dark:text-white text-[10px]">{t.name}</p>
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
           )}

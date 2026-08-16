@@ -451,7 +451,13 @@ export default function ProfileEditorPage() {
                   <>
                     <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                       <Input label="Name" value={item.name} onChange={(e) => set({ name: e.target.value })} />
-                      <Input label="Price" placeholder="₹499" value={item.price || ""} onChange={(e) => set({ price: e.target.value })} />
+                      <Input
+                        label="Price"
+                        placeholder="499"
+                        leftIcon={<span className="text-sm font-bold">₹</span>}
+                        value={item.price || ""}
+                        onChange={(e) => set({ price: e.target.value })}
+                      />
                     </div>
                     <Input label="Link" placeholder="https://…" value={item.link || ""} onChange={(e) => set({ link: e.target.value })} />
                   </>

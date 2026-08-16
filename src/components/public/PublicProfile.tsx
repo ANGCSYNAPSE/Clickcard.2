@@ -52,6 +52,7 @@ export default function PublicProfile({
         products={profile.products}
         business={profile.business}
         wallpaperType={d.wallpaperType}
+        backgroundImageUrl={d.backgroundImageUrl}
         backgroundColor={d.backgroundColor}
         gradientColor={d.gradientColor}
         gradientColorEnd={d.gradientColorEnd}

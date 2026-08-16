@@ -99,6 +99,7 @@ export default function LiveProfileCard({
   business,
   headerLayout = "classic",
   wallpaperType = "fill",
+  backgroundImageUrl,
   backgroundColor = primary,
   gradientColor = primary,
   gradientColorEnd = accent,
@@ -138,6 +139,7 @@ export default function LiveProfileCard({
   business?: LiveProfileBusiness;
   headerLayout?: HeaderLayout;
   wallpaperType?: WallpaperType;
+  backgroundImageUrl?: string;
   backgroundColor?: string;
   gradientColor?: string;
   gradientColorEnd?: string;
@@ -234,6 +236,13 @@ export default function LiveProfileCard({
           background: backgroundColor,
           backgroundImage: patternImages[patternIndex] ?? patternImages[0],
           backgroundSize: patternIndex === 1 ? "6px 6px" : undefined,
+        }
+      : wallpaperType === "image" && backgroundImageUrl
+      ? {
+          backgroundColor,
+          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.55)), url(${backgroundImageUrl})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }
       : {
           background: backgroundColor,
@@ -584,7 +593,7 @@ export default function LiveProfileCard({
                 </div>
                 {p.price && (
                   <span className="shrink-0 font-black" style={{ color: cardText, ...bodySubSizeStyle }}>
-                    {p.price}
+                    {p.price.trim().startsWith("₹") ? p.price : `₹${p.price}`}
                   </span>
                 )}
               </LinkOrDiv>

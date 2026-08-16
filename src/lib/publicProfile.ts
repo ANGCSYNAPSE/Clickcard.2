@@ -50,6 +50,7 @@ export interface PublicCardDesign {
   accent?: string;
   theme?: "light" | "dark";
   wallpaperType?: "fill" | "gradient" | "blur" | "pattern" | "image" | "video";
+  backgroundImageUrl?: string;
   backgroundColor?: string;
   gradientColor?: string;
   gradientColorEnd?: string;

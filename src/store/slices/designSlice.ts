@@ -23,6 +23,7 @@ export interface DesignState {
   accent: string;
   theme: "light" | "dark";
   wallpaperType: WallpaperType;
+  backgroundImageUrl: string;
   backgroundColor: string;
   gradientColor: string;
   gradientColorEnd: string;
@@ -53,6 +54,7 @@ export const DEFAULT_DESIGN: DesignState = {
   accent: "#069494",
   theme: "light",
   wallpaperType: "fill",
+  backgroundImageUrl: "",
   backgroundColor: "#301414",
   gradientColor: "#301414",
   gradientColorEnd: "#069494",
