@@ -109,7 +109,7 @@ export default function FooterMega() {
 
         <div className="mt-14 flex flex-col items-center justify-between gap-3 border-t border-white/10 py-6 text-xs font-semibold text-white/30 sm:flex-row">
           <p>&copy; {new Date().getFullYear()} ClickCard. All rights reserved.</p>
-          <p>Made with ✦ for people worth knowing.</p>
+          <p>Made with &#10084; for people worth knowing.</p>
         </div>
       </div>
 
