@@ -75,36 +75,38 @@ export default function FooterMega() {
             </div>
           </div>
 
-          {COLUMNS.map((col) => (
-            <div key={col.title}>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
-                {col.title}
-              </p>
-              <ul className="mt-4 space-y-2.5">
-                {col.links.map((l) =>
-                  l.href.startsWith("/") ? (
-                    <li key={l.label}>
-                      <Link
-                        href={l.href}
-                        className="inline-block text-sm font-semibold text-white/55 transition hover:translate-x-1 hover:text-white"
-                      >
-                        {l.label}
-                      </Link>
-                    </li>
-                  ) : (
-                    <li key={l.label}>
-                      <a
-                        href={l.href}
-                        className="inline-block text-sm font-semibold text-white/55 transition hover:translate-x-1 hover:text-white"
-                      >
-                        {l.label}
-                      </a>
-                    </li>
-                  )
-                )}
-              </ul>
-            </div>
-          ))}
+          <div className="grid grid-cols-2 gap-8 col-span-1 md:col-span-3 md:grid-cols-3">
+            {COLUMNS.map((col) => (
+              <div key={col.title}>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+                  {col.title}
+                </p>
+                <ul className="mt-4 space-y-2.5">
+                  {col.links.map((l) =>
+                    l.href.startsWith("/") ? (
+                      <li key={l.label}>
+                        <Link
+                          href={l.href}
+                          className="inline-block text-sm font-semibold text-white/55 transition hover:translate-x-1 hover:text-white"
+                        >
+                          {l.label}
+                        </Link>
+                      </li>
+                    ) : (
+                      <li key={l.label}>
+                        <a
+                          href={l.href}
+                          className="inline-block text-sm font-semibold text-white/55 transition hover:translate-x-1 hover:text-white"
+                        >
+                          {l.label}
+                        </a>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="mt-14 flex flex-col items-center justify-between gap-3 border-t border-white/10 py-6 text-xs font-semibold text-white/30 sm:flex-row">
