@@ -14,7 +14,6 @@ export default function ProfilePreview({
 }) {
   const design = useAppSelector((s) => s.design);
   const name = profile.personal?.fullName || "Your name";
-  const tagline = profile.personal?.tagline;
   const bio = profile.personal?.bio;
   const socialLinks = (profile.social || []).filter((s) => s.url);
 
@@ -24,7 +23,6 @@ export default function ProfilePreview({
       name={name}
       username={username}
       avatarUrl={avatarUrl}
-      tagline={tagline}
       bio={bio}
       socialLinks={socialLinks}
       contact={profile.contact}

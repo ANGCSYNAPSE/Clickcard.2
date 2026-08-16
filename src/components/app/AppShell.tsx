@@ -5,7 +5,7 @@ import {
   LayoutDashboard,
   User,
   CreditCard,
-  Sparkles,
+  SlidersHorizontal,
   Share2,
   BarChart3,
   Receipt,
@@ -36,7 +36,7 @@ const NAV_GROUPS = [
       { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { label: "Profile", href: "/profile", icon: User },
       { label: "Digital Card", href: "/card", icon: CreditCard },
-      { label: "Studio", href: "/studio", icon: Sparkles },
+      { label: "Customize", href: "/studio", icon: SlidersHorizontal },
     ],
   },
   {

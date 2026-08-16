@@ -1,5 +1,16 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import type { WallpaperType, GradientDirection } from "@/components/app/LiveProfileCard";
+import type {
+  WallpaperType,
+  GradientDirection,
+  HeaderLayout,
+  ButtonStyle,
+  ButtonRoundness,
+  ButtonShadow,
+  SocialLinksStyle,
+} from "@/components/app/LiveProfileCard";
+
+export type { HeaderLayout, ButtonStyle, ButtonRoundness, ButtonShadow, SocialLinksStyle };
+export type TitleStyle = "text" | "logo";
 
 /**
  * The profile card's visual design (Studio). Lives in Redux — not just local
@@ -14,14 +25,23 @@ export interface DesignState {
   wallpaperType: WallpaperType;
   backgroundColor: string;
   gradientColor: string;
+  gradientColorEnd: string;
   gradientDirection: GradientDirection;
   noise: boolean;
   patternIndex: number;
+  buttonColor: string;
+  buttonTextColor: string;
+  buttonStyle: ButtonStyle;
+  buttonRoundness: ButtonRoundness;
+  buttonShadow: ButtonShadow;
+  socialLinksStyle: SocialLinksStyle;
   pageFont: string;
   pageTextColor: string;
   matchTitleFont: boolean;
   titleFont: string;
   titleColor: string;
+  headerLayout: HeaderLayout;
+  titleStyle: TitleStyle;
   dirty: boolean;
 }
 
@@ -32,14 +52,23 @@ export const DEFAULT_DESIGN: DesignState = {
   wallpaperType: "fill",
   backgroundColor: "#301414",
   gradientColor: "#301414",
+  gradientColorEnd: "#069494",
   gradientDirection: "up",
   noise: true,
   patternIndex: 0,
+  buttonColor: "#FFFFFF",
+  buttonTextColor: "#FFEED5",
+  buttonStyle: "solid",
+  buttonRoundness: "slight",
+  buttonShadow: "none",
+  socialLinksStyle: "buttons",
   pageFont: "Inter",
   pageTextColor: "#FFEED5",
   matchTitleFont: true,
   titleFont: "Inter",
   titleColor: "#FFEED5",
+  headerLayout: "classic",
+  titleStyle: "text",
   dirty: false,
 };
 

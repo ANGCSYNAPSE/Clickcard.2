@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Head from "next/head";
 import {
   FileText,
@@ -6,8 +6,6 @@ import {
   QrCode,
   Download,
   Sparkles,
-  Sun,
-  Moon,
   Palette,
   ChevronRight,
   ChevronDown,
@@ -19,14 +17,28 @@ import {
   ArrowDown,
   Target,
   Save,
+  PanelTop,
+  CaseSensitive,
+  Camera,
+  User as UserIcon,
+  Plus,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import Button from "@/components/ui/Button";
 import LiveProfileCard from "@/components/app/LiveProfileCard";
+import ImageCropModal from "@/components/app/ImageCropModal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchProfile } from "@/store/slices/profileSlice";
+import { fetchProfile, saveProfile, updateSection } from "@/store/slices/profileSlice";
 import { pushToast } from "@/store/slices/uiSlice";
-import { updateDesign, designSaved, STUDIO_DESIGN_KEY } from "@/store/slices/designSlice";
+import {
+  updateDesign,
+  designSaved,
+  STUDIO_DESIGN_KEY,
+  HeaderLayout,
+  ButtonStyle as ButtonStyleT,
+  ButtonRoundness as ButtonRoundnessT,
+  ButtonShadow as ButtonShadowT,
+} from "@/store/slices/designSlice";
 import { useRequireAuth } from "@/lib/authGuards";
 import {
   studioService,
@@ -50,6 +62,14 @@ const PALETTES = [
 
 const FONT_OPTIONS = ["Inter", "Poppins", "Roboto", "Playfair Display", "Space Grotesk", "DM Sans"];
 
+const HEADER_LAYOUTS: { key: HeaderLayout; label: string }[] = [
+  { key: "classic", label: "Classic" },
+  { key: "hero", label: "Hero" },
+  { key: "banner", label: "Banner" },
+  { key: "cutout", label: "Cutout" },
+  { key: "shape", label: "Shape" },
+];
+
 const GOOGLE_FONTS_HREF = `https://fonts.googleapis.com/css2?${FONT_OPTIONS.map(
   (f) => `family=${f.replace(/ /g, "+")}:wght@400;600;700;800;900`,
 ).join("&")}&display=swap`;
@@ -67,17 +87,28 @@ export default function StudioPage() {
     wallpaperType,
     backgroundColor,
     gradientColor,
+    gradientColorEnd,
     gradientDirection,
     noise,
     patternIndex,
+    buttonColor,
+    buttonTextColor,
+    buttonStyle,
+    buttonRoundness,
+    buttonShadow,
+    socialLinksStyle,
     pageFont,
     pageTextColor,
     matchTitleFont,
     titleFont,
     titleColor,
+    headerLayout,
+    titleStyle,
     dirty,
   } = design;
   const set = (patch: Partial<typeof design>) => dispatch(updateDesign(patch));
+  const profileDirty = useAppSelector((s) => s.profile.dirty);
+  const savingProfile = useAppSelector((s) => s.profile.saving);
 
   const [category, setCategory] = useState<StudioCategory>("resume");
   const [templates, setTemplates] = useState<StudioTemplate[]>([]);
@@ -87,19 +118,91 @@ export default function StudioPage() {
   const [expandedSection, setExpandedSection] = useState<string | null>("palette");
   const [detailView, setDetailView] = useState<string | null>(null);
   const [gradientStyle, setGradientStyle] = useState<"custom" | "premade">("custom");
+  const [picture, setPicture] = useState<File | null>(null);
+  const [pictureUrl, setPictureUrl] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [cropSource, setCropSource] = useState<string | null>(null);
+  const [bannerImageUrl, setBannerImageUrl] = useState<string | null>(null);
+  const bannerFileRef = useRef<HTMLInputElement>(null);
+  const [cutoutAvatarUrl, setCutoutAvatarUrl] = useState<string | null>(null);
+  const [removingBg, setRemovingBg] = useState(false);
+  const cutoutProcessedFor = useRef<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchProfile());
   }, [dispatch]);
 
-  const saveDesign = () => {
-    try {
-      localStorage.setItem(STUDIO_DESIGN_KEY, JSON.stringify(design));
-    } catch {
-      /* ignore blocked storage */
+  const onPickPicture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    setCropSource(URL.createObjectURL(f));
+  };
+
+  const onCropConfirm = (file: File) => {
+    setPicture(file);
+    setPictureUrl(URL.createObjectURL(file));
+    setCropSource(null);
+  };
+
+  const onPickBanner = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setBannerImageUrl(URL.createObjectURL(f));
+  };
+
+  const previewAvatar = pictureUrl || draft.personal?.profilePicture;
+
+  // Cutout layout: automatically cut the subject out of the photo (client-side,
+  // in-browser ML — the photo never leaves the device) so it reads as a sticker
+  // over the wallpaper instead of a photo with a background.
+  useEffect(() => {
+    if (headerLayout !== "cutout" || !previewAvatar) return;
+    if (cutoutProcessedFor.current === previewAvatar) return;
+    let cancelled = false;
+    setRemovingBg(true);
+    import("@imgly/background-removal")
+      .then(({ removeBackground }) => removeBackground(previewAvatar))
+      .then((blob) => {
+        if (cancelled) return;
+        cutoutProcessedFor.current = previewAvatar;
+        setCutoutAvatarUrl(URL.createObjectURL(blob));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        cutoutProcessedFor.current = previewAvatar;
+        dispatch(pushToast("Couldn't remove the background — showing the original photo", "info"));
+      })
+      .finally(() => {
+        if (!cancelled) setRemovingBg(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [headerLayout, previewAvatar, dispatch]);
+
+  const cutoutAvatar = cutoutProcessedFor.current === previewAvatar ? cutoutAvatarUrl : null;
+  const displayAvatar = headerLayout === "cutout" ? cutoutAvatar || previewAvatar : previewAvatar;
+
+  const saveAll = async () => {
+    if (profileDirty || picture) {
+      const res = await dispatch(saveProfile({ profile: draft, picture }));
+      if (!saveProfile.fulfilled.match(res)) {
+        dispatch(pushToast((res.payload as string) || "Could not save profile", "error"));
+        return;
+      }
+      setPicture(null);
+      setPictureUrl(null);
     }
-    dispatch(designSaved());
-    dispatch(pushToast("Design saved", "success"));
+    if (dirty) {
+      try {
+        localStorage.setItem(STUDIO_DESIGN_KEY, JSON.stringify(design));
+      } catch {
+        /* ignore blocked storage */
+      }
+      dispatch(designSaved());
+    }
+    dispatch(pushToast("Changes saved", "success"));
   };
 
   useEffect(() => {
@@ -159,16 +262,16 @@ export default function StudioPage() {
   return (
     <AppShell>
       <Head>
-        <title>Studio · ClickCard</title>
+        <title>Customize · ClickCard</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href={GOOGLE_FONTS_HREF} rel="stylesheet" />
       </Head>
 
       <div className="mb-6 flex items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-black text-ink dark:text-white">Studio</h1>
-        {dirty && (
-          <Button onClick={saveDesign} className="text-xs sm:text-sm">
+        <h1 className="font-display text-2xl font-black text-ink dark:text-white">Customize</h1>
+        {(dirty || profileDirty || !!picture) && (
+          <Button onClick={saveAll} loading={savingProfile} className="text-xs sm:text-sm">
             <Save size={16} /> Save changes
           </Button>
         )}
@@ -185,8 +288,8 @@ export default function StudioPage() {
               theme={theme}
               name={draft.personal?.fullName || "Your name"}
               username={user?.username}
-              avatarUrl={draft.personal?.profilePicture}
-              tagline={draft.personal?.tagline}
+              avatarUrl={displayAvatar}
+              bannerUrl={bannerImageUrl || undefined}
               bio={draft.personal?.bio}
               socialLinks={(draft.social || []).filter((s) => s.url)}
               contact={draft.contact}
@@ -194,12 +297,20 @@ export default function StudioPage() {
               education={draft.education}
               products={draft.products}
               business={draft.business}
+              headerLayout={headerLayout}
               wallpaperType={wallpaperType}
               backgroundColor={backgroundColor}
               gradientColor={gradientColor}
+              gradientColorEnd={gradientColorEnd}
               gradientDirection={gradientDirection}
               noise={noise}
               patternIndex={patternIndex}
+              buttonColor={buttonColor}
+              buttonTextColor={buttonTextColor}
+              buttonStyle={buttonStyle}
+              buttonRoundness={buttonRoundness}
+              buttonShadow={buttonShadow}
+              socialLinksStyle={socialLinksStyle}
               pageFont={pageFont}
               pageTextColor={pageTextColor}
               matchTitleFont={matchTitleFont}
@@ -257,7 +368,10 @@ export default function StudioPage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-600 text-white">
+                    <span
+                      className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 text-white dark:border-white/10"
+                      style={{ background: backgroundColor }}
+                    >
                       <Palette size={16} />
                     </span>
                     <p className="text-sm font-bold text-ink dark:text-white">Palette</p>
@@ -271,20 +385,46 @@ export default function StudioPage() {
                 </div>
               </button>
 
-              {/* Theme Option */}
+              {/* Header Option */}
               <button
-                onClick={() => setDetailView("theme")}
+                onClick={() => setDetailView("header")}
                 className="w-full rounded-2xl bg-white px-5 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04]"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                      {theme === "light" ? <Sun size={16} /> : <Moon size={16} />}
+                      <PanelTop size={16} />
                     </span>
-                    <p className="text-sm font-bold text-ink dark:text-white">Theme</p>
+                    <p className="text-sm font-bold text-ink dark:text-white">Header</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-ink/60 dark:text-white/60 capitalize">{theme}</span>
+                    <span className="text-xs font-semibold text-ink/60 dark:text-white/60 capitalize">
+                      {headerLayout}
+                    </span>
+                    <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
+                  </div>
+                </div>
+              </button>
+
+              {/* Buttons Option */}
+              <button
+                onClick={() => setDetailView("buttons")}
+                className="w-full rounded-2xl bg-white px-5 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04]"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 bg-ink/5 dark:border-white/10 dark:bg-white/10">
+                      <span
+                        className="h-3 w-6 rounded-full border border-ink/15 dark:border-white/20"
+                        style={{ background: buttonColor }}
+                      />
+                    </span>
+                    <p className="text-sm font-bold text-ink dark:text-white">Buttons</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold capitalize text-ink/60 dark:text-white/60">
+                      {buttonStyle}
+                    </span>
                     <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
                   </div>
                 </div>
@@ -298,7 +438,7 @@ export default function StudioPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                      <Type size={16} />
+                      <CaseSensitive size={18} />
                     </span>
                     <p className="text-sm font-bold text-ink dark:text-white">Text</p>
                   </div>
@@ -306,6 +446,25 @@ export default function StudioPage() {
                     <span className="text-xs font-semibold text-ink/60 dark:text-white/60">{pageFont}</span>
                     <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
                   </div>
+                </div>
+              </button>
+
+              {/* Colors Option */}
+              <button
+                onClick={() => setDetailView("colors")}
+                className="w-full rounded-2xl bg-white px-5 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04]"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-lg border border-ink/10 dark:border-white/10">
+                      <span className="flex h-full w-full">
+                        <span className="h-full w-1/2" style={{ background: backgroundColor }} />
+                        <span className="h-full w-1/2" style={{ background: buttonColor }} />
+                      </span>
+                    </span>
+                    <p className="text-sm font-bold text-ink dark:text-white">Colors</p>
+                  </div>
+                  <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
                 </div>
               </button>
 
@@ -374,7 +533,7 @@ export default function StudioPage() {
                                 w.key === "fill"
                                   ? backgroundColor
                                   : w.key === "gradient"
-                                  ? `linear-gradient(135deg, ${primary}, ${accent})`
+                                  ? `linear-gradient(135deg, ${gradientColor}, ${gradientColorEnd})`
                                   : w.key === "blur"
                                   ? `linear-gradient(135deg, ${backgroundColor}, ${primary})`
                                   : w.key === "pattern"
@@ -464,7 +623,7 @@ export default function StudioPage() {
 
                     {/* Gradient color */}
                     <div className="flex items-center justify-between gap-4">
-                      <p className="text-sm font-semibold text-ink dark:text-white">Gradient color</p>
+                      <p className="text-sm font-semibold text-ink dark:text-white">Gradient color (start)</p>
                       <label className="flex w-40 cursor-pointer items-center gap-2 rounded-xl border border-ink/10 bg-white px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
                         <span
                           className="h-6 w-6 shrink-0 rounded-md border border-ink/10"
@@ -475,6 +634,24 @@ export default function StudioPage() {
                           type="color"
                           value={gradientColor}
                           onChange={(e) => set({ gradientColor: e.target.value })}
+                          className="sr-only"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Gradient end color */}
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-sm font-semibold text-ink dark:text-white">Gradient color (end)</p>
+                      <label className="flex w-40 cursor-pointer items-center gap-2 rounded-xl border border-ink/10 bg-white px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
+                        <span
+                          className="h-6 w-6 shrink-0 rounded-md border border-ink/10"
+                          style={{ background: gradientColorEnd }}
+                        />
+                        <span className="text-sm font-medium uppercase text-ink dark:text-white">{gradientColorEnd}</span>
+                        <input
+                          type="color"
+                          value={gradientColorEnd}
+                          onChange={(e) => set({ gradientColorEnd: e.target.value })}
                           className="sr-only"
                         />
                       </label>
@@ -615,45 +792,365 @@ export default function StudioPage() {
             </div>
           )}
 
-          {/* Theme Detail View */}
-          {detailView === "theme" && (
-            <div className="space-y-4">
+          {/* Header Detail View */}
+          {detailView === "header" && (
+            <div className="space-y-1">
               {/* Back Button */}
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
+                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
               >
-                ← Theme
+                ← Header
               </button>
 
-              {/* Theme Options */}
-              <div className="px-5 py-4">
-                <p className="mb-4 text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                  Select Theme
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => set({ theme: "light" })}
-                    className={`flex flex-col items-center gap-3 rounded-2xl border p-4 transition ${
-                      theme === "light"
-                        ? "border-brand-400 shadow-soft"
-                        : "border-ink/10 hover:border-brand-200 dark:border-white/10"
-                    }`}
+              <div className="px-5 py-2 space-y-5">
+                {/* Layout */}
+                <div>
+                  <p className="mb-3 text-sm font-semibold text-ink dark:text-white">Layout</p>
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                    {HEADER_LAYOUTS.map((l) => {
+                      const active = headerLayout === l.key;
+                      const avatarShape =
+                        l.key === "cutout"
+                          ? { clipPath: "polygon(18% 0%, 100% 0%, 100% 82%, 82% 100%, 0% 100%, 0% 18%)" }
+                          : l.key === "shape"
+                          ? { borderRadius: "42% 58% 70% 30% / 45% 45% 55% 55%" }
+                          : { borderRadius: "9999px" };
+                      return (
+                        <button
+                          key={l.key}
+                          onClick={() => set({ headerLayout: l.key })}
+                          className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-2 transition ${
+                            active ? "border-ink dark:border-white" : "border-transparent"
+                          }`}
+                        >
+                          <span
+                            className="relative grid h-14 w-full place-items-center rounded-xl overflow-hidden"
+                            style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
+                          >
+                            {l.key === "banner" && (
+                              <span className="absolute inset-x-0 top-0 h-5" style={{ background: `${accent}99` }} />
+                            )}
+                            <span
+                              className="relative grid h-7 w-7 place-items-center bg-white/30 text-white"
+                              style={avatarShape}
+                            >
+                              <UserIcon size={14} />
+                            </span>
+                          </span>
+                          <span className="text-[11px] font-semibold text-ink/70 dark:text-white/70">{l.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Profile image */}
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-ink dark:text-white">Profile image</p>
+                    {headerLayout === "cutout" && removingBg && (
+                      <p className="text-xs text-ink/50 dark:text-white/50">Removing background…</p>
+                    )}
+                  </div>
+                  <div className="relative shrink-0">
+                    <span className="grid h-14 w-14 place-items-center overflow-hidden rounded-full bg-ink/10 text-ink/40 dark:bg-white/10 dark:text-white/40">
+                      {previewAvatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={previewAvatar} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <UserIcon size={22} />
+                      )}
+                    </span>
+                    <button
+                      onClick={() => fileRef.current?.click()}
+                      className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#12403c] dark:text-white"
+                      aria-label="Upload photo"
+                    >
+                      <Camera size={12} />
+                    </button>
+                    <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickPicture} />
+                  </div>
+                </div>
+
+                {/* Banner image — only used by the Banner layout, shows above the profile image */}
+                {headerLayout === "banner" && (
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="text-sm font-semibold text-ink dark:text-white">Banner image</p>
+                    <button
+                      onClick={() => bannerFileRef.current?.click()}
+                      className="relative grid h-14 w-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-ink/10 text-ink/40 dark:bg-white/10 dark:text-white/40"
+                      aria-label="Upload banner image"
+                    >
+                      {bannerImageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={bannerImageUrl} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <ImageIcon size={18} />
+                      )}
+                      <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#12403c] dark:text-white">
+                        <Plus size={12} />
+                      </span>
+                    </button>
+                    <input ref={bannerFileRef} type="file" accept="image/*" hidden onChange={onPickBanner} />
+                  </div>
+                )}
+
+                {/* Title — the @username shown on the card; set at signup, not editable here */}
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm font-semibold text-ink dark:text-white">Title</p>
+                  <div
+                    className="w-40 truncate rounded-xl border border-ink/10 bg-ink/[0.03] px-3 py-2.5 text-sm font-medium text-ink/60 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/60"
+                    title="Your username is set at signup and can't be changed here"
                   >
-                    <Sun size={24} className="text-brand-500" />
-                    <span className="text-xs font-bold text-ink dark:text-white">Light</span>
-                  </button>
-                  <button
-                    onClick={() => set({ theme: "dark" })}
-                    className={`flex flex-col items-center gap-3 rounded-2xl border p-4 transition ${
-                      theme === "dark"
-                        ? "border-brand-400 shadow-soft"
-                        : "border-ink/10 hover:border-brand-200 dark:border-white/10"
-                    }`}
-                  >
-                    <Moon size={24} className="text-brand-500" />
-                    <span className="text-xs font-bold text-ink dark:text-white">Dark</span>
-                  </button>
+                    @{user?.username || "username"}
+                  </div>
+                </div>
+
+                {/* Bio */}
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between gap-4">
+                    <p className="text-sm font-semibold text-ink dark:text-white">Bio</p>
+                    <span className="text-[10px] font-medium text-ink/40 dark:text-white/40">
+                      {(draft.personal?.bio || "").length}/160
+                    </span>
+                  </div>
+                  <textarea
+                    value={draft.personal?.bio || ""}
+                    maxLength={160}
+                    onChange={(e) =>
+                      dispatch(updateSection({ section: "personal", value: { ...draft.personal, bio: e.target.value } }))
+                    }
+                    placeholder="Add a short bio"
+                    rows={3}
+                    className="w-full resize-none rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                  />
+                </div>
+
+                {/* Title style */}
+                <div>
+                  <p className="mb-3 text-sm font-semibold text-ink dark:text-white">Title style</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => set({ titleStyle: "text" })}
+                      className={`flex flex-col items-center gap-2 rounded-xl border p-3 text-xs font-semibold transition ${
+                        titleStyle === "text"
+                          ? "border-ink text-ink dark:border-white dark:text-white"
+                          : "border-ink/10 text-ink/40 dark:border-white/10 dark:text-white/40"
+                      }`}
+                    >
+                      <Type size={18} />
+                      Text
+                    </button>
+                    <button
+                      disabled
+                      className="relative flex flex-col items-center gap-2 rounded-xl border border-ink/10 p-3 text-xs font-semibold text-ink/40 dark:border-white/10 dark:text-white/40"
+                    >
+                      <ImageIcon size={18} />
+                      Logo
+                      <span className="absolute -right-1.5 -top-1.5 grid h-4 w-4 place-items-center rounded-full bg-ink/50 text-white dark:bg-white/30">
+                        <Zap size={9} />
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Colors Detail View */}
+          {detailView === "colors" && (
+            <div className="space-y-1">
+              {/* Back Button */}
+              <button
+                onClick={() => setDetailView(null)}
+                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
+              >
+                ← Colors
+              </button>
+
+              <div className="px-5 py-2 space-y-5">
+                {(
+                  [
+                    { key: "backgroundColor", label: "Background", value: backgroundColor },
+                    { key: "buttonColor", label: "Buttons", value: buttonColor },
+                    { key: "buttonTextColor", label: "Button text", value: buttonTextColor },
+                    { key: "pageTextColor", label: "Page text", value: pageTextColor },
+                    { key: "titleColor", label: "Title", value: titleColor },
+                  ] as { key: keyof typeof design; label: string; value: string }[]
+                ).map((c) => (
+                  <div key={c.key} className="flex items-center justify-between gap-4">
+                    <p className="text-sm font-semibold text-ink dark:text-white">{c.label}</p>
+                    <label className="flex w-40 cursor-pointer items-center gap-2 rounded-xl border border-ink/10 bg-white px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
+                      <span
+                        className="h-6 w-6 shrink-0 rounded-md border border-ink/10"
+                        style={{ background: c.value }}
+                      />
+                      <span className="text-sm font-medium uppercase text-ink dark:text-white">{c.value}</span>
+                      <input
+                        type="color"
+                        value={c.value}
+                        onChange={(e) => set({ [c.key]: e.target.value })}
+                        className="sr-only"
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Buttons Detail View */}
+          {detailView === "buttons" && (
+            <div className="space-y-1">
+              {/* Back Button */}
+              <button
+                onClick={() => setDetailView(null)}
+                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
+              >
+                ← Buttons
+              </button>
+
+              <div className="px-5 py-2 space-y-5">
+                {/* Button style */}
+                <div>
+                  <p className="mb-3 text-sm font-semibold text-ink dark:text-white">Button style</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(
+                      [
+                        { key: "solid", label: "Solid" },
+                        { key: "glass", label: "Glass" },
+                        { key: "outline", label: "Outline" },
+                      ] as { key: ButtonStyleT; label: string; locked?: boolean }[]
+                    ).map((s) => {
+                      const active = buttonStyle === s.key;
+                      return (
+                        <button
+                          key={s.key}
+                          disabled={s.locked}
+                          onClick={() => set({ buttonStyle: s.key })}
+                          className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-2 transition ${
+                            active ? "border-ink dark:border-white" : "border-transparent"
+                          } ${s.locked ? "opacity-70" : ""}`}
+                        >
+                          <span
+                            className="relative grid h-14 w-full place-items-center overflow-hidden rounded-xl"
+                            style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
+                          >
+                            <span
+                              className="h-4 w-14 rounded-full"
+                              style={{
+                                background:
+                                  s.key === "outline"
+                                    ? "transparent"
+                                    : s.key === "glass"
+                                    ? `linear-gradient(155deg, ${buttonColor}66, ${buttonColor}1a 60%, ${buttonColor}33)`
+                                    : buttonColor,
+                                border:
+                                  s.key === "outline" ? `1.5px solid ${buttonColor}` : s.key === "glass" ? "1px solid #ffffff59" : undefined,
+                                boxShadow: s.key === "glass" ? "inset 0 1px 0 rgba(255,255,255,0.5)" : undefined,
+                                backdropFilter: s.key === "glass" ? "blur(6px) saturate(180%)" : undefined,
+                                WebkitBackdropFilter: s.key === "glass" ? "blur(6px) saturate(180%)" : undefined,
+                              }}
+                            />
+                            {s.locked && (
+                              <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-ink/70 text-white dark:bg-white/30">
+                                <Zap size={10} />
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-[11px] font-semibold text-ink/70 dark:text-white/70">{s.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Corner roundness */}
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm font-semibold text-ink dark:text-white">Corner roundness</p>
+                  <div className="flex items-center gap-1.5">
+                    {(
+                      [
+                        { key: "sharp", radius: 0 },
+                        { key: "slight", radius: 5 },
+                        { key: "medium", radius: 10 },
+                        { key: "full", radius: 16 },
+                      ] as { key: ButtonRoundnessT; radius: number }[]
+                    ).map((r) => {
+                      const active = buttonRoundness === r.key;
+                      return (
+                        <button
+                          key={r.key}
+                          onClick={() => set({ buttonRoundness: r.key })}
+                          aria-label={r.key}
+                          className={`grid h-9 w-9 place-items-center rounded-xl border-2 transition ${
+                            active
+                              ? "border-ink dark:border-white"
+                              : "border-ink/10 dark:border-white/10"
+                          }`}
+                        >
+                          <span
+                            className="h-4 w-4 border-t-2 border-l-2 border-ink/60 dark:border-white/60"
+                            style={{ borderTopLeftRadius: r.radius }}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Button shadow */}
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm font-semibold text-ink dark:text-white">Button shadow</p>
+                  <div className="flex items-center gap-1.5">
+                    {(["none", "soft", "strong", "hard"] as ButtonShadowT[]).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => set({ buttonShadow: s })}
+                        className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold capitalize transition ${
+                          buttonShadow === s
+                            ? "border-ink text-ink dark:border-white dark:text-white"
+                            : "border-ink/10 text-ink/40 dark:border-white/10 dark:text-white/40"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Button color */}
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm font-semibold text-ink dark:text-white">Button color</p>
+                  <label className="flex w-40 cursor-pointer items-center gap-2 rounded-xl border border-ink/10 bg-white px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
+                    <span className="h-6 w-6 shrink-0 rounded-md border border-ink/10" style={{ background: buttonColor }} />
+                    <span className="text-sm font-medium uppercase text-ink dark:text-white">{buttonColor}</span>
+                    <input
+                      type="color"
+                      value={buttonColor}
+                      onChange={(e) => set({ buttonColor: e.target.value })}
+                      className="sr-only"
+                    />
+                  </label>
+                </div>
+
+                {/* Button text color */}
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm font-semibold text-ink dark:text-white">Button text color</p>
+                  <label className="flex w-40 cursor-pointer items-center gap-2 rounded-xl border border-ink/10 bg-white px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
+                    <span
+                      className="h-6 w-6 shrink-0 rounded-md border border-ink/10"
+                      style={{ background: buttonTextColor }}
+                    />
+                    <span className="text-sm font-medium uppercase text-ink dark:text-white">{buttonTextColor}</span>
+                    <input
+                      type="color"
+                      value={buttonTextColor}
+                      onChange={(e) => set({ buttonTextColor: e.target.value })}
+                      className="sr-only"
+                    />
+                  </label>
                 </div>
               </div>
             </div>
@@ -822,6 +1319,17 @@ export default function StudioPage() {
           )}
         </div>
       </div>
+
+      {cropSource && (
+        <ImageCropModal
+          imageSrc={cropSource}
+          aspect={1}
+          cropShape="round"
+          title="Crop profile photo"
+          onCancel={() => setCropSource(null)}
+          onConfirm={onCropConfirm}
+        />
+      )}
     </AppShell>
   );
 }

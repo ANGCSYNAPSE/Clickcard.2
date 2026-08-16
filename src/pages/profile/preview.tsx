@@ -53,7 +53,6 @@ export default function ProfilePreviewPage() {
             name={draft.personal?.fullName || "Your name"}
             username={user?.username}
             avatarUrl={draft.personal?.profilePicture}
-            tagline={draft.personal?.tagline}
             bio={draft.personal?.bio}
             socialLinks={(draft.social || []).filter((s) => s.url)}
             contact={draft.contact}

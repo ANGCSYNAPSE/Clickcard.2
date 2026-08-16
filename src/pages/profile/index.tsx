@@ -21,6 +21,7 @@ import AppShell from "@/components/app/AppShell";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import ProfilePreview from "@/components/app/ProfilePreview";
+import ImageCropModal from "@/components/app/ImageCropModal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchProfile,
@@ -28,6 +29,7 @@ import {
   updateSection,
 } from "@/store/slices/profileSlice";
 import { pushToast } from "@/store/slices/uiSlice";
+import { updateDesign } from "@/store/slices/designSlice";
 import type {
   EducationItem,
   ExperienceItem,
@@ -57,9 +59,11 @@ export default function ProfileEditorPage() {
   const dispatch = useAppDispatch();
   const { draft, saving, status } = useAppSelector((s) => s.profile);
   const authUser = useAppSelector((s) => s.auth.user);
+  const socialLinksStyle = useAppSelector((s) => s.design.socialLinksStyle);
   const [active, setActive] = useState<SectionKey>("personal");
   const [picture, setPicture] = useState<File | null>(null);
   const [pictureUrl, setPictureUrl] = useState<string | null>(null);
+  const [cropSource, setCropSource] = useState<string | null>(null);
   const [socialPickerOpen, setSocialPickerOpen] = useState(false);
   const [socialQuery, setSocialQuery] = useState("");
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
@@ -109,9 +113,15 @@ export default function ProfileEditorPage() {
 
   const onPickPicture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
+    e.target.value = "";
     if (!f) return;
-    setPicture(f);
-    setPictureUrl(URL.createObjectURL(f));
+    setCropSource(URL.createObjectURL(f));
+  };
+
+  const onCropConfirm = (file: File) => {
+    setPicture(file);
+    setPictureUrl(URL.createObjectURL(file));
+    setCropSource(null);
   };
 
   const onSave = async () => {
@@ -206,9 +216,25 @@ export default function ProfileEditorPage() {
 
                 {/* quick-add social links */}
                 <div>
-                  <p className="mb-1.5 text-xs font-semibold text-ink/50 dark:text-white/50">
-                    Link your socials
-                  </p>
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <p className="text-xs font-semibold text-ink/50 dark:text-white/50">Link your socials</p>
+                    <div className="flex items-center gap-1 rounded-full bg-ink/5 p-0.5 dark:bg-white/10">
+                      {(["icons", "buttons"] as const).map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => dispatch(updateDesign({ socialLinksStyle: opt }))}
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-bold capitalize transition ${
+                            socialLinksStyle === opt
+                              ? "bg-white text-ink shadow-sm dark:bg-[#12403c] dark:text-white"
+                              : "text-ink/45 dark:text-white/45"
+                          }`}
+                        >
+                          {opt === "icons" ? "Icons" : "Buttons"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {socialIconRow.map(({ platform, icon: Icon }) => {
                       const added = Boolean(findSocial(platform));
@@ -292,12 +318,6 @@ export default function ProfileEditorPage() {
                   value={draft.personal?.fullName || ""}
                   onChange={(e) => patch("personal", { ...draft.personal, fullName: e.target.value })}
                 />
-                <Input
-                  label="Tagline"
-                  placeholder="Product Designer · Freelance"
-                  value={draft.personal?.tagline || ""}
-                  onChange={(e) => patch("personal", { ...draft.personal, tagline: e.target.value })}
-                />
                 <div>
                   <label className="mb-1.5 block text-sm font-semibold text-ink/80 dark:text-white/80">
                     Bio
@@ -372,7 +392,7 @@ export default function ProfileEditorPage() {
                 items={draft.experience || []}
                 onChange={(v) => patch("experience", v)}
                 empty="No work experience added yet."
-                blank={{ company: "", role: "", location: "", startDate: "", endDate: "" }}
+                blank={{ company: "", role: "", location: "", startDate: "", endDate: "", description: "" }}
                 addLabel="Add experience"
                 render={(item, set) => (
                   <>
@@ -383,6 +403,18 @@ export default function ProfileEditorPage() {
                     <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                       <Input label="Start" placeholder="Jan 2022" value={item.startDate || ""} onChange={(e) => set({ startDate: e.target.value })} />
                       <Input label="End" placeholder="Present" value={item.endDate || ""} onChange={(e) => set({ endDate: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-semibold text-ink/80 dark:text-white/80">
+                        Job description
+                      </label>
+                      <textarea
+                        rows={3}
+                        placeholder="What did you work on?"
+                        value={item.description || ""}
+                        onChange={(e) => set({ description: e.target.value })}
+                        className="w-full rounded-2xl border-2 border-brand-100 bg-white p-3.5 sm:p-4 text-sm font-medium text-ink outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                      />
                     </div>
                   </>
                 )}
@@ -490,6 +522,17 @@ export default function ProfileEditorPage() {
           onBack={() => setSocialPickerOpen(false)}
           onClose={() => setSocialPickerOpen(false)}
           onPick={openSocialEditor}
+        />
+      )}
+
+      {cropSource && (
+        <ImageCropModal
+          imageSrc={cropSource}
+          aspect={1}
+          cropShape="round"
+          title="Crop profile photo"
+          onCancel={() => setCropSource(null)}
+          onConfirm={onCropConfirm}
         />
       )}
     </AppShell>

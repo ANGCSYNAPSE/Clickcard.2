@@ -164,7 +164,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative overflow-x-clip bg-paper-soft pt-4 pb-20 min-h-screen flex flex-col items-center justify-center">
+    <section className="relative overflow-x-clip bg-paper-soft pt-20 sm:pt-4 pb-20 min-h-screen flex flex-col items-center justify-center">
       {/* Background ambient light */}
       <div
         aria-hidden

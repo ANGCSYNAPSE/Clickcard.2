@@ -59,7 +59,7 @@ export default function ShowcaseBlocks() {
       </section>
 
       {/* ── 02 · SHARE ── */}
-      <section className="bg-dark px-4 py-24 text-white lg:h-[590px]">
+      <section data-nav-theme="dark" className="bg-dark px-4 py-24 text-white lg:h-[590px]">
         <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
           <motion.div
             {...reveal}

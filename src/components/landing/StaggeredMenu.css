@@ -361,6 +361,16 @@
     border-left: none;
     padding: 5.5em 1.5em 2em 1.5em;
   }
+
+  /* Only on mobile: give the fixed header a solid backing once the page has
+     scrolled, so content doesn't slide directly under the logo/toggle. */
+  .staggered-menu-header[data-scrolled] {
+    background: rgba(254, 250, 243, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 1px 0 rgba(11, 46, 43, 0.08);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+  }
 }
 
 /* The upstream stylesheet inverts the logo while the panel is open, because

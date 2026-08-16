@@ -1,9 +1,14 @@
 import type { CSSProperties } from "react";
-import { Share, Phone, MessageCircle, Mail, Globe, Briefcase, GraduationCap, Package, Building2 } from "lucide-react";
+import { Share, Phone, MessageCircle, Mail, Globe, Briefcase, GraduationCap, Package, Building2, User } from "lucide-react";
 import { getSocialIcon } from "@/lib/socialPlatforms";
 
 export type WallpaperType = "fill" | "gradient" | "blur" | "pattern" | "image" | "video";
 export type GradientDirection = "up" | "down" | "radial";
+export type HeaderLayout = "classic" | "hero" | "banner" | "cutout" | "shape";
+export type ButtonStyle = "solid" | "glass" | "outline";
+export type ButtonRoundness = "sharp" | "slight" | "medium" | "full";
+export type ButtonShadow = "none" | "soft" | "strong" | "hard";
+export type SocialLinksStyle = "buttons" | "icons";
 
 export interface LiveProfileContact {
   phone?: string;
@@ -17,6 +22,7 @@ export interface LiveProfileExperience {
   role?: string;
   startDate?: string;
   endDate?: string;
+  description?: string;
 }
 
 export interface LiveProfileEducation {
@@ -51,7 +57,7 @@ export default function LiveProfileCard({
   name,
   username,
   avatarUrl,
-  tagline,
+  bannerUrl,
   bio,
   socialLinks,
   contact,
@@ -59,12 +65,20 @@ export default function LiveProfileCard({
   education,
   products,
   business,
+  headerLayout = "classic",
   wallpaperType = "fill",
   backgroundColor = primary,
   gradientColor = primary,
+  gradientColorEnd = accent,
   gradientDirection = "up",
   noise = false,
   patternIndex = 0,
+  buttonColor = "#FFFFFF",
+  buttonTextColor,
+  buttonStyle = "solid",
+  buttonRoundness = "slight",
+  buttonShadow = "none",
+  socialLinksStyle = "buttons",
   pageFont = "Inter",
   pageTextColor,
   matchTitleFont = true,
@@ -77,7 +91,7 @@ export default function LiveProfileCard({
   name: string;
   username?: string | null;
   avatarUrl?: string;
-  tagline?: string;
+  bannerUrl?: string;
   bio?: string;
   socialLinks?: { platform: string; username?: string; url?: string }[];
   contact?: LiveProfileContact;
@@ -85,12 +99,20 @@ export default function LiveProfileCard({
   education?: LiveProfileEducation[];
   products?: LiveProfileProduct[];
   business?: LiveProfileBusiness;
+  headerLayout?: HeaderLayout;
   wallpaperType?: WallpaperType;
   backgroundColor?: string;
   gradientColor?: string;
+  gradientColorEnd?: string;
   gradientDirection?: GradientDirection;
   noise?: boolean;
   patternIndex?: number;
+  buttonColor?: string;
+  buttonTextColor?: string;
+  buttonStyle?: ButtonStyle;
+  buttonRoundness?: ButtonRoundness;
+  buttonShadow?: ButtonShadow;
+  socialLinksStyle?: SocialLinksStyle;
   pageFont?: string;
   pageTextColor?: string;
   matchTitleFont?: boolean;
@@ -105,8 +127,30 @@ export default function LiveProfileCard({
   const fontStack = (fontName: string) => `"${fontName}", sans-serif`;
   const pageFontFamily = fontStack(pageFont);
   const titleFontFamily = fontStack(matchTitleFont ? pageFont : titleFont);
-  const cardBg = `${pageColor}14`;
-  const cardBorder = `${pageColor}1f`;
+  const cardText = buttonTextColor || pageColor;
+  const isGlass = buttonStyle === "glass";
+  const cardBg = buttonStyle === "outline" ? "transparent" : isGlass ? `${buttonColor}26` : `${buttonColor}e6`;
+  const cardBorder = buttonStyle === "outline" ? buttonColor : isGlass ? "#ffffff4d" : `${cardText}26`;
+  const cardBorderWidth = buttonStyle === "outline" ? 1.5 : 1;
+  const cardRadius = { sharp: 6, slight: 12, medium: 18, full: 9999 }[buttonRoundness];
+  const cardShadow = {
+    none: "none",
+    soft: "0 2px 8px rgba(0,0,0,0.08)",
+    strong: "0 6px 20px rgba(0,0,0,0.18)",
+    hard: "4px 4px 0 rgba(0,0,0,0.35)",
+  }[buttonShadow];
+  const cardStyle: CSSProperties = {
+    background: isGlass ? `linear-gradient(155deg, ${buttonColor}4d, ${buttonColor}12 60%, ${buttonColor}26)` : cardBg,
+    border: `${cardBorderWidth}px solid ${cardBorder}`,
+    borderRadius: cardRadius,
+    boxShadow: isGlass
+      ? [cardShadow, "inset 0 1px 0 rgba(255,255,255,0.45)", "inset 0 0 0 1px rgba(255,255,255,0.08)"]
+          .filter((v) => v !== "none")
+          .join(", ")
+      : cardShadow,
+    backdropFilter: isGlass ? "blur(16px) saturate(180%)" : undefined,
+    WebkitBackdropFilter: isGlass ? "blur(16px) saturate(180%)" : undefined,
+  };
 
   const patternImages = [
     `repeating-linear-gradient(45deg, ${backgroundColor}, ${backgroundColor} 3px, #ffffff33 3px, #ffffff33 6px)`,
@@ -120,16 +164,8 @@ export default function LiveProfileCard({
       ? {
           background:
             gradientDirection === "radial"
-              ? `radial-gradient(circle, ${gradientColor}, ${accent})`
-              : `linear-gradient(${gradientDirection === "down" ? "to bottom" : "to top"}, ${gradientColor}, ${accent})`,
-          backgroundImage: noise
-            ? `radial-gradient(#ffffff22 1px, transparent 1px), ${
-                gradientDirection === "radial"
-                  ? `radial-gradient(circle, ${gradientColor}, ${accent})`
-                  : `linear-gradient(${gradientDirection === "down" ? "to bottom" : "to top"}, ${gradientColor}, ${accent})`
-              }`
-            : undefined,
-          backgroundSize: noise ? "3px 3px, auto" : undefined,
+              ? `radial-gradient(circle, ${gradientColor}, ${gradientColorEnd})`
+              : `linear-gradient(${gradientDirection === "down" ? "to bottom" : "to top"}, ${gradientColor}, ${gradientColorEnd})`,
         }
       : wallpaperType === "pattern"
       ? {
@@ -140,6 +176,14 @@ export default function LiveProfileCard({
       : {
           background: backgroundColor,
         };
+
+  const heroMode = headerLayout === "hero";
+  const bannerMode = headerLayout === "banner";
+  const cutoutMode = headerLayout === "cutout";
+  const avatarSizeClass = bannerMode ? "h-20 w-20" : "h-24 w-24";
+  const avatarMarginClass = bannerMode ? "-mt-10" : "mt-4";
+  const avatarShapeStyle: CSSProperties =
+    headerLayout === "shape" ? { borderRadius: "42% 58% 70% 30% / 45% 45% 55% 55%" } : { borderRadius: "9999px" };
 
   const contactActions = [
     contact?.phone && { icon: Phone, label: "Call" },
@@ -160,60 +204,135 @@ export default function LiveProfileCard({
       }}
     >
       {/* Wallpaper background area (whole card, independent of the avatar) */}
-      <div className="absolute inset-0 w-full h-full" style={wallpaperStyle} />
+      <div className="absolute inset-0 z-0 w-full h-full" style={wallpaperStyle} />
+
+      {/* Noise overlay — a separate layer so toggling it never touches the base color/gradient underneath */}
+      {wallpaperType === "gradient" && noise && (
+        <div
+          className="pointer-events-none absolute inset-0 z-[1] w-full h-full"
+          style={{ backgroundImage: `radial-gradient(#ffffff22 1px, transparent 1px)`, backgroundSize: "3px 3px" }}
+        />
+      )}
 
       {/* Header with icons */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3">
         <div
-          className="grid h-8 w-8 place-items-center rounded-full text-white bg-textColor"
-          style={{ background: textColor }}
+          className={`grid h-8 w-8 place-items-center rounded-full text-white ${heroMode ? "backdrop-blur-sm" : ""}`}
+          style={{ background: heroMode ? "#ffffff33" : textColor }}
         >
           <h3 className="text-sm ">CC</h3>
         </div>
-        <div className="grid h-8 w-8 place-items-center rounded text-white" >
+        <div
+          className={`grid h-8 w-8 place-items-center rounded-full text-white ${heroMode ? "backdrop-blur-sm" : ""}`}
+          style={{ background: heroMode ? "#ffffff33" : undefined }}
+        >
           <Share className="w-5 h-5" />
         </div>
       </div>
 
       {/* Scrollable content — everything filled in shows here */}
-      <div className="no-scrollbar relative z-10 flex h-full flex-col items-center overflow-y-auto px-6 pb-16 pt-20 text-center">
-        {/* Avatar */}
-        <div
-          className="grid h-24 w-24 place-items-center overflow-hidden rounded-full text-2xl font-black text-white -mt-16 mb-2 shadow-lg shrink-0"
-          style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
-        >
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-          ) : (
-            name[0]?.toUpperCase() || " "
-          )}
-        </div>
+      <div className="no-scrollbar relative z-10 flex h-full flex-col items-center overflow-y-auto pb-16 text-center">
+        {heroMode ? (
+          /* Hero image — full-bleed photo that dissolves into the card's own wallpaper underneath */
+          <div className="relative w-full shrink-0" style={{ height: 320 }}>
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt=""
+                className="h-full w-full object-cover"
+                style={{
+                  WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 50%, transparent 96%)",
+                  maskImage: "linear-gradient(to bottom, #000 0%, #000 50%, transparent 96%)",
+                }}
+              />
+            ) : (
+              <div
+                className="grid h-full w-full place-items-center"
+                style={{
+                  background: "#94A3B8",
+                  WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 50%, transparent 96%)",
+                  maskImage: "linear-gradient(to bottom, #000 0%, #000 50%, transparent 96%)",
+                }}
+              >
+                <User size={72} className="text-white/85" strokeWidth={1.5} />
+              </div>
+            )}
+          </div>
+        ) : cutoutMode ? (
+          /* Cutout — background-removed photo "stickered" onto the wallpaper, username above it */
+          <div className="flex w-full shrink-0 flex-col items-center px-6 pt-16">
+            <p
+              className="-mb-4 z-[1] text-[26px] font-black leading-none"
+              style={{ color: titleTextColor, fontFamily: titleFontFamily, transform: "rotate(-3deg)" }}
+            >
+              @{username || "username"}
+            </p>
+            <div className="relative w-full" style={{ height: 260 }}>
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="" className="h-full w-full object-contain" />
+              ) : (
+                <div className="grid h-full place-items-center">
+                  <User size={72} className="opacity-30" style={{ color: pageColor }} strokeWidth={1.5} />
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Banner — scrolls with the rest of the content, avatar overlaps its bottom edge */}
+            {bannerMode && (
+              <div className="w-full shrink-0 overflow-hidden" style={{ height: 130 }}>
+                {bannerUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={bannerUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div
+                    className="h-full w-full"
+                    style={{ background: `linear-gradient(135deg, ${primary}, ${accent})` }}
+                  />
+                )}
+              </div>
+            )}
+            <div
+              className={`grid place-items-center overflow-hidden mb-2 shadow-lg shrink-0 ${avatarSizeClass} ${avatarMarginClass}`}
+              style={{
+                background: avatarUrl ? `linear-gradient(135deg, ${primary}, ${accent})` : "#94A3B8",
+                ...avatarShapeStyle,
+              }}
+            >
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <User size={bannerMode ? 40 : 48} className="text-white/85" strokeWidth={1.5} />
+              )}
+            </div>
+          </>
+        )}
 
-        {/* Username */}
-        <p
-          className="text-xl font-black text-center shrink-0"
-          style={{ color: titleTextColor, fontFamily: titleFontFamily }}
-        >
-          @{username || "username"}
-        </p>
-
-        {/* Tagline */}
-        {tagline && (
-          <p className="mt-1 shrink-0 text-sm font-semibold text-center" style={{ color: pageColor, opacity: 0.85 }}>
-            {tagline}
+        {/* Username — cutout renders its own username above the photo instead */}
+        {!cutoutMode && (
+          <p
+            className={`w-full shrink-0 px-6 text-center text-xl font-black ${heroMode ? "-mt-6" : ""}`}
+            style={{ color: titleTextColor, fontFamily: titleFontFamily }}
+          >
+            @{username || "username"}
           </p>
         )}
 
         {/* Bio */}
         {bio && (
           <p
-            className="mt-2 line-clamp-3 max-w-[240px] shrink-0 text-xs leading-relaxed text-center"
+            className="mt-2 line-clamp-3 max-w-[240px] mx-auto shrink-0 text-center text-xs leading-relaxed"
             style={{ color: pageColor, opacity: 0.7 }}
           >
             {bio}
           </p>
         )}
+
+        <div className="flex w-full flex-1 flex-col items-center px-6">
 
         {/* Contact quick actions */}
         {contactActions.length > 0 && (
@@ -221,11 +340,11 @@ export default function LiveProfileCard({
             {contactActions.map((a) => (
               <div
                 key={a.label}
-                className="flex flex-col items-center gap-1 rounded-xl px-1 py-2.5"
-                style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+                className="flex flex-col items-center gap-1 px-1 py-2.5 backdrop-blur-sm"
+                style={cardStyle}
               >
-                <a.icon size={14} style={{ color: pageColor }} />
-                <span className="truncate text-[9px] font-bold" style={{ color: pageColor }}>
+                <a.icon size={14} style={{ color: cardText }} />
+                <span className="truncate text-[9px] font-bold" style={{ color: cardText }}>
                   {a.label}
                 </span>
               </div>
@@ -233,25 +352,43 @@ export default function LiveProfileCard({
           </div>
         )}
 
-        {/* Social link list (platform + handle) */}
+        {/* Social links — a compact icon row, or full icon+handle buttons */}
         {socialLinks && socialLinks.length > 0 && (
-          <div className="mt-5 w-full shrink-0 space-y-2">
-            {socialLinks.map((s, i) => {
-              const Icon = getSocialIcon(s.platform);
-              return (
-                <div
-                  key={`row-${s.platform}-${i}`}
-                  className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left"
-                  style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
-                >
-                  <Icon size={15} style={{ color: pageColor }} />
-                  <span className="min-w-0 flex-1 truncate text-xs font-bold" style={{ color: pageColor }}>
-                    {s.username ? `@${s.username}` : s.platform}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+          socialLinksStyle === "icons" ? (
+            <div className="mt-5 flex w-full shrink-0 flex-wrap items-center justify-center gap-2">
+              {socialLinks.map((s, i) => {
+                const Icon = getSocialIcon(s.platform);
+                return (
+                  <div
+                    key={`icon-${s.platform}-${i}`}
+                    className="grid h-11 w-11 shrink-0 place-items-center backdrop-blur-sm"
+                    style={cardStyle}
+                    title={s.username ? `@${s.username}` : s.platform}
+                  >
+                    <Icon size={17} style={{ color: cardText }} />
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="mt-5 w-full shrink-0 space-y-2">
+              {socialLinks.map((s, i) => {
+                const Icon = getSocialIcon(s.platform);
+                return (
+                  <div
+                    key={`row-${s.platform}-${i}`}
+                    className="flex items-center gap-2.5 px-3 py-2.5 text-left backdrop-blur-sm"
+                    style={cardStyle}
+                  >
+                    <Icon size={15} style={{ color: cardText }} />
+                    <span className="min-w-0 flex-1 truncate text-xs font-bold" style={{ color: cardText }}>
+                      {s.username ? `@${s.username}` : s.platform}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )
         )}
 
         {/* Experience */}
@@ -263,18 +400,23 @@ export default function LiveProfileCard({
             {experience.map((e, i) => (
               <div
                 key={i}
-                className="flex items-start gap-2.5 rounded-xl px-3 py-2.5"
-                style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+                className="flex items-start gap-2.5 px-3 py-2.5 backdrop-blur-sm"
+                style={cardStyle}
               >
-                <Briefcase size={14} className="mt-0.5 shrink-0" style={{ color: pageColor }} />
+                <Briefcase size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-bold" style={{ color: pageColor }}>
+                  <p className="truncate text-xs font-bold" style={{ color: cardText }}>
                     {e.role || "Role"}
                   </p>
-                  <p className="truncate text-[10px] opacity-70" style={{ color: pageColor }}>
+                  <p className="truncate text-[10px] opacity-70" style={{ color: cardText }}>
                     {e.company}
                     {(e.startDate || e.endDate) && ` · ${[e.startDate, e.endDate].filter(Boolean).join(" – ")}`}
                   </p>
+                  {e.description && (
+                    <p className="mt-1 line-clamp-3 text-[10px] leading-relaxed opacity-80" style={{ color: cardText }}>
+                      {e.description}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}
@@ -290,15 +432,15 @@ export default function LiveProfileCard({
             {education.map((e, i) => (
               <div
                 key={i}
-                className="flex items-start gap-2.5 rounded-xl px-3 py-2.5"
-                style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+                className="flex items-start gap-2.5 px-3 py-2.5 backdrop-blur-sm"
+                style={cardStyle}
               >
-                <GraduationCap size={14} className="mt-0.5 shrink-0" style={{ color: pageColor }} />
+                <GraduationCap size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-bold" style={{ color: pageColor }}>
+                  <p className="truncate text-xs font-bold" style={{ color: cardText }}>
                     {e.institution || "Institution"}
                   </p>
-                  <p className="truncate text-[10px] opacity-70" style={{ color: pageColor }}>
+                  <p className="truncate text-[10px] opacity-70" style={{ color: cardText }}>
                     {[e.degree, e.field].filter(Boolean).join(", ")}
                     {(e.startYear || e.endYear) && ` · ${[e.startYear, e.endYear].filter(Boolean).join(" – ")}`}
                   </p>
@@ -317,22 +459,22 @@ export default function LiveProfileCard({
             {products.map((p, i) => (
               <div
                 key={i}
-                className="flex items-start gap-2.5 rounded-xl px-3 py-2.5"
-                style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+                className="flex items-start gap-2.5 px-3 py-2.5 backdrop-blur-sm"
+                style={cardStyle}
               >
-                <Package size={14} className="mt-0.5 shrink-0" style={{ color: pageColor }} />
+                <Package size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-bold" style={{ color: pageColor }}>
+                  <p className="truncate text-xs font-bold" style={{ color: cardText }}>
                     {p.name || "Product"}
                   </p>
                   {p.description && (
-                    <p className="truncate text-[10px] opacity-70" style={{ color: pageColor }}>
+                    <p className="truncate text-[10px] opacity-70" style={{ color: cardText }}>
                       {p.description}
                     </p>
                   )}
                 </div>
                 {p.price && (
-                  <span className="shrink-0 text-[10px] font-black" style={{ color: pageColor }}>
+                  <span className="shrink-0 text-[10px] font-black" style={{ color: cardText }}>
                     {p.price}
                   </span>
                 )}
@@ -348,16 +490,16 @@ export default function LiveProfileCard({
               Business
             </p>
             <div
-              className="mt-2 flex items-start gap-2.5 rounded-xl px-3 py-2.5"
-              style={{ background: cardBg, border: `1px solid ${cardBorder}` }}
+              className="mt-2 flex items-start gap-2.5 px-3 py-2.5 backdrop-blur-sm"
+              style={cardStyle}
             >
-              <Building2 size={14} className="mt-0.5 shrink-0" style={{ color: pageColor }} />
+              <Building2 size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-bold" style={{ color: pageColor }}>
+                <p className="truncate text-xs font-bold" style={{ color: cardText }}>
                   {business.name}
                 </p>
                 {(business.category || business.description) && (
-                  <p className="truncate text-[10px] opacity-70" style={{ color: pageColor }}>
+                  <p className="truncate text-[10px] opacity-70" style={{ color: cardText }}>
                     {business.category || business.description}
                   </p>
                 )}
@@ -366,10 +508,11 @@ export default function LiveProfileCard({
           </div>
         )}
 
-        {/* Footer — scrolls with the content */}
-        <div className="mt-6 shrink-0 pb-2 text-center text-[10px] opacity-60" style={{ color: pageColor }}>
-          <p>Report • Privacy</p>
-          <p>More from ClickCard</p>
+          {/* Footer — pinned to the bottom when content is short, scrolls with content when it overflows */}
+          <div className="mt-auto shrink-0 pt-6 pb-2 text-center text-[10px] opacity-60" style={{ color: pageColor }}>
+            <p>Report • Privacy</p>
+            <p>More from ClickCard</p>
+          </div>
         </div>
       </div>
 

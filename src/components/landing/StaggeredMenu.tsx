@@ -56,6 +56,7 @@ export const StaggeredMenu = ({
   onMenuClose,
 }: StaggeredMenuProps) => {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const openRef = useRef(false);
   const panelRef = useRef<HTMLElement | null>(null);
   const preLayersRef = useRef<HTMLDivElement | null>(null);
@@ -463,6 +464,16 @@ export const StaggeredMenu = ({
     else panel.setAttribute("inert", "");
   }, [open]);
 
+  // Mobile only (handled in CSS): once the page scrolls, the fixed header
+  // picks up a solid backing so page content doesn't slide directly under
+  // the logo/toggle with nothing to separate them.
+  React.useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const preLayerColors = (() => {
     const raw = colors && colors.length ? colors.slice(0, 4) : ["#1e1e22", "#35353c"];
     const arr = [...raw];
@@ -491,7 +502,11 @@ export const StaggeredMenu = ({
         ))}
       </div>
 
-      <header className="staggered-menu-header" aria-label="Main navigation header">
+      <header
+        className="staggered-menu-header"
+        data-scrolled={scrolled || undefined}
+        aria-label="Main navigation header"
+      >
         <a className="sm-logo" href="/" aria-label="Home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

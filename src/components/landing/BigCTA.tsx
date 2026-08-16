@@ -4,7 +4,7 @@ import ClaimBar from "./ClaimBar";
 
 export default function BigCTA() {
   return (
-    <section className="relative overflow-hidden bg-dark px-4 py-28">
+    <section data-nav-theme="dark" className="relative overflow-hidden bg-dark px-4 py-28">
       <div
         aria-hidden
         className="pointer-events-none absolute -left-24 top-0 h-[26rem] w-[26rem] rounded-full bg-primary/20 blur-3xl"
