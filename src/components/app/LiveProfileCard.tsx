@@ -1,5 +1,5 @@
-import { useEffect, type CSSProperties } from "react";
-import { Share, Phone, MessageCircle, Mail, Globe, Briefcase, GraduationCap, Package, Building2, User } from "lucide-react";
+import { useEffect, type CSSProperties, type ReactNode } from "react";
+import { Share, Phone, MessageCircle, Mail, Globe, Briefcase, GraduationCap, Package, Building2, User, MapPin } from "lucide-react";
 import { getSocialIcon } from "@/lib/socialPlatforms";
 
 export type WallpaperType = "fill" | "gradient" | "blur" | "pattern" | "image" | "video";
@@ -37,18 +37,50 @@ export interface LiveProfileProduct {
   name?: string;
   price?: string;
   description?: string;
+  link?: string;
 }
 
 export interface LiveProfileBusiness {
   name?: string;
   category?: string;
   description?: string;
+  mapUrl?: string;
+}
+
+/** Renders a real link when `href` is given (interactive/public mode), otherwise
+ * the same decorative `<div>` the preview panels have always used. */
+function LinkOrDiv({
+  href,
+  className,
+  style,
+  title,
+  children,
+}: {
+  href?: string;
+  className?: string;
+  style?: CSSProperties;
+  title?: string;
+  children: ReactNode;
+}) {
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noreferrer" className={className} style={style} title={title}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <div className={className} style={style} title={title}>
+      {children}
+    </div>
+  );
 }
 
 /**
- * The Linktree-style live preview card. Shared by the Studio design tool and
- * every other "Live preview" panel so they all render identically. Scrolls
- * internally so every filled-in profile section shows, not just the header.
+ * The Linktree-style profile card. Shared by every "live preview" panel
+ * (Studio, Dashboard, Profile editor) AND the real public page — pass
+ * `interactive` for the latter so it fills the viewport and every row is a
+ * real link, instead of the fixed-size decorative preview box.
  */
 export default function LiveProfileCard({
   primary,
@@ -87,6 +119,8 @@ export default function LiveProfileCard({
   titleFontSize = 20,
   bioFontSize = 12,
   bodyFontSize = 12,
+  interactive = false,
+  onShare,
 }: {
   primary: string;
   accent: string;
@@ -124,6 +158,13 @@ export default function LiveProfileCard({
   titleFontSize?: number;
   bioFontSize?: number;
   bodyFontSize?: number;
+  /** True for the real public page: sizes to fill the viewport instead of the
+   * fixed 320×680 preview box, and every row becomes a real, clickable link
+   * instead of decorative chrome. False (default) for every "live preview"
+   * panel — Studio, Dashboard, Profile editor. */
+  interactive?: boolean;
+  /** Called when the header's share icon is tapped (interactive mode only). */
+  onShare?: () => void;
 }) {
   useEffect(() => {
     const loadFont = (font: string) => {
@@ -207,11 +248,19 @@ export default function LiveProfileCard({
     headerLayout === "shape" ? { borderRadius: "42% 58% 70% 30% / 45% 45% 55% 55%" } : { borderRadius: "9999px" };
 
   const contactActions = [
-    contact?.phone && { icon: Phone, label: "Call" },
-    contact?.whatsapp && { icon: MessageCircle, label: "WhatsApp" },
-    contact?.email && { icon: Mail, label: "Email" },
-    contact?.website && { icon: Globe, label: "Website" },
-  ].filter(Boolean) as { icon: typeof Phone; label: string }[];
+    contact?.phone && { icon: Phone, label: "Call", href: `tel:${contact.phone}` },
+    contact?.whatsapp && {
+      icon: MessageCircle,
+      label: "WhatsApp",
+      href: `https://wa.me/${contact.whatsapp.replace(/[^0-9]/g, "")}`,
+    },
+    contact?.email && { icon: Mail, label: "Email", href: `mailto:${contact.email}` },
+    contact?.website && {
+      icon: Globe,
+      label: "Website",
+      href: /^https?:\/\//.test(contact.website) ? contact.website : `https://${contact.website}`,
+    },
+  ].filter(Boolean) as { icon: typeof Phone; label: string; href: string }[];
 
   // Point sizes set directly in Studio (like a word processor's font-size
   // box), not preset buckets — applied as inline font-size in px.
@@ -224,10 +273,15 @@ export default function LiveProfileCard({
 
   return (
     <div
-      className="relative rounded-3xl shadow-card overflow-hidden"
+      className={
+        interactive
+          ? "relative min-h-screen w-full overflow-hidden sm:mx-auto sm:my-8 sm:max-w-[420px] sm:rounded-3xl sm:shadow-card"
+          : "relative rounded-3xl shadow-card overflow-hidden"
+      }
       style={{
-        width: 320,
-        height: 680,
+        width: interactive ? undefined : 320,
+        height: interactive ? undefined : 680,
+        minHeight: interactive ? "100vh" : undefined,
         background: bg,
         color: textColor,
         fontFamily: pageFontFamily,
@@ -246,18 +300,41 @@ export default function LiveProfileCard({
 
       {/* Header with icons */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3">
-        <div
-          className={`grid h-8 w-8 place-items-center rounded-full text-white ${heroMode ? "backdrop-blur-sm" : ""}`}
-          style={{ background: heroMode ? "#ffffff33" : textColor }}
-        >
-          <h3 className="text-sm ">CC</h3>
-        </div>
-        <div
-          className={`grid h-8 w-8 place-items-center rounded-full text-white ${heroMode ? "backdrop-blur-sm" : ""}`}
-          style={{ background: heroMode ? "#ffffff33" : undefined }}
-        >
-          <Share className="w-5 h-5" />
-        </div>
+        {interactive ? (
+          <a
+            href="/"
+            aria-label="ClickCard home"
+            className={`grid h-8 w-8 place-items-center rounded-full text-white ${heroMode ? "backdrop-blur-sm" : ""}`}
+            style={{ background: heroMode ? "#ffffff33" : textColor }}
+          >
+            <h3 className="text-sm ">CC</h3>
+          </a>
+        ) : (
+          <div
+            className={`grid h-8 w-8 place-items-center rounded-full text-white ${heroMode ? "backdrop-blur-sm" : ""}`}
+            style={{ background: heroMode ? "#ffffff33" : textColor }}
+          >
+            <h3 className="text-sm ">CC</h3>
+          </div>
+        )}
+        {interactive ? (
+          <button
+            type="button"
+            onClick={onShare}
+            aria-label="Share"
+            className={`grid h-8 w-8 place-items-center rounded-full text-white ${heroMode ? "backdrop-blur-sm" : ""}`}
+            style={{ background: heroMode ? "#ffffff33" : undefined }}
+          >
+            <Share className="w-5 h-5" />
+          </button>
+        ) : (
+          <div
+            className={`grid h-8 w-8 place-items-center rounded-full text-white ${heroMode ? "backdrop-blur-sm" : ""}`}
+            style={{ background: heroMode ? "#ffffff33" : undefined }}
+          >
+            <Share className="w-5 h-5" />
+          </div>
+        )}
       </div>
 
       {/* Scrollable content — everything filled in shows here */}
@@ -368,14 +445,15 @@ export default function LiveProfileCard({
         {contactActions.length > 0 && (
           <div className="mt-5 grid w-full shrink-0 gap-1.5" style={{ gridTemplateColumns: `repeat(${contactActions.length}, minmax(0, 1fr))` }}>
             {contactActions.map((a) => (
-              <div
+              <LinkOrDiv
                 key={a.label}
+                href={interactive ? a.href : undefined}
                 title={a.label}
                 className="flex items-center justify-center py-3 backdrop-blur-sm"
                 style={cardStyle}
               >
                 <a.icon size={18} style={{ color: cardText }} />
-              </div>
+              </LinkOrDiv>
             ))}
           </div>
         )}
@@ -387,14 +465,15 @@ export default function LiveProfileCard({
               {socialLinks.map((s, i) => {
                 const Icon = getSocialIcon(s.platform);
                 return (
-                  <div
+                  <LinkOrDiv
                     key={`icon-${s.platform}-${i}`}
+                    href={interactive ? s.url : undefined}
                     className="grid h-11 w-11 shrink-0 place-items-center backdrop-blur-sm"
                     style={cardStyle}
                     title={s.username ? `@${s.username}` : s.platform}
                   >
                     <Icon size={17} style={{ color: cardText }} />
-                  </div>
+                  </LinkOrDiv>
                 );
               })}
             </div>
@@ -403,8 +482,9 @@ export default function LiveProfileCard({
               {socialLinks.map((s, i) => {
                 const Icon = getSocialIcon(s.platform);
                 return (
-                  <div
+                  <LinkOrDiv
                     key={`row-${s.platform}-${i}`}
+                    href={interactive ? s.url : undefined}
                     className="flex items-center gap-2.5 px-3 py-2.5 text-left backdrop-blur-sm"
                     style={cardStyle}
                   >
@@ -412,7 +492,7 @@ export default function LiveProfileCard({
                     <span className="min-w-0 flex-1 truncate font-bold" style={{ color: cardText, ...bodySizeStyle }}>
                       {s.username ? `@${s.username}` : s.platform}
                     </span>
-                  </div>
+                  </LinkOrDiv>
                 );
               })}
             </div>
@@ -485,8 +565,9 @@ export default function LiveProfileCard({
               Products &amp; services
             </p>
             {products.map((p, i) => (
-              <div
+              <LinkOrDiv
                 key={i}
+                href={interactive ? p.link : undefined}
                 className="flex items-start gap-2.5 px-3 py-2.5 backdrop-blur-sm"
                 style={cardStyle}
               >
@@ -506,7 +587,7 @@ export default function LiveProfileCard({
                     {p.price}
                   </span>
                 )}
-              </div>
+              </LinkOrDiv>
             ))}
           </div>
         )}
@@ -531,6 +612,17 @@ export default function LiveProfileCard({
                     {business.category || business.description}
                   </p>
                 )}
+                {interactive && business.mapUrl && (
+                  <a
+                    href={business.mapUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1.5 inline-flex items-center gap-1 font-bold underline-offset-2 hover:underline"
+                    style={{ color: cardText, ...bodySubSizeStyle }}
+                  >
+                    <MapPin size={11} /> View on map
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -546,15 +638,25 @@ export default function LiveProfileCard({
 
       {/* Action Button only — fixed to the bottom of the card, not scrolling */}
       <div className="absolute inset-x-0 bottom-4 z-20 flex justify-center">
-        <button
-          className="shrink-0 px-8 py-2.5 rounded-full font-bold text-sm shadow-lg transition hover:opacity-90"
-          style={{
-            background: textColor,
-            color: bg,
-          }}
-        >
-          Join on ClickCard
-        </button>
+        {interactive ? (
+          <a
+            href="/signup"
+            className="shrink-0 px-8 py-2.5 rounded-full font-bold text-sm shadow-lg transition hover:opacity-90"
+            style={{ background: textColor, color: bg }}
+          >
+            Join on ClickCard
+          </a>
+        ) : (
+          <button
+            className="shrink-0 px-8 py-2.5 rounded-full font-bold text-sm shadow-lg transition hover:opacity-90"
+            style={{
+              background: textColor,
+              color: bg,
+            }}
+          >
+            Join on ClickCard
+          </button>
+        )}
       </div>
     </div>
   );

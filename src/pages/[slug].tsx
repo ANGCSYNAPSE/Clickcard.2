@@ -93,5 +93,12 @@ export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
     ctx.res.statusCode = 404;
   }
 
-  return { props: { profile, slug, shareUrl } };
+  // getServerSideProps props must be JSON-serializable — any `undefined`
+  // anywhere in the tree (e.g. an optional field the backend didn't send)
+  // makes Next throw a 500. A JSON round-trip drops those keys the same way
+  // JSON.stringify would, without having to chase down every optional field
+  // across PublicProfile/PublicCardDesign by hand.
+  const safeProfile = profile ? (JSON.parse(JSON.stringify(profile)) as TProfile) : null;
+
+  return { props: { profile: safeProfile, slug, shareUrl } };
 };

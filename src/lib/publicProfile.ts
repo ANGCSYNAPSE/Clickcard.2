@@ -24,6 +24,7 @@ export interface PublicExperience {
   role?: string;
   startDate?: string;
   endDate?: string;
+  description?: string;
 }
 export interface PublicEducation {
   institution: string;
@@ -150,7 +151,9 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
   let social: PublicSocial[] = [];
   const sl = d.social_links;
   if (Array.isArray(sl)) {
-    social = sl.filter((s: any) => s?.url).map((s: any) => ({ platform: s.platform || s.label || "Link", url: s.url, label: s.label }));
+    social = sl
+      .filter((s: any) => s?.url)
+      .map((s: any) => ({ platform: s.platform || s.label || "Link", url: s.url, ...(s.label ? { label: s.label } : {}) }));
   } else if (sl && typeof sl === "object") {
     social = Object.entries(sl)
       .filter(([, v]) => typeof v === "string" && v)
@@ -172,7 +175,7 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
     country: contact.country,
     social,
     experience: (d.work_experience || []).map((e: any) => ({
-      company: e.company, role: e.role, startDate: e.startDate, endDate: e.endDate,
+      company: e.company, role: e.role, startDate: e.startDate, endDate: e.endDate, description: e.description,
     })),
     education: (d.education || []).map((e: any) => ({
       institution: e.institution, degree: e.degree, field: e.field, startYear: e.startYear, endYear: e.endYear,
