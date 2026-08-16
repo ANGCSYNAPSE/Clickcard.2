@@ -196,14 +196,12 @@ export default function AppShell({
         </nav>
 
         {user?.username && (
-          <a
-            href={`${SITE_URL}/${user.username}`}
-            target="_blank"
-            rel="noreferrer"
+          <Link
+            href="/profile/preview"
             className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-ink/10 px-3 py-2.5 text-xs font-bold text-ink/70 transition hover:border-brand-300 hover:text-brand-700 dark:border-white/10 dark:text-white/70"
           >
             <ExternalLink size={14} /> View public page
-          </a>
+          </Link>
         )}
       </aside>
 
@@ -265,14 +263,13 @@ export default function AppShell({
                   </div>
                   <MenuLink href="/settings" icon={Settings} label="Settings" />
                   {user?.username && (
-                    <a
-                      href={`${SITE_URL}/${user.username}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-ink/70 transition hover:bg-brand-50 dark:text-white/70 dark:hover:bg-white/5"
+                    <Link
+                      href="/profile/preview"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold text-ink/70 transition hover:bg-brand-50 dark:text-white/70 dark:hover:bg-white/5"
                     >
                       <ExternalLink size={16} /> Public page
-                    </a>
+                    </Link>
                   )}
                   <button
                     onClick={handleLogout}

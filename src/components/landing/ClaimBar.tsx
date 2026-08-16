@@ -7,36 +7,51 @@ import { USERNAME_REGEX } from "@/lib/validation";
 
 type Props = { variant?: "light" | "dark" };
 
+const sanitize = (raw: string) => raw.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+
 export default function ClaimBar({ variant = "light" }: Props) {
   const [name, setName] = useState("");
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
   const onDark = variant === "dark";
+  const handle = sanitize(name);
+  const taken = available === false;
 
   /* debounced username availability check — same API the signup page uses */
   useEffect(() => {
-    const handle = name.trim().toLowerCase().replace(/[^a-z0-9-_]/g, "");
     if (!USERNAME_REGEX.test(handle)) {
       setAvailable(null);
       setChecking(false);
       return;
     }
+    let cancelled = false;
     setChecking(true);
     const t = setTimeout(() => {
       authService
         .checkUsername(handle)
-        .then(({ data }) => setAvailable(Boolean(data.data?.available)))
-        .catch(() => setAvailable(null))
-        .finally(() => setChecking(false));
+        .then(({ data }) => {
+          if (!cancelled) setAvailable(Boolean(data?.data?.available));
+        })
+        .catch((err) => {
+          if (!cancelled) setAvailable(null);
+          if (process.env.NODE_ENV !== "production") {
+            // eslint-disable-next-line no-console
+            console.error("checkUsername failed:", err);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setChecking(false);
+        });
     }, 450);
-    return () => clearTimeout(t);
-  }, [name]);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [handle]);
 
   const claim = () => {
-    const handle = name.trim().toLowerCase().replace(/[^a-z0-9-_]/g, "");
-    window.location.href = handle
-      ? `${WEBAPP_URL}?username=${encodeURIComponent(handle)}`
-      : WEBAPP_URL;
+    if (!handle || taken || checking) return;
+    window.location.href = `${WEBAPP_URL}?username=${encodeURIComponent(handle)}`;
   };
 
   return (
@@ -76,9 +91,10 @@ export default function ClaimBar({ variant = "light" }: Props) {
       </label>
       <button
         type="submit"
+        disabled={taken}
         className={`btn group shrink-0 px-4 py-3 text-sm sm:px-6 sm:py-3.5 ${
           onDark ? "btn-accent" : "btn-secondary"
-        }`}
+        } disabled:cursor-not-allowed disabled:opacity-50`}
       >
         Claim it
         <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
@@ -100,6 +116,6 @@ function UsernameStatus({
     return <Loader2 className={`h-4 w-4 animate-spin ${onDark ? "text-white/50" : "text-ink/40"}`} />;
   if (available === true) return <Check className="h-5 w-5 text-candy-pink" />;
   if (available === false)
-    return <span className="text-xs font-bold text-rose-500">taken</span>;
+    return <span className="whitespace-nowrap text-xs font-bold text-rose-500">already taken</span>;
   return null;
 }
