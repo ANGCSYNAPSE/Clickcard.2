@@ -9,26 +9,26 @@ export const profileService = {
     return { ...res, data: { ...res.data, data: fromApiProfile(res.data?.data) } };
   },
 
-  /** Create/update full profile. Sends multipart so an optional picture can ride along. */
+  /**
+   * Create/update full profile. Sends multipart so an optional picture can
+   * ride along. Deliberately does NOT set a Content-Type header — for a
+   * FormData body the browser must generate that itself (it's the only one
+   * that knows the multipart boundary string it's using). Setting
+   * "multipart/form-data" by hand here previously overrode that and shipped
+   * a boundary-less request, which the backend couldn't parse, so any
+   * attached picture silently never saved.
+   */
   save: (profileData: FullProfile, profilePicture?: File | null) => {
     const form = new FormData();
     form.append("profileData", JSON.stringify(toApiProfile(profileData)));
     if (profilePicture) form.append("profilePicture", profilePicture);
-    return apiClient.post<ApiResponse<FullProfile>>(
-      PROFILE_ROUTES.create,
-      form,
-      { headers: { "Content-Type": "multipart/form-data" } },
-    );
+    return apiClient.post<ApiResponse<FullProfile>>(PROFILE_ROUTES.create, form);
   },
 
   uploadPicture: (file: File) => {
     const form = new FormData();
     form.append("profilePicture", file);
-    return apiClient.post<ApiResponse<{ profilePicture: string }>>(
-      PROFILE_ROUTES.uploadPicture,
-      form,
-      { headers: { "Content-Type": "multipart/form-data" } },
-    );
+    return apiClient.post<ApiResponse<{ profilePicture: string }>>(PROFILE_ROUTES.uploadPicture, form);
   },
 
   makePublic: () =>

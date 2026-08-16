@@ -285,7 +285,7 @@ export default function LiveProfileCard({
       className={
         interactive
           ? "relative min-h-screen w-full overflow-hidden sm:mx-auto sm:my-8 sm:max-w-[420px] sm:rounded-3xl sm:shadow-card"
-          : "relative rounded-3xl shadow-card overflow-hidden"
+          : "relative rounded-3xl overflow-hidden"
       }
       style={{
         width: interactive ? undefined : 320,

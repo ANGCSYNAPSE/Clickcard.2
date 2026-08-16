@@ -31,7 +31,7 @@ const QUICK = [
   {
     label: "Design card",
     hint: "Customize your card",
-    href: "/studio",
+    href: "/customize",
     icon: Sparkles,
     tint: "bg-candy-yellow",
   },

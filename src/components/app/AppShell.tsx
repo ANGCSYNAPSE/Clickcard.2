@@ -36,7 +36,7 @@ const NAV_GROUPS = [
       { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { label: "Profile", href: "/profile", icon: User },
       { label: "Digital Card", href: "/card", icon: CreditCard },
-      { label: "Customize", href: "/studio", icon: SlidersHorizontal },
+      { label: "Customize", href: "/customize", icon: SlidersHorizontal },
     ],
   },
   {

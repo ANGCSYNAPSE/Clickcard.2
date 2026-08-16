@@ -12,7 +12,7 @@ const nextConfig = {
       config.externals = [...(config.externals || []), "onnxruntime-web", "@imgly/background-removal"];
     }
     // We only ever run background removal on the "cpu" (wasm) device — see
-    // the `removeBackground()` call in src/pages/studio/index.tsx, which
+    // the `removeBackground()` call in src/pages/customize/index.tsx, which
     // never passes `{ device: "gpu" }`. @imgly/background-removal still
     // *conditionally* `import()`s "onnxruntime-web/webgpu" for the gpu path,
     // and webpack bundles both branches of a dynamic import regardless of

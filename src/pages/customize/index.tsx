@@ -318,14 +318,14 @@ export default function StudioPage() {
   if (!guard) return null;
 
   return (
-    <AppShell>
+    <AppShell fullHeight>
       <Head>
         <title>Customize · ClickCard</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </Head>
 
-      <div className="mb-6 flex items-center justify-between gap-3">
+      <div className="mb-4 flex items-center justify-between gap-3 lg:shrink-0">
         <h1 className="font-display text-2xl font-black text-ink dark:text-white">Customize</h1>
         {(dirty || profileDirty || !!picture) && (
           <Button onClick={saveAll} loading={savingProfile} className="text-xs sm:text-sm">
@@ -334,11 +334,11 @@ export default function StudioPage() {
         )}
       </div>
 
-      <div className="flex flex-col gap-6 xl:flex-row xl:h-[calc(100vh-160px)]">
+      <div className="flex flex-col gap-6 lg:min-h-0 lg:flex-1 lg:flex-row">
         {/* preview + gallery */}
-        <div className="flex flex-col min-h-0 xl:flex-1">
+        <div className="flex flex-col min-h-0 lg:flex-1">
           {/* live preview */}
-          <div className="grid place-items-center rounded-3xl  bg-mist p-4 sm:p-6 dark:bg-white/[0.02] min-h-[340px] sm:min-h-[420px] xl:flex-1 xl:overflow-hidden">
+          <div className="grid place-items-center rounded-3xl  bg-mist p-4 sm:p-6 dark:bg-white/[0.02] min-h-[340px] sm:min-h-[410px] lg:flex-1 lg:overflow-hidden">
             <LiveProfileCard
               primary={primary}
               accent={accent}
@@ -388,7 +388,7 @@ export default function StudioPage() {
         </div>
 
         {/* controls */}
-        <div className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#12403c] overflow-y-auto xl:w-[440px] xl:h-full xl:shrink-0 2xl:w-[520px]">
+        <div className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#12403c] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px] 2xl:w-[520px]">
           {/* Design Heading */}
           <div className="px-5 py-4">
             <h3 className="font-display text-lg font-black text-ink dark:text-white">Design</h3>
