@@ -32,10 +32,11 @@ const nextConfig = {
     // vendor bundles from being re-minified.
     if (!isServer && Array.isArray(config.optimization?.minimizer)) {
       config.optimization.minimizer[0] = new TerserPlugin({
-        exclude: /^static[\\/]media[\\/]ort[.-].*\.mjs$/,
+        exclude: /ort.*\.mjs$/,
         parallel: true,
         terserOptions: {
-          compress: { ecma: 5 },
+          module: true,
+          compress: { ecma: 2020 },
           mangle: { safari10: true },
         },
       });
