@@ -65,7 +65,7 @@ export default function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="relative grid h-10 w-10 place-items-center rounded-xl text-ink/60 transition hover:bg-ink/5 dark:text-white/60 dark:hover:bg-white/10"
+        className="relative grid h-10 w-10 place-items-center rounded-xl text-ink/70 transition hover:bg-ink/5 hover:text-ink dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
         aria-label="Notifications"
       >
         <Bell size={18} />
@@ -77,7 +77,7 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 z-50 w-[min(92vw,360px)] overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-card dark:border-white/[0.06] dark:bg-[#12403c]">
+        <div className="fixed inset-x-3 top-16 z-50 overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-soft-lg dark:border-white/[0.06] dark:bg-[#12403c] sm:absolute sm:inset-auto sm:right-0 sm:top-12 sm:w-80 lg:w-96">
           <div className="flex items-center justify-between border-b border-ink/[0.06] px-4 py-3 dark:border-white/[0.06]">
             <p className="font-display text-sm font-black text-ink dark:text-white">
               Notifications

@@ -281,7 +281,7 @@ export default function StudioPage() {
         {/* preview + gallery */}
         <div className="flex flex-col min-h-0 xl:flex-1">
           {/* live preview */}
-          <div className="grid place-items-center rounded-3xl  bg-mist p-4 sm:p-6 dark:border-white/5 dark:bg-white/[0.02] min-h-[340px] sm:min-h-[420px] xl:flex-1 xl:overflow-hidden">
+          <div className="grid place-items-center rounded-3xl  bg-mist p-4 sm:p-6 dark:bg-white/[0.02] min-h-[340px] sm:min-h-[420px] xl:flex-1 xl:overflow-hidden">
             <LiveProfileCard
               primary={primary}
               accent={accent}
