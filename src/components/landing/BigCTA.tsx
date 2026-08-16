@@ -21,9 +21,9 @@ export default function BigCTA() {
         transition={{ duration: 0.55 }}
         className="relative mx-auto flex max-w-6xl flex-col items-center text-center"
       >
-        <h2 className=" text-5xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl ">
-          Your name is probably still
-          <span className=" ml-2 rounded-card bg-primary px-4 py-2 text-white">
+        <h2 className="text-3xl font-extrabold leading-relaxed tracking-tight text-white sm:text-5xl sm:leading-[1.25] lg:text-6xl">
+          Your name is probably still{" "}
+          <span className="inline-block rounded-card bg-primary px-3.5 py-1 text-white align-baseline sm:px-4 sm:py-1.5">
             free
           </span>
         </h2>
