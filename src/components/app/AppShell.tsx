@@ -128,7 +128,7 @@ export default function AppShell({
         <div className="flex items-center justify-between px-2">
           <Logo solid />
           <button
-            className="lg:hidden"
+            className="text-ink dark:text-white transition hover:opacity-80 lg:hidden"
             onClick={() => dispatch(setSidebar(false))}
             aria-label="Close menu"
           >
@@ -207,9 +207,9 @@ export default function AppShell({
 
       {/* ───────── main ───────── */}
       <div className="lg:pl-[270px]">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-ink/[0.06] bg-white/75 px-4 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0b2e2b]/75 sm:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-ink/[0.06] bg-white/75 px-4 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0b2e2b]/75 sm:px-6">
           <button
-            className="lg:hidden"
+            className="text-ink dark:text-white transition hover:opacity-80 lg:hidden"
             onClick={() => dispatch(setSidebar(true))}
             aria-label="Open menu"
           >
