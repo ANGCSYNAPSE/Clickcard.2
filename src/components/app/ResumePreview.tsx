@@ -4,11 +4,13 @@ import type { FullProfile, ProjectItem } from "@/types";
 
 type Icon = typeof Mail;
 
-// A4 at 96dpi — true page proportions so what you see here matches print/PDF.
-const PAGE_WIDTH = 794;
+// A4 at 96dpi — true page proportions. The page never renders wider than
+// this, but shrinks (preserving the exact aspect ratio) to fit whatever
+// space its container actually has — the CV tab, the phone frame, the
+// browser-preview frame — instead of overflowing and getting clipped.
+export const PAGE_WIDTH = 794;
 const PAGE_HEIGHT = 1123;
 const PAGE_PADDING = 48;
-const CONTENT_HEIGHT = PAGE_HEIGHT - PAGE_PADDING * 2;
 const BLOCK_GAP = 16;
 
 interface Block {
@@ -16,12 +18,32 @@ interface Block {
   node: ReactNode;
 }
 
+/** Tracks the rendered width of `ref`'s element, live, via ResizeObserver. */
+function useMeasuredWidth<T extends HTMLElement>(fallback: number) {
+  const ref = useRef<T>(null);
+  const [width, setWidth] = useState(fallback);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width;
+      if (w) setWidth(w);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return { ref, width };
+}
+
 /**
  * Measures each content block off-screen, then packs them into as many
  * fixed-height A4 pages as needed — pages grow/shrink automatically as
- * experience/education entries are added or the font changes.
+ * experience/education entries are added, the font changes, or the
+ * available width changes.
  */
-function usePaginatedBlocks(blocks: Block[], signature: string) {
+function usePaginatedBlocks(blocks: Block[], contentHeight: number, signature: string) {
   const [pageKeys, setPageKeys] = useState<string[][]>([blocks.map((b) => b.key)]);
   const measureRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [fontsTick, setFontsTick] = useState(0);
@@ -40,7 +62,7 @@ function usePaginatedBlocks(blocks: Block[], signature: string) {
     blocks.forEach((b, i) => {
       const h = heights[i];
       const addition = current.length ? h + BLOCK_GAP : h;
-      if (used + addition > CONTENT_HEIGHT && current.length > 0) {
+      if (used + addition > contentHeight && current.length > 0) {
         result.push(current);
         current = [b.key];
         used = h;
@@ -52,7 +74,7 @@ function usePaginatedBlocks(blocks: Block[], signature: string) {
     if (current.length) result.push(current);
     setPageKeys(result.length ? result : [[]]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signature, fontsTick, blocks.length]);
+  }, [signature, contentHeight, fontsTick, blocks.length]);
 
   return { pageKeys, measureRefs };
 }
@@ -125,6 +147,15 @@ export default function ResumePreview({
   const fg = textColor || "#0b2e2b";
   const fullName = p.fullName || "Your name";
 
+  const { ref: containerRef, width: containerWidth } = useMeasuredWidth<HTMLDivElement>(PAGE_WIDTH);
+
+  // Shrink (never grow) to fit the container, keeping the exact A4 aspect
+  // ratio and proportional margins so it always reads as a real page.
+  const pageWidth = Math.min(PAGE_WIDTH, containerWidth || PAGE_WIDTH);
+  const pageHeight = pageWidth * (PAGE_HEIGHT / PAGE_WIDTH);
+  const pagePadding = pageWidth * (PAGE_PADDING / PAGE_WIDTH);
+  const contentHeight = pageHeight - pagePadding * 2;
+
   const contactItems = (
     [
       c.email && { icon: Mail, label: c.email },
@@ -179,8 +210,8 @@ export default function ResumePreview({
               {skills.map((s, i) => (
                 <span
                   key={i}
-                  className="rounded-full px-2.5 py-1 text-[10px] font-semibold"
-                  style={{ background: `${primary}1a`, color: primary }}
+                  className="rounded-full px-2.5 py-1 text-xs font-bold"
+                  style={{ color: `${fg}80` }}
                 >
                   {s}
                 </span>
@@ -320,11 +351,11 @@ export default function ResumePreview({
   ]);
 
   const signature = useMemo(
-    () => JSON.stringify({ n: blocks.map((b) => b.key), fontFamily, fg, primary, accent }),
-    [blocks, fontFamily, fg, primary, accent],
+    () => JSON.stringify({ n: blocks.map((b) => b.key), fontFamily, fg, primary, accent, pageWidth }),
+    [blocks, fontFamily, fg, primary, accent, pageWidth],
   );
 
-  const { pageKeys, measureRefs } = usePaginatedBlocks(blocks, signature);
+  const { pageKeys, measureRefs } = usePaginatedBlocks(blocks, contentHeight, signature);
   const blockMap = useMemo(() => new Map(blocks.map((b) => [b.key, b.node])), [blocks]);
 
   const sharedStyle = {
@@ -333,11 +364,12 @@ export default function ResumePreview({
   };
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div ref={containerRef} className="flex w-full flex-col items-center gap-6">
       {/* Off-screen measurement pass — invisible, same width as a real page's content area */}
       <div
         aria-hidden
-        style={{ position: "absolute", top: -99999, left: -99999, width: PAGE_WIDTH - PAGE_PADDING * 2, ...sharedStyle }}
+        className="break-words"
+        style={{ position: "absolute", top: -99999, left: -99999, width: pageWidth - pagePadding * 2, ...sharedStyle }}
       >
         {blocks.map((b) => (
           <div
@@ -354,12 +386,11 @@ export default function ResumePreview({
       {pageKeys.map((keys, pageIndex) => (
         <div
           key={pageIndex}
-          className="w-full shrink-0 overflow-hidden rounded-lg bg-white"
+          className="shrink-0 overflow-hidden rounded-lg bg-white break-words"
           style={{
-            maxWidth: PAGE_WIDTH,
-            minHeight: PAGE_HEIGHT,
-            padding: PAGE_PADDING,
-            // boxShadow: "0 30px 60px -20px rgba(11,46,43,0.22)",
+            width: pageWidth,
+            minHeight: pageHeight,
+            padding: pagePadding,
             ...sharedStyle,
           }}
         >

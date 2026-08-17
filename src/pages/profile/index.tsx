@@ -13,8 +13,6 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  Search,
-  X as CloseIcon,
 } from "lucide-react";
 import { SOCIAL_QUICK_ADD, ALL_SOCIAL_PLATFORMS, getSocialIcon } from "@/lib/socialPlatforms";
 import AppShell from "@/components/app/AppShell";
@@ -22,6 +20,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import ProfilePreview from "@/components/app/ProfilePreview";
 import ImageCropModal from "@/components/app/ImageCropModal";
+import SocialIconPickerModal from "@/components/app/SocialIconPickerModal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchProfile,
@@ -65,7 +64,6 @@ export default function ProfileEditorPage() {
   const [pictureUrl, setPictureUrl] = useState<string | null>(null);
   const [cropSource, setCropSource] = useState<string | null>(null);
   const [socialPickerOpen, setSocialPickerOpen] = useState(false);
-  const [socialQuery, setSocialQuery] = useState("");
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -87,7 +85,6 @@ export default function ProfileEditorPage() {
     }
     setEditingSocial(platform);
     setSocialPickerOpen(false);
-    setSocialQuery("");
   };
 
   const updateSocial = (platform: string, patchValue: Partial<SocialLink>) =>
@@ -353,15 +350,23 @@ export default function ProfileEditorPage() {
                     ["city", "City", "Mumbai"],
                     ["country", "Country", "India"],
                   ] as const
-                ).map(([k, label, ph]) => (
-                  <Input
-                    key={k}
-                    label={label}
-                    placeholder={ph}
-                    value={(draft.contact?.[k] as string) || ""}
-                    onChange={(e) => patch("contact", { ...draft.contact, [k]: e.target.value })}
-                  />
-                ))}
+                ).map(([k, label, ph]) => {
+                  const isPhoneField = k === "phone" || k === "whatsapp";
+                  return (
+                    <Input
+                      key={k}
+                      label={label}
+                      placeholder={ph}
+                      type={isPhoneField ? "tel" : "text"}
+                      inputMode={isPhoneField ? "tel" : undefined}
+                      value={(draft.contact?.[k] as string) || ""}
+                      onChange={(e) => {
+                        const v = isPhoneField ? e.target.value.replace(/[^\d+ ]/g, "") : e.target.value;
+                        patch("contact", { ...draft.contact, [k]: v });
+                      }}
+                    />
+                  );
+                })}
                 <div className="sm:col-span-2">
                   <Input
                     label="Address"
@@ -533,9 +538,7 @@ export default function ProfileEditorPage() {
       </div>
 
       {socialPickerOpen && (
-        <SocialIconPicker
-          query={socialQuery}
-          onQueryChange={setSocialQuery}
+        <SocialIconPickerModal
           onBack={() => setSocialPickerOpen(false)}
           onClose={() => setSocialPickerOpen(false)}
           onPick={openSocialEditor}
@@ -553,92 +556,6 @@ export default function ProfileEditorPage() {
         />
       )}
     </AppShell>
-  );
-}
-
-/* ---- "Add social icon" picker modal ---- */
-function SocialIconPicker({
-  query,
-  onQueryChange,
-  onBack,
-  onClose,
-  onPick,
-}: {
-  query: string;
-  onQueryChange: (v: string) => void;
-  onBack: () => void;
-  onClose: () => void;
-  onPick: (platform: string) => void;
-}) {
-  const filtered = ALL_SOCIAL_PLATFORMS.filter((p) =>
-    p.platform.toLowerCase().includes(query.trim().toLowerCase()),
-  );
-
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative flex w-full max-w-sm flex-col rounded-t-3xl bg-white shadow-soft-lg sm:max-h-[80vh] sm:rounded-3xl dark:bg-[#12403c]"
-      >
-        {/* header */}
-        <div className="flex items-center justify-between px-5 pt-5">
-          <button
-            onClick={onBack}
-            aria-label="Back"
-            className="grid h-8 w-8 place-items-center rounded-full text-ink/60 transition hover:bg-ink/5 dark:text-white/60 dark:hover:bg-white/10"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <h3 className="font-display text-base font-black text-ink dark:text-white">Add social icon</h3>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="grid h-8 w-8 place-items-center rounded-full text-ink/60 transition hover:bg-ink/5 dark:text-white/60 dark:hover:bg-white/10"
-          >
-            <CloseIcon size={18} />
-          </button>
-        </div>
-
-        {/* search */}
-        <div className="px-5 pt-4">
-          <div className="flex items-center gap-2 rounded-2xl bg-mist px-3.5 py-2.5 dark:bg-white/5">
-            <Search size={16} className="text-ink/40 dark:text-white/40" />
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => onQueryChange(e.target.value)}
-              placeholder="Search"
-              className="w-full bg-transparent text-sm font-medium text-ink outline-none placeholder:text-ink/40 dark:text-white dark:placeholder:text-white/40"
-            />
-          </div>
-        </div>
-
-        {/* list */}
-        <div className="mt-2 flex-1 overflow-y-auto px-2 pb-4">
-          {filtered.length === 0 ? (
-            <p className="px-3 py-8 text-center text-sm text-ink/45 dark:text-white/45">
-              No platforms match &ldquo;{query}&rdquo;
-            </p>
-          ) : (
-            filtered.map(({ platform, icon: Icon }) => (
-              <button
-                key={platform}
-                type="button"
-                onClick={() => onPick(platform)}
-                className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition hover:bg-mist dark:hover:bg-white/5"
-              >
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink/5 text-ink dark:bg-white/10 dark:text-white">
-                  <Icon size={17} />
-                </span>
-                <span className="flex-1 text-sm font-bold text-ink dark:text-white">{platform}</span>
-                <ChevronRight size={16} className="text-ink/30 dark:text-white/30" />
-              </button>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
   );
 }
 

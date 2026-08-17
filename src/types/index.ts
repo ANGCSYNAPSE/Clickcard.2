@@ -135,6 +135,12 @@ export interface DigitalCardSection {
   /** Project entries shown on the Resume/CV layout. */
   projects?: ProjectItem[];
   /**
+   * Social links shown on the Resume/CV & Portfolio layouts — separate from
+   * the main profile.social list so editing them here doesn't change what
+   * shows up on the Share page, public profile, etc.
+   */
+  socialLinks?: SocialLink[];
+  /**
    * The full Studio design (colors, wallpaper, buttons, fonts…) as a plain
    * JSON blob — this is a loose JSON column on the backend, so it round-trips
    * whatever shape we send. See DesignState in store/slices/designSlice.ts

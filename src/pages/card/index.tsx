@@ -19,24 +19,38 @@ import {
   Plus,
   Trash2,
   X,
+  Mail,
+  Phone,
+  Globe,
+  MapPin,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import CardPreview from "@/components/app/CardPreview";
 import ResumePreview from "@/components/app/ResumePreview";
+import PortfolioPreview from "@/components/app/PortfolioPreview";
 import FontPickerModal from "@/components/app/FontPickerModal";
 import SkillPickerModal from "@/components/app/SkillPickerModal";
+import SocialIconPickerModal from "@/components/app/SocialIconPickerModal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProfile, saveProfile, updateSection } from "@/store/slices/profileSlice";
 import { pushToast } from "@/store/slices/uiSlice";
 import { useRequireAuth } from "@/lib/authGuards";
 import { SITE_URL } from "@/lib/config";
 import { loadGoogleFont } from "@/lib/fonts";
+import { SOCIAL_QUICK_ADD, getSocialIcon } from "@/lib/socialPlatforms";
 import {
   profileService,
   CardTemplate,
   CardRenderInput,
 } from "@/services/profileService";
-import type { PersonalSection, ContactSection, ExperienceItem, EducationItem, ProjectItem } from "@/types";
+import type {
+  PersonalSection,
+  ContactSection,
+  ExperienceItem,
+  EducationItem,
+  ProjectItem,
+  SocialLink,
+} from "@/types";
 
 /**
  * Template ids are contract with the backend renderer (CardTemplateService.js) —
@@ -123,12 +137,15 @@ export default function CardPage() {
   const [headerColor, setHeaderColor] = useState<string>(draft.digitalCard?.headerColor || "");
   const [skills, setSkills] = useState<string[]>(draft.digitalCard?.skills || []);
   const [projects, setProjects] = useState<ProjectItem[]>(draft.digitalCard?.projects || []);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(draft.digitalCard?.socialLinks || []);
   const [downloading, setDownloading] = useState(false);
   const [view, setView] = useState<ViewMode>("card");
   const [createMode, setCreateMode] = useState<CreateMode>("card");
   const [detailView, setDetailView] = useState<string | null>(null);
   const [fontPickerOpen, setFontPickerOpen] = useState(false);
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
+  const [socialPickerOpen, setSocialPickerOpen] = useState(false);
+  const [editingSocial, setEditingSocial] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -155,6 +172,7 @@ export default function CardPage() {
     if (draft.digitalCard?.headerColor) setHeaderColor(draft.digitalCard.headerColor);
     if (draft.digitalCard?.skills) setSkills(draft.digitalCard.skills);
     if (draft.digitalCard?.projects) setProjects(draft.digitalCard.projects);
+    if (draft.digitalCard?.socialLinks) setSocialLinks(draft.digitalCard.socialLinks);
   }, [draft.digitalCard]);
 
   useEffect(() => {
@@ -177,11 +195,48 @@ export default function CardPage() {
   const experience = draft.experience || [];
   const education = draft.education || [];
 
+  const onlyDigits = (v: string) => v.replace(/\D/g, "");
+  const onlyPhoneChars = (v: string) => v.replace(/[^\d+ ]/g, "");
+
   const updatePersonal = (patch: Partial<PersonalSection>) =>
     dispatch(updateSection({ section: "personal", value: { ...draft.personal, ...patch } }));
 
   const updateContact = (patch: Partial<ContactSection>) =>
     dispatch(updateSection({ section: "contact", value: { ...draft.contact, ...patch } }));
+
+  // Portfolio/CV social links are their own list — kept out of profile.social
+  // on purpose, so editing them here doesn't touch the Share page, public
+  // profile, or anywhere else that reads the main profile.
+  const findSocial = (platform: string) =>
+    socialLinks.find((s) => s.platform?.toLowerCase() === platform.toLowerCase());
+  const socialIconRow = [
+    ...SOCIAL_QUICK_ADD,
+    { platform: "GitHub", icon: getSocialIcon("GitHub") },
+    ...socialLinks
+      .filter(
+        (s) =>
+          !SOCIAL_QUICK_ADD.some((q) => q.platform.toLowerCase() === s.platform?.toLowerCase()) &&
+          s.platform?.toLowerCase() !== "github",
+      )
+      .map((s) => ({ platform: s.platform, icon: getSocialIcon(s.platform) })),
+  ];
+
+  /** Ensures a (possibly blank) entry exists for the platform, then opens its editor. */
+  const openSocialEditor = (platform: string) => {
+    if (!findSocial(platform)) {
+      setSocialLinks((prev) => [...prev, { platform, username: "", url: "", visible: true }]);
+    }
+    setEditingSocial(platform);
+    setSocialPickerOpen(false);
+  };
+  const updateSocial = (platform: string, patchValue: Partial<SocialLink>) =>
+    setSocialLinks((prev) =>
+      prev.map((s) => (s.platform?.toLowerCase() === platform.toLowerCase() ? { ...s, ...patchValue } : s)),
+    );
+  const removeSocial = (platform: string) => {
+    setSocialLinks((prev) => prev.filter((s) => s.platform?.toLowerCase() !== platform.toLowerCase()));
+    setEditingSocial(null);
+  };
 
   const addExperience = () =>
     dispatch(
@@ -238,6 +293,7 @@ export default function CardPage() {
         headerColor,
         skills,
         projects,
+        socialLinks,
       },
     };
     const res = await dispatch(saveProfile({ profile: next }));
@@ -325,6 +381,17 @@ export default function CardPage() {
         skills={skills}
         projects={projects}
       />
+    ) : createMode === "portfolio" ? (
+      <PortfolioPreview
+        profile={draft}
+        primary={primary}
+        accent={accent}
+        fontFamily={fontFamily}
+        textColor={textColor}
+        skills={skills}
+        projects={projects}
+        socialLinks={socialLinks}
+      />
     ) : (
       card
     );
@@ -368,39 +435,45 @@ export default function CardPage() {
       </div>
 
       {/* ── body ───────────────────────────────────────────── */}
-      <div className="flex flex-col gap-5 lg:min-h-0 lg:flex-1 lg:flex-row">
+      <div className="flex min-w-0 flex-col gap-5 lg:min-h-0 lg:flex-1 lg:flex-row">
         {/* stage */}
-        <section className="flex flex-col rounded-3xl border border-ink/[0.06] bg-mist p-4 dark:border-white/[0.06] dark:bg-white/[0.02] lg:min-h-0 lg:flex-1">
+        <section className="flex min-w-0 flex-col rounded-3xl border border-ink/[0.06] bg-mist p-4 dark:border-white/[0.06] dark:bg-white/[0.02] lg:min-h-0 lg:flex-1">
           <div
-            className={`flex min-h-[420px] flex-1 justify-center py-2 no-scrollbar lg:min-h-0 lg:overflow-y-auto ${
-              createMode === "resume" && view === "card" ? "items-start" : "items-center"
+            className={`flex min-h-[420px] min-w-0 flex-1 justify-center overflow-x-auto py-2 no-scrollbar lg:min-h-0 lg:overflow-y-auto ${
+              (createMode === "resume" || createMode === "portfolio") && view === "card" ? "items-start" : "items-center"
             }`}
           >
             {view === "card" && (
-              <div className={`w-full ${createMode === "resume" ? "max-w-[820px]" : "max-w-[340px]"}`}>{stage}</div>
+              <div
+                className={`w-full ${
+                  createMode === "resume" ? "max-w-[820px]" : createMode === "portfolio" ? "max-w-[600px]" : "max-w-[340px]"
+                }`}
+              >
+                {stage}
+              </div>
             )}
 
             {view === "mobile" && (
-              <div className="w-full max-w-[300px] rounded-[2.2rem] bg-ink p-2.5 ">
-                <div className="overflow-hidden rounded-[1.8rem] bg-white dark:bg-[#12403c]">
-                  <div className="flex items-center justify-between px-4 pb-1.5 pt-2 text-[10px] font-bold text-ink/70 dark:text-white/70">
+              <div className="w-full max-w-[300px] rounded-[2.2rem] bg-ink p-2.5">
+                <div className="flex h-[600px] flex-col overflow-hidden rounded-[1.8rem] bg-white dark:bg-[#12403c]">
+                  <div className="flex shrink-0 items-center justify-between px-4 pb-1.5 pt-2 text-[10px] font-bold text-ink/70 dark:text-white/70">
                     <span>9:41</span>
                     <span className="rounded-full bg-ink/10 px-2 py-0.5 dark:bg-white/10">
                       LIVE
                     </span>
                   </div>
-                  <div className="p-3">{stage}</div>
+                  <div className="no-scrollbar flex-1 overflow-auto p-3">{stage}</div>
                 </div>
               </div>
             )}
 
             {view === "preview" && (
               <div
-                className={`w-full overflow-hidden rounded-2xl bg-white  dark:bg-[#12403c] ${
-                  createMode === "resume" ? "max-w-[480px]" : "max-w-[400px]"
+                className={`flex h-[560px] w-full flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#12403c] ${
+                  createMode === "resume" || createMode === "portfolio" ? "max-w-[480px]" : "max-w-[400px]"
                 }`}
               >
-                <div className="flex items-center gap-2 border-b border-ink/[0.06] px-3 py-2 dark:border-white/[0.06]">
+                <div className="flex shrink-0 items-center gap-2 border-b border-ink/[0.06] px-3 py-2 dark:border-white/[0.06]">
                   <span className="h-2.5 w-2.5 rounded-full bg-brand-500" />
                   <span className="h-2.5 w-2.5 rounded-full bg-candy-yellow" />
                   <span className="h-2.5 w-2.5 rounded-full bg-candy-pink" />
@@ -408,7 +481,7 @@ export default function CardPage() {
                     {publicUrl || "clickcard.app"}
                   </span>
                 </div>
-                <div className="p-4">{stage}</div>
+                <div className="no-scrollbar flex-1 overflow-auto p-4">{stage}</div>
               </div>
             )}
           </div>
@@ -418,8 +491,20 @@ export default function CardPage() {
             <div className="inline-flex items-center gap-1 rounded-xl bg-white p-1 dark:bg-white/5">
               {VIEW_MODES.map((m) => {
                 const isCardTab = m.id === "card";
-                const label = isCardTab && createMode === "resume" ? "CV" : m.label;
-                const ModeIcon = isCardTab && createMode === "resume" ? FileText : m.icon;
+                const label = isCardTab
+                  ? createMode === "resume"
+                    ? "CV"
+                    : createMode === "portfolio"
+                    ? "Portfolio"
+                    : m.label
+                  : m.label;
+                const ModeIcon = isCardTab
+                  ? createMode === "resume"
+                    ? FileText
+                    : createMode === "portfolio"
+                    ? LayoutGrid
+                    : m.icon
+                  : m.icon;
                 return (
                   <button
                     key={m.id}
@@ -498,8 +583,8 @@ export default function CardPage() {
                 </div>
               </button>
 
-              {/* Details Option — resume/CV only */}
-              {createMode === "resume" && (
+              {/* Details Option — resume/CV and portfolio only */}
+              {(createMode === "resume" || createMode === "portfolio") && (
                 <button
                   onClick={() => setDetailView("details")}
                   className="w-full rounded-2xl bg-white px-5 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04]"
@@ -659,43 +744,6 @@ export default function CardPage() {
                   />
                 </div>
 
-                {/* Contact */}
-                <div className="space-y-2">
-                  <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                    Contact
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="email"
-                      value={draft.contact?.email || ""}
-                      onChange={(e) => updateContact({ email: e.target.value })}
-                      placeholder="Email"
-                      className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                    />
-                    <input
-                      type="text"
-                      value={draft.contact?.phone || ""}
-                      onChange={(e) => updateContact({ phone: e.target.value })}
-                      placeholder="Phone"
-                      className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                    />
-                    <input
-                      type="text"
-                      value={draft.contact?.website || ""}
-                      onChange={(e) => updateContact({ website: e.target.value })}
-                      placeholder="Website"
-                      className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                    />
-                    <input
-                      type="text"
-                      value={draft.contact?.city || ""}
-                      onChange={(e) => updateContact({ city: e.target.value })}
-                      placeholder="City"
-                      className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                    />
-                  </div>
-                </div>
-
                 {/* Skills */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -736,87 +784,89 @@ export default function CardPage() {
 
                 {/* Experience */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                      Experience
-                    </p>
-                    <button
-                      type="button"
-                      onClick={addExperience}
-                      className="flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-white/80"
-                    >
-                      <Plus size={12} /> Add
-                    </button>
-                  </div>
-                  {experience.length === 0 && (
-                    <p className="text-xs text-ink/40 dark:text-white/40">No experience added yet.</p>
-                  )}
-                  <div className="space-y-3">
-                    {experience.map((e, i) => (
-                      <div
-                        key={i}
-                        className="space-y-2 rounded-xl border border-ink/10 p-3 dark:border-white/10"
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
+                        Experience
+                      </p>
+                      <button
+                        type="button"
+                        onClick={addExperience}
+                        className="flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-white/80"
                       >
-                        <div className="flex items-center gap-2">
+                        <Plus size={12} /> Add
+                      </button>
+                    </div>
+                    {experience.length === 0 && (
+                      <p className="text-xs text-ink/40 dark:text-white/40">No experience added yet.</p>
+                    )}
+                    <div className="space-y-3">
+                      {experience.map((e, i) => (
+                        <div
+                          key={i}
+                          className="space-y-2 rounded-xl border border-ink/10 p-3 dark:border-white/10"
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={e.role || ""}
+                              onChange={(ev) => updateExperience(i, { role: ev.target.value })}
+                              placeholder="Role"
+                              className="flex-1 rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeExperience(i)}
+                              aria-label="Remove experience"
+                              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink/40 transition hover:bg-ink/5 hover:text-red-500 dark:text-white/40 dark:hover:bg-white/10"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                           <input
                             type="text"
-                            value={e.role || ""}
-                            onChange={(ev) => updateExperience(i, { role: ev.target.value })}
-                            placeholder="Role"
-                            className="flex-1 rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeExperience(i)}
-                            aria-label="Remove experience"
-                            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink/40 transition hover:bg-ink/5 hover:text-red-500 dark:text-white/40 dark:hover:bg-white/10"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                        <input
-                          type="text"
-                          value={e.company || ""}
-                          onChange={(ev) => updateExperience(i, { company: ev.target.value })}
-                          placeholder="Company"
-                          className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                        />
-                        <div className="grid grid-cols-2 gap-2">
-                          <input
-                            type="text"
-                            value={e.startDate || ""}
-                            onChange={(ev) => updateExperience(i, { startDate: ev.target.value })}
-                            placeholder="Start (e.g. 2021)"
+                            value={e.company || ""}
+                            onChange={(ev) => updateExperience(i, { company: ev.target.value })}
+                            placeholder="Company"
                             className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
                           />
-                          <input
-                            type="text"
-                            value={e.endDate || ""}
-                            disabled={!!e.current}
-                            onChange={(ev) => updateExperience(i, { endDate: ev.target.value })}
-                            placeholder="End (e.g. 2023)"
-                            className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={e.startDate || ""}
+                              onChange={(ev) => updateExperience(i, { startDate: onlyDigits(ev.target.value) })}
+                              placeholder="Start (e.g. 2021)"
+                              className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                            />
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={e.endDate || ""}
+                              disabled={!!e.current}
+                              onChange={(ev) => updateExperience(i, { endDate: onlyDigits(ev.target.value) })}
+                              placeholder="End (e.g. 2023)"
+                              className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                            />
+                          </div>
+                          <label className="flex items-center gap-2 text-xs font-medium text-ink/70 dark:text-white/70">
+                            <input
+                              type="checkbox"
+                              checked={!!e.current}
+                              onChange={(ev) => updateExperience(i, { current: ev.target.checked })}
+                            />
+                            Currently working here
+                          </label>
+                          <textarea
+                            value={e.description || ""}
+                            onChange={(ev) => updateExperience(i, { description: ev.target.value })}
+                            placeholder="Description"
+                            rows={2}
+                            className="w-full resize-none rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
                           />
                         </div>
-                        <label className="flex items-center gap-2 text-xs font-medium text-ink/70 dark:text-white/70">
-                          <input
-                            type="checkbox"
-                            checked={!!e.current}
-                            onChange={(ev) => updateExperience(i, { current: ev.target.checked })}
-                          />
-                          Currently working here
-                        </label>
-                        <textarea
-                          value={e.description || ""}
-                          onChange={(ev) => updateExperience(i, { description: ev.target.value })}
-                          placeholder="Description"
-                          rows={2}
-                          className="w-full resize-none rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                        />
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
 
                 {/* Projects */}
                 <div className="space-y-2">
@@ -875,15 +925,17 @@ export default function CardPage() {
                         <div className="grid grid-cols-2 gap-2">
                           <input
                             type="text"
+                            inputMode="numeric"
                             value={proj.startDate || ""}
-                            onChange={(ev) => updateProject(i, { startDate: ev.target.value })}
+                            onChange={(ev) => updateProject(i, { startDate: onlyDigits(ev.target.value) })}
                             placeholder="Start (e.g. 2023)"
                             className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
                           />
                           <input
                             type="text"
+                            inputMode="numeric"
                             value={proj.endDate || ""}
-                            onChange={(ev) => updateProject(i, { endDate: ev.target.value })}
+                            onChange={(ev) => updateProject(i, { endDate: onlyDigits(ev.target.value) })}
                             placeholder="End (e.g. 2024)"
                             className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
                           />
@@ -902,85 +954,218 @@ export default function CardPage() {
 
                 {/* Education */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                      Education
-                    </p>
-                    <button
-                      type="button"
-                      onClick={addEducation}
-                      className="flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-white/80"
-                    >
-                      <Plus size={12} /> Add
-                    </button>
-                  </div>
-                  {education.length === 0 && (
-                    <p className="text-xs text-ink/40 dark:text-white/40">No education added yet.</p>
-                  )}
-                  <div className="space-y-3">
-                    {education.map((ed, i) => (
-                      <div
-                        key={i}
-                        className="space-y-2 rounded-xl border border-ink/10 p-3 dark:border-white/10"
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
+                        Education
+                      </p>
+                      <button
+                        type="button"
+                        onClick={addEducation}
+                        className="flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-white/80"
                       >
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={ed.institution || ""}
-                            onChange={(ev) => updateEducation(i, { institution: ev.target.value })}
-                            placeholder="Institution"
-                            className="flex-1 rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                        <Plus size={12} /> Add
+                      </button>
+                    </div>
+                    {education.length === 0 && (
+                      <p className="text-xs text-ink/40 dark:text-white/40">No education added yet.</p>
+                    )}
+                    <div className="space-y-3">
+                      {education.map((ed, i) => (
+                        <div
+                          key={i}
+                          className="space-y-2 rounded-xl border border-ink/10 p-3 dark:border-white/10"
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={ed.institution || ""}
+                              onChange={(ev) => updateEducation(i, { institution: ev.target.value })}
+                              placeholder="Institution"
+                              className="flex-1 rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeEducation(i)}
+                              aria-label="Remove education"
+                              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink/40 transition hover:bg-ink/5 hover:text-red-500 dark:text-white/40 dark:hover:bg-white/10"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              value={ed.degree || ""}
+                              onChange={(ev) => updateEducation(i, { degree: ev.target.value })}
+                              placeholder="Degree"
+                              className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                            />
+                            <input
+                              type="text"
+                              value={ed.field || ""}
+                              onChange={(ev) => updateEducation(i, { field: ev.target.value })}
+                              placeholder="Field of study"
+                              className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={ed.startYear || ""}
+                              onChange={(ev) => updateEducation(i, { startYear: onlyDigits(ev.target.value) })}
+                              placeholder="Start year"
+                              className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                            />
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={ed.endYear || ""}
+                              onChange={(ev) => updateEducation(i, { endYear: onlyDigits(ev.target.value) })}
+                              placeholder="End year"
+                              className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                            />
+                          </div>
+                          <textarea
+                            value={ed.description || ""}
+                            onChange={(ev) => updateEducation(i, { description: ev.target.value })}
+                            placeholder="Description"
+                            rows={2}
+                            className="w-full resize-none rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
                           />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                {/* Contact */}
+                <div className="space-y-2">
+                  <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
+                    Contact
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
+                        <Mail size={12} /> Email
+                      </label>
+                      <input
+                        type="email"
+                        value={draft.contact?.email || ""}
+                        onChange={(e) => updateContact({ email: e.target.value })}
+                        placeholder="you@example.com"
+                        className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
+                        <Phone size={12} /> Phone
+                      </label>
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        value={draft.contact?.phone || ""}
+                        onChange={(e) => updateContact({ phone: onlyPhoneChars(e.target.value) })}
+                        placeholder="+91 82196 34560"
+                        className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
+                        <Globe size={12} /> Portfolio / LinkedIn
+                      </label>
+                      <input
+                        type="text"
+                        value={draft.contact?.website || ""}
+                        onChange={(e) => updateContact({ website: e.target.value })}
+                        placeholder="https://…"
+                        className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
+                        <MapPin size={12} /> City
+                      </label>
+                      <input
+                        type="text"
+                        value={draft.contact?.city || ""}
+                        onChange={(e) => updateContact({ city: e.target.value })}
+                        placeholder="City"
+                        className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Social links */}
+                  <div className="mt-4">
+                    <p className="mb-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">Social links</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {socialIconRow.map(({ platform, icon: Icon }) => {
+                        const added = Boolean(findSocial(platform));
+                        const isEditing = editingSocial === platform;
+                        return (
+                          <button
+                            key={platform}
+                            type="button"
+                            onClick={() => openSocialEditor(platform)}
+                            title={added ? `Edit ${platform}` : `Add ${platform}`}
+                            aria-label={added ? `Edit ${platform}` : `Add ${platform}`}
+                            className={`grid h-9 w-9 place-items-center rounded-full transition ${
+                              isEditing
+                                ? "bg-brand-500 text-white ring-2 ring-brand-500/30"
+                                : added
+                                ? "bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-white"
+                                : "bg-ink/5 text-ink/60 hover:bg-brand-50 hover:text-brand-600 dark:bg-white/10 dark:text-white/60 dark:hover:bg-white/20"
+                            }`}
+                          >
+                            <Icon size={15} />
+                          </button>
+                        );
+                      })}
+                      <button
+                        type="button"
+                        onClick={() => setSocialPickerOpen(true)}
+                        title="Add another social link"
+                        aria-label="Add another social link"
+                        className="grid h-9 w-9 place-items-center rounded-full border border-dashed border-ink/15 text-ink/40 transition hover:border-brand-300 hover:text-brand-600 dark:border-white/15 dark:text-white/40"
+                      >
+                        <Plus size={15} />
+                      </button>
+                    </div>
+
+                    {editingSocial && findSocial(editingSocial) && (
+                      <div className="mt-3 space-y-2 rounded-xl bg-mist p-3 dark:bg-white/[0.03]">
+                        <div className="flex items-center justify-between">
+                          <span className="inline-flex items-center gap-2 text-xs font-bold text-ink dark:text-white">
+                            {(() => {
+                              const Icon = getSocialIcon(editingSocial);
+                              return <Icon size={14} />;
+                            })()}
+                            {editingSocial}
+                          </span>
                           <button
                             type="button"
-                            onClick={() => removeEducation(i)}
-                            aria-label="Remove education"
-                            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink/40 transition hover:bg-ink/5 hover:text-red-500 dark:text-white/40 dark:hover:bg-white/10"
+                            onClick={() => removeSocial(editingSocial)}
+                            className="flex items-center gap-1 text-xs font-semibold text-rose-500 transition hover:text-rose-600"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={12} /> Remove
                           </button>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <input
-                            type="text"
-                            value={ed.degree || ""}
-                            onChange={(ev) => updateEducation(i, { degree: ev.target.value })}
-                            placeholder="Degree"
-                            className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                          />
-                          <input
-                            type="text"
-                            value={ed.field || ""}
-                            onChange={(ev) => updateEducation(i, { field: ev.target.value })}
-                            placeholder="Field of study"
-                            className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <input
-                            type="text"
-                            value={ed.startYear || ""}
-                            onChange={(ev) => updateEducation(i, { startYear: ev.target.value })}
-                            placeholder="Start year"
-                            className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                          />
-                          <input
-                            type="text"
-                            value={ed.endYear || ""}
-                            onChange={(ev) => updateEducation(i, { endYear: ev.target.value })}
-                            placeholder="End year"
-                            className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                          />
-                        </div>
-                        <textarea
-                          value={ed.description || ""}
-                          onChange={(ev) => updateEducation(i, { description: ev.target.value })}
-                          placeholder="Description"
-                          rows={2}
-                          className="w-full resize-none rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                        <input
+                          type="text"
+                          value={findSocial(editingSocial)?.url || ""}
+                          onChange={(e) => updateSocial(editingSocial, { url: e.target.value })}
+                          placeholder="https://…"
+                          className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
                         />
+                        <button
+                          type="button"
+                          onClick={() => setEditingSocial(null)}
+                          className="text-xs font-bold text-brand-600 hover:text-brand-700"
+                        >
+                          Done
+                        </button>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
@@ -1209,6 +1394,14 @@ export default function CardPage() {
           existingSkills={skills}
           onAdd={(skill) => setSkills((prev) => [...prev, skill])}
           onClose={() => setSkillPickerOpen(false)}
+        />
+      )}
+
+      {socialPickerOpen && (
+        <SocialIconPickerModal
+          onBack={() => setSocialPickerOpen(false)}
+          onClose={() => setSocialPickerOpen(false)}
+          onPick={openSocialEditor}
         />
       )}
     </AppShell>
