@@ -25,9 +25,9 @@ export interface SocialPlatform {
 export const SOCIAL_QUICK_ADD: SocialPlatform[] = [
   { platform: "Instagram", icon: SiInstagram },
   { platform: "Facebook", icon: SiFacebook },
-  { platform: "LinkedIn", icon: FaLinkedin },
   { platform: "YouTube", icon: SiYoutube },
-  { platform: "TikTok", icon: SiTiktok },
+  { platform: "WhatsApp", icon: SiWhatsapp },
+  { platform: "LinkedIn", icon: FaLinkedin },
 ];
 
 /** Full catalog shown in the "Add social icon" picker. */
@@ -38,7 +38,7 @@ export const ALL_SOCIAL_PLATFORMS: SocialPlatform[] = [
   { platform: "Facebook", icon: SiFacebook },
   { platform: "YouTube", icon: SiYoutube },
   { platform: "X (formerly Twitter)", icon: SiX },
-  { platform: "TikTok", icon: SiTiktok },
+  // { platform: "TikTok", icon: SiTiktok },
   { platform: "LinkedIn", icon: FaLinkedin },
   { platform: "WhatsApp", icon: SiWhatsapp },
   { platform: "Snapchat", icon: SiSnapchat },

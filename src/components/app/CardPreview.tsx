@@ -2,6 +2,7 @@ import { CSSProperties } from "react";
 import { Phone, Mail, Globe, MessageCircle, MapPin, ExternalLink, QrCode } from "lucide-react";
 import type { FullProfile } from "@/types";
 import { SITE_URL } from "@/lib/config";
+import { getContrastText } from "@/lib/color";
 
 /**
  * Lightweight client-side preview of the 6 digital card templates. Visually
@@ -32,11 +33,14 @@ function Avatar({
   size = 80,
   picture,
   initials,
+  borderColor,
 }: {
   t: Tokens;
   size?: number;
   picture?: string;
   initials: string;
+  /** Matches the card's own surface so the avatar reads as a cut-out. */
+  borderColor?: string;
 }) {
   return (
     <div
@@ -47,7 +51,7 @@ function Avatar({
         background: t.isDark ? "#12403c" : "#ffffff",
         color: t.primary,
         fontSize: size * 0.36,
-        border: `4px solid ${t.isDark ? t.bg : "#FBF1E1"}`,
+        border: `4px solid ${borderColor ?? (t.isDark ? t.bg : "#FBF1E1")}`,
       }}
     >
       {picture ? (
@@ -116,6 +120,11 @@ export default function CardPreview({
   theme,
   profile,
   username,
+  fontFamily,
+  textColor,
+  paletteStyle = "fill",
+  backgroundColor = "#ffffff",
+  headerColor,
 }: {
   templateId: string;
   primary: string;
@@ -125,6 +134,16 @@ export default function CardPreview({
   theme: "light" | "dark";
   profile: FullProfile;
   username?: string | null;
+  /** Google Font family applied to the whole card (inherited by all text). */
+  fontFamily?: string;
+  /** Overrides the default light/dark text colour when set. */
+  textColor?: string;
+  /** How the card's base surface renders — a flat colour, a primary→accent gradient, or a softened gradient. */
+  paletteStyle?: "fill" | "gradient" | "blur";
+  /** Overrides the header band / header block / side panel colour (falls back to primary). */
+  headerColor?: string;
+  /** Solid background colour used when paletteStyle is "fill". */
+  backgroundColor?: string;
 }) {
   const p = profile.personal || {};
   const c = profile.contact || {};
@@ -138,10 +157,34 @@ export default function CardPreview({
     : "";
 
   const isDark = theme === "dark" || templateId === "neon-dark";
+
+  // The card's base surface — solid fill, a primary→accent gradient, or that
+  // gradient softened with a translucent white wash (no backdrop-filter, so
+  // it renders identically in the exported PDF/PNG too).
+  const resolvedBg =
+    paletteStyle === "gradient"
+      ? `linear-gradient(135deg, ${primary}, ${accent})`
+      : paletteStyle === "blur"
+      ? `linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)), linear-gradient(135deg, ${primary}, ${accent})`
+      : backgroundColor;
+
+  // A solid fallback for spots that can't render a gradient (e.g. the avatar's
+  // cut-out border) — closest visible tone for gradient/blur, exact for fill.
+  const resolvedSolidBg = paletteStyle === "fill" ? backgroundColor : primary;
+
+  // The header band / header block / side panel colour — defaults to primary
+  // when the user hasn't picked one, same across all three palette styles.
+  const headerFill = headerColor || primary;
+
+  const autoFg =
+    paletteStyle === "gradient" || paletteStyle === "blur"
+      ? getContrastText(primary)
+      : getContrastText(backgroundColor);
+
   const t: Tokens = {
     isDark,
     bg: isDark ? "#0b2e2b" : "#ffffff",
-    fg: isDark ? "#ffffff" : "#0b2e2b",
+    fg: textColor || (isDark ? "#ffffff" : autoFg),
     subtle: isDark ? "rgba(255,255,255,0.55)" : "rgba(11,46,43,0.55)",
     surface: isDark ? "rgba(255,255,255,0.07)" : "#ffffff",
     primary,
@@ -149,13 +192,14 @@ export default function CardPreview({
   };
 
   const cardStyle: CSSProperties = {
-    background: t.bg,
+    background: resolvedBg,
     color: t.fg,
     borderRadius: 24,
     width: "100%",
     maxWidth: 360,
     overflow: "hidden",
-    boxShadow: "0 30px 60px -20px rgba(11,46,43,0.22)",
+    // boxShadow: "0 30px 60px -20px rgba(11,46,43,0.22)",
+    fontFamily: fontFamily ? `"${fontFamily}", sans-serif` : undefined,
   };
 
   const contact = (
@@ -186,7 +230,13 @@ export default function CardPreview({
             <h2 className="mt-4 break-words font-display text-3xl font-black">{fullName}</h2>
             {p.tagline && <p className="mt-1 text-sm" style={{ color: t.subtle }}>{p.tagline}</p>}
           </div>
-          <Avatar t={t} size={56} picture={p.profilePicture} initials={initials} />
+          <Avatar
+            t={t}
+            size={56}
+            picture={p.profilePicture}
+            initials={initials}
+            borderColor={isDark ? t.bg : resolvedSolidBg}
+          />
         </div>
         <div className="my-5 h-0.5 w-12" style={{ background: primary }} />
         {p.bio && <p className="text-xs leading-relaxed" style={{ color: t.subtle }}>{p.bio}</p>}
@@ -201,7 +251,7 @@ export default function CardPreview({
       <div style={cardStyle} className="flex">
         <div
           className="flex w-1/3 flex-col items-center gap-3 p-4 text-white"
-          style={{ background: primary }}
+          style={{ background: headerFill }}
         >
           <Avatar t={t} size={64} picture={p.profilePicture} initials={initials} />
           <h3 className="text-center text-sm font-black leading-tight">{fullName}</h3>
@@ -236,7 +286,9 @@ export default function CardPreview({
         <div
           className="h-24 rounded-2xl"
           style={{
-            background: `radial-gradient(circle at 30% 30%, ${primary}cc, transparent 60%), radial-gradient(circle at 70% 70%, ${accent}cc, transparent 60%), #06211f`,
+            background: headerColor
+              ? `radial-gradient(circle at 40% 40%, ${headerColor}cc, transparent 65%), #06211f`
+              : `radial-gradient(circle at 30% 30%, ${primary}cc, transparent 60%), radial-gradient(circle at 70% 70%, ${accent}cc, transparent 60%), #06211f`,
           }}
         />
         <div className="-mt-10 flex justify-center">
@@ -260,10 +312,10 @@ export default function CardPreview({
   if (templateId === "corporate-premium") {
     return (
       <div style={{ ...cardStyle, background: "#fcfaf5", color: "#0b2e2b" }} className="p-6">
-        <div className="flex items-center justify-between gap-3 pb-4" style={{ borderBottom: `2px solid ${primary}` }}>
+        <div className="flex items-center justify-between gap-3 pb-4" style={{ borderBottom: `2px solid ${headerFill}` }}>
           <div className="min-w-0">
             {biz.name && (
-              <div className="truncate text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: primary }}>
+              <div className="truncate text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: headerFill }}>
                 {biz.name}
               </div>
             )}
@@ -283,7 +335,7 @@ export default function CardPreview({
 
   if (templateId === "playful-rounded") {
     return (
-      <div style={{ ...cardStyle, background: isDark ? t.bg : "#FBF1E1" }} className="p-5">
+      <div style={{ ...cardStyle, background: isDark ? t.bg : resolvedBg }} className="p-5">
         <div className="rounded-3xl p-4" style={{ background: t.surface }}>
           <div className="flex items-center gap-3">
             <Avatar t={t} size={56} picture={p.profilePicture} initials={initials} />
@@ -306,8 +358,10 @@ export default function CardPreview({
     );
   }
 
-  // default: gradient-classic — "Classic Retro", a flat 4-stop header band.
-  const band = stripes?.length ? stripes : [primary, accent, primary, accent];
+  // default: gradient-classic — "Classic Retro", a flat header band. A custom
+  // header colour renders as a solid band; otherwise falls back to the
+  // multi-stop stripes (or a primary/accent alternation).
+  const band = headerColor ? [headerColor] : stripes?.length ? stripes : [primary, accent, primary, accent];
   const tiles = [
     ...contact.slice(0, 3),
     ...social.slice(0, 2).map((s) => ({
@@ -317,14 +371,20 @@ export default function CardPreview({
   ].slice(0, 4);
 
   return (
-    <div style={{ ...cardStyle, background: isDark ? t.bg : "#FBF1E1" }}>
+    <div style={{ ...cardStyle, background: isDark ? t.bg : resolvedBg }}>
       <div className="flex h-24">
         {band.map((colour, i) => (
           <div key={i} className="flex-1" style={{ background: colour }} />
         ))}
       </div>
       <div className="-mt-9 flex justify-center">
-        <Avatar t={t} size={72} picture={p.profilePicture} initials={initials} />
+        <Avatar
+          t={t}
+          size={72}
+          picture={p.profilePicture}
+          initials={initials}
+          borderColor={isDark ? t.bg : resolvedSolidBg}
+        />
       </div>
       <div className="px-5 pb-5 pt-2.5 text-center">
         <h2 className="break-words font-display text-lg font-black" style={{ color: t.fg }}>

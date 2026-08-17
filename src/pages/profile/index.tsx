@@ -102,7 +102,7 @@ export default function ProfileEditorPage() {
   };
 
   /** Fixed quick-add icons plus any extra platforms already added via the picker. */
-  const socialIconRow = [
+  const socialIconCatalog = [
     ...SOCIAL_QUICK_ADD,
     ...ALL_SOCIAL_PLATFORMS.filter(
       (p) =>
@@ -110,6 +110,15 @@ export default function ProfileEditorPage() {
         findSocial(p.platform),
     ),
   ];
+
+  // Platforms the user has actually filled in move to the front, in the order
+  // they were added (first added → first icon); everything else keeps its
+  // default catalog order after that.
+  const addedIconsInOrder = social
+    .map((s) => socialIconCatalog.find((p) => p.platform.toLowerCase() === s.platform?.toLowerCase()))
+    .filter((p): p is (typeof socialIconCatalog)[number] => Boolean(p));
+  const notYetAddedIcons = socialIconCatalog.filter((p) => !findSocial(p.platform));
+  const socialIconRow = [...addedIconsInOrder, ...notYetAddedIcons];
 
   const onPickPicture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];

@@ -74,6 +74,16 @@ export interface ExperienceItem {
   description?: string;
 }
 
+export interface ProjectItem {
+  id?: string;
+  name: string;
+  role?: string;
+  link?: string;
+  startDate?: string;
+  endDate?: string;
+  description?: string;
+}
+
 export interface BusinessHours {
   day: string;
   open?: string;
@@ -115,6 +125,15 @@ export interface DigitalCardSection {
   theme?: string;
   primaryColor?: string;
   accentColor?: string;
+  fontFamily?: string;
+  textColor?: string;
+  paletteStyle?: string;
+  backgroundColor?: string;
+  headerColor?: string;
+  /** Comma-separated skill tags, shown on the Resume/CV layout. */
+  skills?: string[];
+  /** Project entries shown on the Resume/CV layout. */
+  projects?: ProjectItem[];
   /**
    * The full Studio design (colors, wallpaper, buttons, fonts…) as a plain
    * JSON blob — this is a loose JSON column on the backend, so it round-trips
