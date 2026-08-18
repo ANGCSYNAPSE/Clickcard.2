@@ -331,7 +331,7 @@ export default function PortfolioPage() {
 
         <aside className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#12403c] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px]">
           <div className="px-5 py-4">
-            <h3 className="font-display text-lg font-black text-ink dark:text-white">Create Portfolio</h3>
+            <h3 className="font-display text-lg font-black text-ink dark:text-white">Edit Portfolio</h3>
           </div>
 
           {detailView === null && (

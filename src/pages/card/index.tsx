@@ -356,7 +356,7 @@ export default function CardPage() {
         {/* control rail — same shell/list/detail-view pattern as the Customize page */}
         <aside className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#12403c] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px]">
           <div className="px-5 py-4">
-            <h3 className="font-display text-lg font-black text-ink dark:text-white">Create Card</h3>
+            <h3 className="font-display text-lg font-black text-ink dark:text-white">Edit Card</h3>
           </div>
 
           {detailView === null && (
@@ -382,7 +382,7 @@ export default function CardPage() {
                   </div>
                 </div>
               </button>
-              
+
               {/* Details Option — name, business, contact info shown on the card */}
               <button
                 onClick={() => setDetailView("details")}
