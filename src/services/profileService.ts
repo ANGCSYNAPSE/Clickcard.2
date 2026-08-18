@@ -11,24 +11,32 @@ export const profileService = {
 
   /**
    * Create/update full profile. Sends multipart so an optional picture can
-   * ride along. Deliberately does NOT set a Content-Type header — for a
-   * FormData body the browser must generate that itself (it's the only one
-   * that knows the multipart boundary string it's using). Setting
-   * "multipart/form-data" by hand here previously overrode that and shipped
-   * a boundary-less request, which the backend couldn't parse, so any
-   * attached picture silently never saved.
+   * ride along. `apiClient` defaults every request to
+   * "Content-Type: application/json" (see axiosClient.ts) — axios's own
+   * transformRequest checks that header and, when it's JSON, silently
+   * JSON.stringifies the FormData instead of sending it as multipart (a
+   * File has no enumerable own properties, so it serializes to "{}" and the
+   * picture is lost even though the rest of the payload looks fine). Setting
+   * Content-Type to undefined here clears that default so axios takes its
+   * FormData branch and lets the browser generate the real multipart
+   * boundary — do NOT set it to "multipart/form-data" by hand instead, that
+   * ships a boundary-less request the backend can't parse either.
    */
   save: (profileData: FullProfile, profilePicture?: File | null) => {
     const form = new FormData();
     form.append("profileData", JSON.stringify(toApiProfile(profileData)));
     if (profilePicture) form.append("profilePicture", profilePicture);
-    return apiClient.post<ApiResponse<FullProfile>>(PROFILE_ROUTES.create, form);
+    return apiClient.post<ApiResponse<FullProfile>>(PROFILE_ROUTES.create, form, {
+      headers: { "Content-Type": undefined },
+    });
   },
 
   uploadPicture: (file: File) => {
     const form = new FormData();
     form.append("profilePicture", file);
-    return apiClient.post<ApiResponse<{ profilePicture: string }>>(PROFILE_ROUTES.uploadPicture, form);
+    return apiClient.post<ApiResponse<{ profilePicture: string }>>(PROFILE_ROUTES.uploadPicture, form, {
+      headers: { "Content-Type": undefined },
+    });
   },
 
   makePublic: () =>

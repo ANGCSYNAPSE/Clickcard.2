@@ -37,8 +37,14 @@ export function fromApiProfile(d: any): FullProfile {
       .map(([k, v]) => ({ platform: k, url: v as string }));
   }
 
+  // The backend stores the avatar as a top-level user field (Cloudinary URL),
+  // not inside personal_identity, so it has to be merged in by hand.
+  const personal = { ...(d.personal_identity ?? d.personalIdentity ?? {}) };
+  const profilePicture = d.profile_picture ?? d.profilePicture ?? personal.profilePicture;
+  if (profilePicture) personal.profilePicture = profilePicture;
+
   return {
-    personal: d.personal_identity ?? d.personalIdentity ?? {},
+    personal,
     contact: d.contact_information ?? d.contactInformation ?? {},
     education: d.education ?? [],
     experience: d.work_experience ?? d.workExperience ?? [],

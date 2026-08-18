@@ -1,17 +1,24 @@
-import { CSSProperties } from "react";
-import { Phone, Mail, Globe, MessageCircle, MapPin, ExternalLink, QrCode } from "lucide-react";
+import { CSSProperties, useId } from "react";
+import { Phone, Mail, Globe, MessageCircle, MapPin } from "lucide-react";
 import type { FullProfile } from "@/types";
 import { SITE_URL } from "@/lib/config";
 import { getContrastText } from "@/lib/color";
 
 /**
- * Lightweight client-side preview of the 6 digital card templates. Visually
- * matches CardTemplateService.js on the BE so the rendered PDF is recognisable
- * from the preview. Intentionally not a 1:1 copy of every pixel — the BE PDF is
- * the source of truth for download.
+ * Lightweight client-side preview of the digital business-card templates
+ * (see @/lib/cardTemplates). Visually matches CardTemplateService.js on the
+ * BE so the rendered PDF is recognisable from the preview. Intentionally not
+ * a 1:1 copy of every pixel — the BE PDF is the source of truth for download.
  */
 
 type Icon = typeof Phone;
+
+/**
+ * Standard business-card trim size — 89 × 51 mm — applied as a CSS aspect
+ * ratio so every template (front and back alike) renders at true card
+ * proportions regardless of pixel width.
+ */
+const CARD_ASPECT_RATIO = "89 / 51";
 
 /** Resolved theme colours, threaded to the sub-components below. */
 interface Tokens {
@@ -76,34 +83,6 @@ function Row({ t, icon: I, label }: { t: Tokens; icon: Icon; label: string }) {
   );
 }
 
-/** Reference-style row: solid icon tile, label, trailing open-link glyph. */
-function TileRow({
-  t,
-  icon: I,
-  label,
-  tint,
-}: {
-  t: Tokens;
-  icon: Icon;
-  label: string;
-  tint: string;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 rounded-xl px-2.5 py-2" style={{ background: t.surface }}>
-      <span
-        className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-white"
-        style={{ background: tint }}
-      >
-        <I size={14} />
-      </span>
-      <span className="min-w-0 flex-1 truncate text-[11px] font-bold" style={{ color: t.fg }}>
-        {label}
-      </span>
-      <ExternalLink size={12} style={{ color: t.subtle }} />
-    </div>
-  );
-}
-
 function Footer({ t, url }: { t: Tokens; url: string }) {
   return (
     <div className="mt-4 text-center text-[10px]" style={{ color: t.subtle }}>
@@ -112,11 +91,112 @@ function Footer({ t, url }: { t: Tokens; url: string }) {
   );
 }
 
+/** Meandering wave band used by the Wave Bold template — anchored to one edge. */
+function WaveBand({ fill, height = 64, flip }: { fill: string; height?: number; flip?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 400 100"
+      preserveAspectRatio="none"
+      className="block w-full"
+      style={{ height, transform: flip ? "scaleY(-1)" : undefined }}
+    >
+      <path
+        d="M0,55 C70,95 130,10 210,35 C280,57 320,15 400,25 L400,0 L0,0 Z"
+        fill={fill}
+      />
+    </svg>
+  );
+}
+
+/** Repeating chevron/arrow tile used by the Chevron Pattern template. */
+function ChevronPattern({ id, fill, bg }: { id: string; fill: string; bg: string }) {
+  return (
+    <svg width="100%" height="100%" className="absolute inset-0" preserveAspectRatio="xMidYMin slice">
+      <defs>
+        <pattern id={id} width="26" height="15" patternUnits="userSpaceOnUse">
+          <rect width="26" height="15" fill={bg} />
+          <path d="M0,15 L13,0 L26,15" fill="none" stroke={fill} strokeWidth="5" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill={`url(#${id})`} />
+    </svg>
+  );
+}
+
+/**
+ * Original hand-drawn-style mandala bloom used by the Floral Mandala
+ * template — layered petal rings, a dotted halo and outlined shapes, built
+ * from primitives rather than reproducing any specific illustration.
+ */
+function MandalaMotif({
+  size = 160,
+  light,
+  mid,
+  dark,
+  ink,
+  style,
+}: {
+  size?: number;
+  /** Palest fill — outer petals. */
+  light: string;
+  /** Mid-tone fill — inner petals and core ring. */
+  mid: string;
+  /** Deepest tone — accent dots and core centre. */
+  dark: string;
+  /** Line colour for every stroke, mimicking hand-drawn outlines. */
+  ink: string;
+  style?: CSSProperties;
+}) {
+  const outer = Array.from({ length: 14 });
+  const middle = Array.from({ length: 12 });
+  const dots = Array.from({ length: 22 });
+  return (
+    <svg viewBox="0 0 200 200" width={size} height={size} style={style} aria-hidden>
+      <g transform="translate(100,100)">
+        {dots.map((_, i) => {
+          const angle = (360 / dots.length) * i;
+          const rad = (angle * Math.PI) / 180;
+          const r = 86;
+          return (
+            <circle key={`d-${i}`} cx={Math.sin(rad) * r} cy={-Math.cos(rad) * r} r={2.6} fill={dark} />
+          );
+        })}
+        {outer.map((_, i) => (
+          <ellipse
+            key={`o-${i}`}
+            rx={15}
+            ry={44}
+            cy={-60}
+            fill={light}
+            stroke={ink}
+            strokeWidth={1.4}
+            transform={`rotate(${(360 / outer.length) * i})`}
+          />
+        ))}
+        {middle.map((_, i) => (
+          <ellipse
+            key={`m-${i}`}
+            rx={11}
+            ry={30}
+            cy={-40}
+            fill={mid}
+            stroke={ink}
+            strokeWidth={1.2}
+            transform={`rotate(${(360 / middle.length) * i + 15})`}
+          />
+        ))}
+        <circle r={23} fill={mid} stroke={ink} strokeWidth={1.4} />
+        <circle r={13} fill={light} stroke={ink} strokeWidth={1} />
+        <circle r={4.5} fill={dark} />
+      </g>
+    </svg>
+  );
+}
+
 export default function CardPreview({
   templateId,
   primary,
   accent,
-  stripes,
   theme,
   profile,
   username,
@@ -129,8 +209,6 @@ export default function CardPreview({
   templateId: string;
   primary: string;
   accent: string;
-  /** Palette stops for the Classic Retro header band. */
-  stripes?: string[];
   theme: "light" | "dark";
   profile: FullProfile;
   username?: string | null;
@@ -145,9 +223,9 @@ export default function CardPreview({
   /** Solid background colour used when paletteStyle is "fill". */
   backgroundColor?: string;
 }) {
+  const patternId = useId();
   const p = profile.personal || {};
   const c = profile.contact || {};
-  const social = (profile.social || []).filter((s) => s.url);
   const biz = profile.business || {};
   const fullName = p.fullName || "Your name";
   const initials =
@@ -156,7 +234,7 @@ export default function CardPreview({
     ? `${SITE_URL}/${username}`
     : "";
 
-  const isDark = theme === "dark" || templateId === "neon-dark";
+  const isDark = theme === "dark";
 
   // The card's base surface — solid fill, a primary→accent gradient, or that
   // gradient softened with a translucent white wash (no backdrop-filter, so
@@ -167,14 +245,6 @@ export default function CardPreview({
       : paletteStyle === "blur"
       ? `linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)), linear-gradient(135deg, ${primary}, ${accent})`
       : backgroundColor;
-
-  // A solid fallback for spots that can't render a gradient (e.g. the avatar's
-  // cut-out border) — closest visible tone for gradient/blur, exact for fill.
-  const resolvedSolidBg = paletteStyle === "fill" ? backgroundColor : primary;
-
-  // The header band / header block / side panel colour — defaults to primary
-  // when the user hasn't picked one, same across all three palette styles.
-  const headerFill = headerColor || primary;
 
   const autoFg =
     paletteStyle === "gradient" || paletteStyle === "blur"
@@ -219,194 +289,160 @@ export default function CardPreview({
 
   // --- template variants ---
 
-  if (templateId === "minimal-mono") {
+  if (templateId === "chevron-pattern") {
     return (
-      <div style={cardStyle} className="p-7">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: primary }}>
-              {biz.name || "Digital Card"}
-            </div>
-            <h2 className="mt-4 break-words font-display text-3xl font-black">{fullName}</h2>
-            {p.tagline && <p className="mt-1 text-sm" style={{ color: t.subtle }}>{p.tagline}</p>}
-          </div>
-          <Avatar
-            t={t}
-            size={56}
-            picture={p.profilePicture}
-            initials={initials}
-            borderColor={isDark ? t.bg : resolvedSolidBg}
-          />
+      <div style={{ ...cardStyle, background: "#ffffff", color: "#0b2e2b" }}>
+        <div className="relative h-24 overflow-hidden">
+          <ChevronPattern id={`${patternId}-chevron`} fill={accent} bg="#ffffff" />
         </div>
-        <div className="my-5 h-0.5 w-12" style={{ background: primary }} />
-        {p.bio && <p className="text-xs leading-relaxed" style={{ color: t.subtle }}>{p.bio}</p>}
-        <div className="mt-4 space-y-1.5">{rows}</div>
-        <Footer t={t} url={publicUrl} />
-      </div>
-    );
-  }
-
-  if (templateId === "split-modern") {
-    return (
-      <div style={cardStyle} className="flex">
-        <div
-          className="flex w-1/3 flex-col items-center gap-3 p-4 text-white"
-          style={{ background: headerFill }}
-        >
-          <Avatar t={t} size={64} picture={p.profilePicture} initials={initials} />
-          <h3 className="text-center text-sm font-black leading-tight">{fullName}</h3>
+        <div className="px-6 pb-5 pt-4 text-center">
+          <h2 className="break-words text-xl font-black uppercase tracking-wide">
+            {biz.name || fullName}
+          </h2>
           {p.tagline && (
-            <div className="text-center text-[9px] font-black uppercase tracking-wider opacity-90">
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: t.subtle }}>
               {p.tagline}
-            </div>
+            </p>
           )}
-          <div className="mt-auto grid h-14 w-14 place-items-center rounded-md bg-white text-ink">
-            <QrCode size={36} />
-          </div>
-        </div>
-        <div className="min-w-0 flex-1 p-4">
-          {biz.name && (
-            <div className="truncate text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: primary }}>
-              {biz.name}{biz.category ? ` · ${biz.category}` : ""}
-            </div>
-          )}
-          {p.bio && <p className="mt-2 text-[11px]" style={{ color: t.subtle }}>{p.bio}</p>}
-          <div className="mt-3 space-y-1.5">{rows}</div>
+          <div className="mx-auto mt-3 h-0.5 w-10" style={{ background: accent }} />
+          <div className="mt-4 space-y-1.5 text-left">{rows}</div>
+          <Footer t={t} url={publicUrl} />
         </div>
       </div>
     );
   }
 
-  if (templateId === "neon-dark") {
+  if (templateId === "geo-triangle") {
     return (
-      <div
-        style={{ ...cardStyle, background: "#06211f", color: "#ffffff", border: "1px solid rgba(255,255,255,0.08)" }}
-        className="p-5"
-      >
+      <div style={{ ...cardStyle, background: "#ffffff", color: "#0b2e2b" }} className="relative overflow-hidden">
         <div
-          className="h-24 rounded-2xl"
-          style={{
-            background: headerColor
-              ? `radial-gradient(circle at 40% 40%, ${headerColor}cc, transparent 65%), #06211f`
-              : `radial-gradient(circle at 30% 30%, ${primary}cc, transparent 60%), radial-gradient(circle at 70% 70%, ${accent}cc, transparent 60%), #06211f`,
-          }}
+          className="absolute left-0 top-0 h-24 w-24"
+          style={{ background: accent, clipPath: "polygon(0 0, 100% 0, 0 100%)" }}
         />
-        <div className="-mt-10 flex justify-center">
-          <Avatar t={t} size={72} picture={p.profilePicture} initials={initials} />
-        </div>
-        <div className="mt-3 text-center">
-          <h2 className="break-words font-display text-xl font-black text-white">{fullName}</h2>
-          {p.tagline && (
-            <div className="mt-1 text-[10px] font-black uppercase tracking-wider" style={{ color: accent }}>
-              {p.tagline}
-            </div>
-          )}
-          {p.bio && <p className="mt-2 text-[11px]" style={{ color: "rgba(255,255,255,0.6)" }}>{p.bio}</p>}
-        </div>
-        <div className="mt-4 space-y-1.5">{rows}</div>
-        <Footer t={t} url={publicUrl} />
-      </div>
-    );
-  }
-
-  if (templateId === "corporate-premium") {
-    return (
-      <div style={{ ...cardStyle, background: "#fcfaf5", color: "#0b2e2b" }} className="p-6">
-        <div className="flex items-center justify-between gap-3 pb-4" style={{ borderBottom: `2px solid ${headerFill}` }}>
-          <div className="min-w-0">
-            {biz.name && (
-              <div className="truncate text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: headerFill }}>
-                {biz.name}
-              </div>
-            )}
-            <h2 className="mt-1 break-words text-2xl font-bold" style={{ fontFamily: "Georgia, serif" }}>
-              {fullName}
-            </h2>
-            {p.tagline && <div className="italic" style={{ color: t.subtle }}>{p.tagline}</div>}
+        <div
+          className="absolute bottom-0 right-0 h-20 w-28"
+          style={{ background: primary, clipPath: "polygon(100% 100%, 0 100%, 100% 0)" }}
+        />
+        <div className="relative px-6 pb-6 pt-8 text-center">
+          <div className="flex justify-center">
+            <Avatar t={t} size={64} picture={p.profilePicture} initials={initials} borderColor="#ffffff" />
           </div>
-          <Avatar t={t} size={64} picture={p.profilePicture} initials={initials} />
+          <h2 className="mt-3 break-words text-lg font-black">{fullName}</h2>
+          {p.tagline && (
+            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: primary }}>
+              {p.tagline}
+            </p>
+          )}
+          <div className="mx-auto mt-3 h-0.5 w-10" style={{ background: primary }} />
+          <div className="mt-4 space-y-1.5 text-left">{rows}</div>
+          <Footer t={t} url={publicUrl} />
         </div>
-        {p.bio && <p className="mt-4 text-xs italic" style={{ color: t.subtle }}>{p.bio}</p>}
-        <div className="mt-4 space-y-1.5">{rows}</div>
-        <Footer t={t} url={publicUrl} />
       </div>
     );
   }
 
-  if (templateId === "playful-rounded") {
+  if (templateId === "floral-mandala") {
+    // Fixed ivory/teal palette so this template always reads the same way,
+    // independent of the user's primary/accent picks (matches the reference
+    // colour scheme rather than following the palette picker).
+    const cream = "#FBF3E4";
+    const ink = "#211D18";
+    const light = "#BFE9E1";
+    const mid = "#3FAFA8";
+    const dark = "#0E6E68";
+    const motif = (extra: CSSProperties) => (
+      <MandalaMotif size={200} light={light} mid={mid} dark={dark} ink={ink} style={{ position: "absolute", ...extra }} />
+    );
+    // Standard 89×51mm trim size applied to both faces — a fixed CSS aspect
+    // ratio so front and back render at true business-card proportions.
+    const faceStyle: CSSProperties = {
+      background: cream,
+      borderColor: ink,
+      width: "100%",
+      maxWidth: cardStyle.maxWidth,
+      aspectRatio: CARD_ASPECT_RATIO,
+      fontFamily: cardStyle.fontFamily,
+    };
     return (
-      <div style={{ ...cardStyle, background: isDark ? t.bg : resolvedBg }} className="p-5">
-        <div className="rounded-3xl p-4" style={{ background: t.surface }}>
-          <div className="flex items-center gap-3">
-            <Avatar t={t} size={56} picture={p.profilePicture} initials={initials} />
-            <div className="min-w-0">
-              <h2 className="truncate font-display text-lg font-black" style={{ color: t.fg }}>
-                {fullName}
-              </h2>
+      <div className="flex w-full flex-col gap-4" style={{ maxWidth: cardStyle.maxWidth }}>
+        {/* Front face — 89×51mm trim, contact details beside a corner mandala bloom */}
+        <div
+          className="relative overflow-hidden rounded-2xl border-[3px] p-4"
+          style={{ ...faceStyle, color: ink }}
+        >
+          {motif({ left: -60, top: -50 })}
+          <div className="relative ml-[44%] flex h-full flex-col justify-center gap-1.5">
+            <div>
+              <h2 className="break-words text-base font-black uppercase leading-tight tracking-wide">{fullName}</h2>
               {p.tagline && (
-                <div className="truncate text-[10px] font-black uppercase tracking-wider" style={{ color: accent }}>
+                <p className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.16em]" style={{ color: `${ink}99` }}>
                   {p.tagline}
-                </div>
+                </p>
               )}
             </div>
+            <div className="space-y-1">
+              {contact.slice(0, 3).map((r, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <span
+                    className="grid h-4 w-4 shrink-0 place-items-center rounded-full border"
+                    style={{ borderColor: ink }}
+                  >
+                    <r.icon size={8} style={{ color: ink }} />
+                  </span>
+                  <span className="truncate text-[9px] font-bold" style={{ color: ink }}>
+                    {r.label}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-          {p.bio && <p className="mt-3 text-xs" style={{ color: t.subtle }}>{p.bio}</p>}
         </div>
-        <div className="mt-3 space-y-1.5">{rows}</div>
-        <Footer t={t} url={publicUrl} />
+
+        {/* Back face — 89×51mm trim, full mandala field with a centred company badge */}
+        <div className="relative flex items-center justify-center overflow-hidden rounded-2xl border-[3px]" style={faceStyle}>
+          {motif({ left: "50%", top: "50%", transform: "translate(-50%, -50%)" })}
+          {motif({ left: -70, top: -70 })}
+          {motif({ right: -70, bottom: -70 })}
+          <span
+            className="relative rounded-full border-2 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
+            style={{ borderColor: ink, background: cream, color: ink }}
+          >
+            {biz.name || "Company"}
+          </span>
+        </div>
       </div>
     );
   }
 
-  // default: gradient-classic — "Classic Retro", a flat header band. A custom
-  // header colour renders as a solid band; otherwise falls back to the
-  // multi-stop stripes (or a primary/accent alternation).
-  const band = headerColor ? [headerColor] : stripes?.length ? stripes : [primary, accent, primary, accent];
-  const tiles = [
-    ...contact.slice(0, 3),
-    ...social.slice(0, 2).map((s) => ({
-      icon: ExternalLink as Icon,
-      label: `${s.platform || "Link"} · ${s.url}`,
-    })),
-  ].slice(0, 4);
-
+  // default: wave-bold — a flowing wave band across a bold colour field.
+  const waveColor = headerColor || accent;
+  const onPrimary = getContrastText(primary);
   return (
-    <div style={{ ...cardStyle, background: isDark ? t.bg : resolvedBg }}>
-      <div className="flex h-24">
-        {band.map((colour, i) => (
-          <div key={i} className="flex-1" style={{ background: colour }} />
-        ))}
-      </div>
-      <div className="-mt-9 flex justify-center">
-        <Avatar
-          t={t}
-          size={72}
-          picture={p.profilePicture}
-          initials={initials}
-          borderColor={isDark ? t.bg : resolvedSolidBg}
-        />
-      </div>
-      <div className="px-5 pb-5 pt-2.5 text-center">
-        <h2 className="break-words font-display text-lg font-black" style={{ color: t.fg }}>
-          {fullName}
+    <div style={{ ...cardStyle, background: primary, color: onPrimary }} className="relative overflow-hidden">
+      <WaveBand fill={waveColor} height={58} />
+      <div className="px-6 pt-1 pb-3 text-center">
+        <h2
+          className="break-words text-2xl"
+          style={{ color: waveColor, fontFamily: "Georgia, serif", fontStyle: "italic", fontWeight: 700 }}
+        >
+          {biz.name || fullName}
         </h2>
-        <p className="mt-0.5 text-xs" style={{ color: t.subtle }}>
-          {p.tagline || "Your title"}
-        </p>
-        {tiles.length > 0 && (
-          <div className="mt-3 space-y-2 text-left">
-            {tiles.map((r, i) => (
-              <TileRow
-                key={i}
-                t={t}
-                icon={r.icon}
-                label={r.label}
-                tint={i % 2 === 0 ? primary : accent}
-              />
-            ))}
-          </div>
+        {p.tagline && (
+          <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: onPrimary, opacity: 0.85 }}>
+            {p.tagline}
+          </p>
         )}
-        <Footer t={t} url={publicUrl} />
+      </div>
+      <WaveBand fill={waveColor} height={58} flip />
+      <div className="px-5 pb-5 pt-3">
+        <div className="flex justify-center">
+          <Avatar t={t} size={56} picture={p.profilePicture} initials={initials} borderColor={waveColor} />
+        </div>
+        <h3 className="mt-2 text-center text-lg font-black" style={{ color: onPrimary }}>
+          {fullName}
+        </h3>
+        <div className="mt-3 space-y-1.5">{rows}</div>
+        <Footer t={{ ...t, subtle: onPrimary === "#FFFFFF" ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)" }} url={publicUrl} />
       </div>
     </div>
   );

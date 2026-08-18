@@ -25,6 +25,8 @@ import {
   MapPin,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
+import Button from "@/components/ui/Button";
+import SharePopup from "@/components/app/SharePopup";
 import CardPreview from "@/components/app/CardPreview";
 import ResumePreview from "@/components/app/ResumePreview";
 import PortfolioPreview from "@/components/app/PortfolioPreview";
@@ -37,12 +39,9 @@ import { pushToast } from "@/store/slices/uiSlice";
 import { useRequireAuth } from "@/lib/authGuards";
 import { SITE_URL } from "@/lib/config";
 import { loadGoogleFont } from "@/lib/fonts";
+import { CARD_TEMPLATES } from "@/lib/cardTemplates";
 import { SOCIAL_QUICK_ADD, getSocialIcon } from "@/lib/socialPlatforms";
-import {
-  profileService,
-  CardTemplate,
-  CardRenderInput,
-} from "@/services/profileService";
+import { profileService, CardRenderInput } from "@/services/profileService";
 import type {
   PersonalSection,
   ContactSection,
@@ -52,20 +51,6 @@ import type {
   SocialLink,
 } from "@/types";
 
-/**
- * Template ids are contract with the backend renderer (CardTemplateService.js) —
- * only the display copy below is ours to change.
- */
-const FALLBACK_TEMPLATES: CardTemplate[] = [
-  { id: "gradient-classic", name: "Classic Retro", description: "Bold 4-colour header with retro vibes." },
-  { id: "minimal-mono", name: "Minimal Mono", description: "Simple & clean monochrome style." },
-  { id: "split-modern", name: "Split Layout", description: "Two-column information layout." },
-  { id: "neon-dark", name: "Neon Edge", description: "Dark background with neon accents." },
-  { id: "corporate-premium", name: "Corporate Gold", description: "Premium look with gold highlights." },
-  { id: "playful-rounded", name: "Playful Rounded", description: "Soft shapes & friendly look." },
-];
-
-/** `swatch` drives the preview stripes; 4 stops render as blocks, 2 as a gradient. */
 const PALETTES: {
   name: string;
   primary: string;
@@ -111,9 +96,8 @@ export default function CardPage() {
   const profileUser = useAppSelector((s) => s.auth.user);
   const saving = useAppSelector((s) => s.profile.saving);
 
-  const [templates, setTemplates] = useState<CardTemplate[]>(FALLBACK_TEMPLATES);
   const [templateId, setTemplateId] = useState<string>(
-    draft.digitalCard?.templateId || "gradient-classic",
+    draft.digitalCard?.templateId || "wave-bold",
   );
   const [primary, setPrimary] = useState<string>(
     draft.digitalCard?.primaryColor || PALETTES[0].primary,
@@ -145,18 +129,11 @@ export default function CardPage() {
   const [fontPickerOpen, setFontPickerOpen] = useState(false);
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
   const [socialPickerOpen, setSocialPickerOpen] = useState(false);
+  const [showSharePopup, setShowSharePopup] = useState(false);
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchProfile());
-    profileService
-      .listCardTemplates()
-      .then((r) => {
-        if (r.data?.data?.templates?.length) setTemplates(r.data.data.templates);
-      })
-      .catch(() => {
-        /* keep fallback list */
-      });
   }, [dispatch]);
 
   // Sync editor controls with whatever profile finishes loading
@@ -179,16 +156,15 @@ export default function CardPage() {
     loadGoogleFont(fontFamily);
   }, [fontFamily]);
 
+  // Template picker is Card-only — leave its detail view if the mode changes.
+  useEffect(() => {
+    if (createMode !== "card" && detailView === "template") setDetailView(null);
+  }, [createMode, detailView]);
+
   const renderInput: CardRenderInput = useMemo(
     () => ({ templateId, primary, accent, theme }),
     [templateId, primary, accent, theme],
   );
-
-  /** Stripes follow the picked palette; custom colours fall back to primary/accent. */
-  const stripes = useMemo(() => {
-    const hit = PALETTES.find((p) => p.primary === primary && p.accent === accent);
-    return hit?.swatch ?? [primary, accent, primary, accent];
-  }, [primary, accent]);
 
   // Resume/CV detail editing — patches the same profile.experience/education
   // sections the rest of the app reads from, via the generic updateSection reducer.
@@ -333,23 +309,7 @@ export default function CardPage() {
       ? `${SITE_URL}/${profileUser?.username || ""}`
       : "";
 
-  const onShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "My ClickCard", url: publicUrl });
-        dispatch(pushToast("Shared", "success"));
-        return;
-      } catch {
-        /* user cancelled */
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(publicUrl);
-      dispatch(pushToast("Link copied", "success"));
-    } catch {
-      dispatch(pushToast(publicUrl, "info"));
-    }
-  };
+  const onShare = () => setShowSharePopup(true);
 
   if (!guard) return null;
 
@@ -358,7 +318,6 @@ export default function CardPage() {
       templateId={templateId}
       primary={primary}
       accent={accent}
-      stripes={stripes}
       theme={theme}
       profile={draft}
       username={profileUser?.username}
@@ -413,12 +372,9 @@ export default function CardPage() {
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
-          <button
-            onClick={onShare}
-            className="inline-flex items-center gap-2 rounded-xl border border-ink/10 bg-white px-4 py-2.5 text-sm font-bold text-ink transition hover:border-brand-300 hover:text-brand-600 dark:border-white/10 dark:bg-white/5 dark:text-white"
-          >
-            <Share2 size={16} /> Share
-          </button>
+          <Button variant="outline" onClick={onShare}>
+            <Share2 size={18} /> Share
+          </Button>
           <button
             onClick={onDownload}
             disabled={downloading}
@@ -562,26 +518,28 @@ export default function CardPage() {
                 Customize
               </p>
 
-              {/* Template Option */}
-              <button
-                onClick={() => setDetailView("template")}
-                className="w-full rounded-2xl bg-white px-5 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04]"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                      <Sparkles size={16} />
-                    </span>
-                    <p className="text-sm font-bold text-ink dark:text-white">Template</p>
+              {/* Template Option — business/visiting-card layouts, Card mode only */}
+              {createMode === "card" && (
+                <button
+                  onClick={() => setDetailView("template")}
+                  className="w-full rounded-2xl bg-white px-5 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04]"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                        <Sparkles size={16} />
+                      </span>
+                      <p className="text-sm font-bold text-ink dark:text-white">Template</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="max-w-[110px] truncate text-xs font-semibold text-ink/60 dark:text-white/60">
+                        {CARD_TEMPLATES.find((t) => t.id === templateId)?.name || "Classic"}
+                      </span>
+                      <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-ink/60 dark:text-white/60">
-                      {templates.find((t) => t.id === templateId)?.name || "Custom"}
-                    </span>
-                    <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
-                  </div>
-                </div>
-              </button>
+                </button>
+              )}
 
               {/* Details Option — resume/CV and portfolio only */}
               {(createMode === "resume" || createMode === "portfolio") && (
@@ -665,7 +623,7 @@ export default function CardPage() {
             </div>
           )}
 
-          {/* Template Detail View */}
+          {/* Template Detail View — business/visiting-card layout picker */}
           {detailView === "template" && (
             <div className="space-y-1">
               <button
@@ -674,34 +632,48 @@ export default function CardPage() {
               >
                 ← Template
               </button>
-              <div className="px-5 pb-4">
-                <div className="grid grid-cols-2 gap-2">
-                  {templates.map((t) => {
-                    const active = templateId === t.id;
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => setTemplateId(t.id)}
-                        className={`relative rounded-xl border p-2.5 text-left transition ${
-                          active
-                            ? "border-brand-400 bg-brand-50 dark:bg-brand-500/10"
-                            : "border-ink/10 hover:border-brand-200 hover:bg-brand-50/50 dark:border-white/10 dark:hover:bg-white/[0.04]"
-                        }`}
-                      >
+              <div className="grid grid-cols-2 gap-3 px-5 pb-4">
+                {CARD_TEMPLATES.map((tpl) => {
+                  const swatch = tpl.swatch;
+                  const active = templateId === tpl.id;
+                  return (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      onClick={() => setTemplateId(tpl.id)}
+                      title={tpl.description}
+                      className={`flex flex-col items-start gap-2 rounded-2xl border-2 bg-white p-2.5 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-white/[0.04] ${
+                        active ? "border-ink dark:border-white" : "border-transparent"
+                      }`}
+                    >
+                      {/* Mini visiting-card thumbnail */}
+                      <span className="relative block h-16 w-full overflow-hidden rounded-lg">
+                        <span
+                          className="absolute inset-0"
+                          style={{
+                            background:
+                              swatch.length > 1
+                                ? `linear-gradient(135deg, ${swatch.join(", ")})`
+                                : swatch[0],
+                          }}
+                        />
+                        <span className="absolute left-2 top-2 h-4 w-4 rounded-full border-2 border-white/80 bg-white/40" />
+                        <span className="absolute bottom-2 left-2 right-2 h-1.5 rounded-full bg-white/60" />
                         {active && (
-                          <Check size={13} className="absolute right-2 top-2 text-brand-500" />
+                          <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white text-brand-600 shadow">
+                            <Check size={12} />
+                          </span>
                         )}
-                        <p className="pr-4 text-[11px] font-bold leading-tight text-ink dark:text-white">
-                          {t.name}
-                        </p>
-                        <p className="mt-1 text-[10px] leading-snug text-ink/50 dark:text-white/50">
-                          {t.description}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
+                      </span>
+                      <span className="text-xs font-bold leading-tight text-ink dark:text-white">
+                        {tpl.name}
+                      </span>
+                      <span className="line-clamp-2 text-[10px] leading-snug text-ink/50 dark:text-white/50">
+                        {tpl.description}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -1403,6 +1375,10 @@ export default function CardPage() {
           onClose={() => setSocialPickerOpen(false)}
           onPick={openSocialEditor}
         />
+      )}
+
+      {showSharePopup && publicUrl && (
+        <SharePopup profileUrl={publicUrl} onClose={() => setShowSharePopup(false)} />
       )}
     </AppShell>
   );

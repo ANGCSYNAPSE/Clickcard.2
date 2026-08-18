@@ -194,8 +194,8 @@ export default function ProfileEditorPage() {
           <div className="min-w-0 order-2 rounded-2xl sm:rounded-3xl border border-ink/[0.06] bg-white p-4 sm:p-6 lg:p-7 dark:border-white/[0.06] dark:bg-[#12403c]">
             {active === "personal" && (
               <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                  <div className="relative shrink-0">
+                <div className="flex flex-col items-center text-center gap-4 sm:flex-row sm:items-center sm:text-left">
+                  <div className="relative inline-block shrink-0">
                     <span className="grid h-16 w-16 sm:h-20 sm:w-20 place-items-center overflow-hidden rounded-full bg-candy-pink text-xl sm:text-2xl font-black text-white">
                       {previewAvatar ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -206,7 +206,7 @@ export default function ProfileEditorPage() {
                     </span>
                     <button
                       onClick={() => fileRef.current?.click()}
-                      className="absolute -bottom-1 -right-1 grid h-7 w-7 sm:h-8 sm:w-8 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#12403c] dark:text-white"
+                      className="absolute -bottom-3 -right-1 grid h-7 w-7 sm:h-8 sm:w-8 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#12403c] dark:text-white"
                       aria-label="Upload photo"
                     >
                       <Camera size={14} />

@@ -167,9 +167,15 @@ export default function SharePage() {
 
       {/* Your profile QR — always available, independent of custom share links */}
       {profileUrl && (
-        <div className="mt-5 flex flex-col gap-4 rounded-3xl border border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#12403c] sm:flex-row sm:items-center">
-          <div className="grid h-24 w-24 shrink-0 place-items-center rounded-2xl bg-white p-2 ring-1 ring-ink/5 dark:bg-white">
-            <QRCodeCanvas id="qr-profile" value={profileUrl} size={80} level="M" />
+        <div className="mt-5 flex flex-col items-center gap-4 rounded-3xl border border-ink/5 bg-white p-5 text-center dark:border-white/5 dark:bg-[#12403c] sm:flex-row sm:items-center sm:text-left">
+          <div className="grid h-36 w-36 shrink-0 place-items-center rounded-2xl bg-white p-2 ring-1 ring-ink/5 dark:bg-white sm:h-28 sm:w-28">
+            <QRCodeCanvas
+              id="qr-profile"
+              value={profileUrl}
+              size={128}
+              level="M"
+              style={{ width: "100%", height: "100%" }}
+            />
           </div>
           <div className="min-w-0 flex-1">
             <p className="font-bold text-ink dark:text-white">Your profile QR</p>
@@ -268,10 +274,16 @@ export default function SharePage() {
           return (
             <div
               key={l.id}
-              className="flex flex-col gap-4 rounded-3xl border border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#12403c] sm:flex-row sm:items-center"
+              className="flex flex-col items-center gap-4 rounded-3xl border border-ink/5 bg-white p-5 text-center dark:border-white/5 dark:bg-[#12403c] sm:flex-row sm:items-center sm:text-left"
             >
-              <div className="grid h-24 w-24 shrink-0 place-items-center rounded-2xl bg-white p-2 ring-1 ring-ink/5 dark:bg-white">
-                <QRCodeCanvas id={`qr-${l.id}`} value={linkUrl(l)} size={80} level="M" />
+              <div className="grid h-36 w-36 shrink-0 place-items-center rounded-2xl bg-white p-2 ring-1 ring-ink/5 dark:bg-white sm:h-28 sm:w-28">
+                <QRCodeCanvas
+                  id={`qr-${l.id}`}
+                  value={linkUrl(l)}
+                  size={128}
+                  level="M"
+                  style={{ width: "100%", height: "100%" }}
+                />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bold text-ink dark:text-white">{friendly}</p>

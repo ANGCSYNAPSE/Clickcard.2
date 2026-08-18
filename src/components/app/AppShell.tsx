@@ -23,6 +23,7 @@ import Logo from "@/components/ui/Logo";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { logout } from "@/store/slices/authSlice";
+import { fetchProfile } from "@/store/slices/profileSlice";
 import { setSidebar } from "@/store/slices/uiSlice";
 import { useRequireAuth } from "@/lib/authGuards";
 import { useEntitlement } from "@/lib/useEntitlement";
@@ -73,6 +74,8 @@ export default function AppShell({
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((s) => s.auth);
+  const profilePicture = useAppSelector((s) => s.profile.draft.personal?.profilePicture);
+  const profileStatus = useAppSelector((s) => s.profile.status);
   const { planName, isPaid } = useEntitlement();
   const sidebarOpen = useAppSelector((s) => s.ui.sidebarOpen);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -82,6 +85,13 @@ export default function AppShell({
     dispatch(setSidebar(false));
     setMenuOpen(false);
   }, [router.asPath, dispatch]);
+
+  // Pages that don't already fetch the profile themselves (billing, analytics,
+  // etc.) still need it here so the sidebar/header avatar can show the real
+  // profile picture instead of always falling back to the initial.
+  useEffect(() => {
+    if (profileStatus === "idle") dispatch(fetchProfile());
+  }, [profileStatus, dispatch]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -139,9 +149,18 @@ export default function AppShell({
         {/* profile mini-card */}
         <div className="mt-5 rounded-2xl bg-mist p-3 dark:bg-white/[0.04]">
           <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-candy-pink text-sm font-black text-white">
-              {initial}
-            </span>
+            {profilePicture ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profilePicture}
+                alt=""
+                className="h-10 w-10 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-candy-pink text-sm font-black text-white">
+                {initial}
+              </span>
+            )}
             <div className="min-w-0">
               <p className="truncate text-sm font-bold text-ink dark:text-white">
                 {user?.username ? `@${user.username}` : "Your account"}
@@ -246,9 +265,14 @@ export default function AppShell({
                 onClick={() => setMenuOpen((v) => !v)}
                 className="flex items-center gap-1.5 rounded-full transition hover:opacity-80"
               >
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-candy-pink text-sm font-black text-white">
-                  {initial}
-                </span>
+                {profilePicture ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profilePicture} alt="" className="h-9 w-9 rounded-full object-cover" />
+                ) : (
+                  <span className="grid h-9 w-9 place-items-center rounded-full bg-candy-pink text-sm font-black text-white">
+                    {initial}
+                  </span>
+                )}
                 <ChevronDown size={14} className="text-ink/50 dark:text-white/50" />
               </button>
               {menuOpen && (
