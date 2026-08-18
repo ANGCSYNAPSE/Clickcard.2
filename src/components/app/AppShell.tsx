@@ -41,7 +41,7 @@ const NAV_GROUPS = [
       { label: "Customize", href: "/customize", icon: SlidersHorizontal },
       { label: "Card", href: "/card", icon: CreditCard },
       { label: "CV", href: "/cv", icon: FileText },
-      { label: "Portfolio", href: "/portfolio", icon: LayoutGrid },
+      // { label: "Portfolio", href: "/portfolio", icon: LayoutGrid },
     ],
   },
   {
