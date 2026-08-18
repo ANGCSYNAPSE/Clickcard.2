@@ -439,7 +439,7 @@ export default function StudioPage() {
 
               {/* Customize Heading */}
               <p className="px-1 pt-2 text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                Customize
+                Editing
               </p>
 
               {/* Palette Option */}

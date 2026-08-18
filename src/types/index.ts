@@ -84,6 +84,18 @@ export interface ProjectItem {
   description?: string;
 }
 
+export interface AwardItem {
+  id?: string;
+  title: string;
+  description?: string;
+}
+
+export interface LanguageItem {
+  id?: string;
+  name: string;
+  level?: string;
+}
+
 export interface BusinessHours {
   day: string;
   open?: string;
@@ -122,6 +134,8 @@ export interface SocialLink {
 
 export interface DigitalCardSection {
   templateId?: string;
+  /** CV template id (@/lib/cvTemplates) — separate from `templateId`, which is Card-only. */
+  cvTemplateId?: string;
   theme?: string;
   primaryColor?: string;
   accentColor?: string;
@@ -130,10 +144,24 @@ export interface DigitalCardSection {
   paletteStyle?: string;
   backgroundColor?: string;
   headerColor?: string;
+  /**
+   * Card-only overrides for name/tagline, business, and contact info —
+   * separate from the main profile.personal/business/contact so editing
+   * these in the Digital Card page never changes the Profile page, CV,
+   * Portfolio, or public profile. Unset fields fall back to the main
+   * profile's value when rendering the card.
+   */
+  cardPersonal?: PersonalSection;
+  cardBusiness?: BusinessSection;
+  cardContact?: ContactSection;
   /** Comma-separated skill tags, shown on the Resume/CV layout. */
   skills?: string[];
   /** Project entries shown on the Resume/CV layout. */
   projects?: ProjectItem[];
+  /** Award entries shown on the CV layout (templates with an Awards section). */
+  awards?: AwardItem[];
+  /** Language entries shown on the CV layout (templates with a Languages section). */
+  languages?: LanguageItem[];
   /**
    * Social links shown on the Resume/CV & Portfolio layouts — separate from
    * the main profile.social list so editing them here doesn't change what

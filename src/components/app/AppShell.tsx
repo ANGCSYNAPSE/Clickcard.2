@@ -18,6 +18,8 @@ import {
   ChevronDown,
   Crown,
   Zap,
+  FileText,
+  LayoutGrid,
 } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 import ThemeToggle from "@/components/ui/ThemeToggle";
@@ -36,8 +38,10 @@ const NAV_GROUPS = [
     items: [
       { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { label: "Profile", href: "/profile", icon: User },
-      { label: "Digital Card", href: "/card", icon: CreditCard },
       { label: "Customize", href: "/customize", icon: SlidersHorizontal },
+      { label: "Card", href: "/card", icon: CreditCard },
+      { label: "CV", href: "/cv", icon: FileText },
+      { label: "Portfolio", href: "/portfolio", icon: LayoutGrid },
     ],
   },
   {

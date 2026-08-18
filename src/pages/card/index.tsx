@@ -12,44 +12,28 @@ import {
   Smartphone,
   Eye,
   Loader2,
-  FileText,
-  LayoutGrid,
   ChevronRight,
   Pencil,
-  Plus,
-  Trash2,
-  X,
   Mail,
   Phone,
   Globe,
   MapPin,
+  Building2,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import Button from "@/components/ui/Button";
 import SharePopup from "@/components/app/SharePopup";
 import CardPreview from "@/components/app/CardPreview";
-import ResumePreview from "@/components/app/ResumePreview";
-import PortfolioPreview from "@/components/app/PortfolioPreview";
 import FontPickerModal from "@/components/app/FontPickerModal";
-import SkillPickerModal from "@/components/app/SkillPickerModal";
-import SocialIconPickerModal from "@/components/app/SocialIconPickerModal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchProfile, saveProfile, updateSection } from "@/store/slices/profileSlice";
+import { fetchProfile, saveProfile } from "@/store/slices/profileSlice";
 import { pushToast } from "@/store/slices/uiSlice";
 import { useRequireAuth } from "@/lib/authGuards";
 import { SITE_URL } from "@/lib/config";
 import { loadGoogleFont } from "@/lib/fonts";
 import { CARD_TEMPLATES } from "@/lib/cardTemplates";
-import { SOCIAL_QUICK_ADD, getSocialIcon } from "@/lib/socialPlatforms";
 import { profileService, CardRenderInput } from "@/services/profileService";
-import type {
-  PersonalSection,
-  ContactSection,
-  ExperienceItem,
-  EducationItem,
-  ProjectItem,
-  SocialLink,
-} from "@/types";
+import type { PersonalSection, ContactSection, BusinessSection } from "@/types";
 
 const PALETTES: {
   name: string;
@@ -73,19 +57,7 @@ const VIEW_MODES: { id: ViewMode; label: string; icon: typeof CreditCard }[] = [
   { id: "preview", label: "Preview", icon: Eye },
 ];
 
-type CreateMode = "card" | "resume" | "portfolio";
 type PaletteStyle = "fill" | "gradient" | "blur";
-
-const CREATE_MODES: {
-  id: CreateMode;
-  label: string;
-  description: string;
-  icon: typeof CreditCard;
-}[] = [
-  { id: "card", label: "Card", description: "Business card", icon: CreditCard },
-  { id: "resume", label: "CV", description: "Professional resume maker", icon: FileText },
-  { id: "portfolio", label: "Portfolio", description: "Short portfolio", icon: LayoutGrid },
-];
 
 export default function CardPage() {
   const guard = useRequireAuth();
@@ -119,18 +91,25 @@ export default function CardPage() {
     draft.digitalCard?.backgroundColor || "#FFFFFF",
   );
   const [headerColor, setHeaderColor] = useState<string>(draft.digitalCard?.headerColor || "");
-  const [skills, setSkills] = useState<string[]>(draft.digitalCard?.skills || []);
-  const [projects, setProjects] = useState<ProjectItem[]>(draft.digitalCard?.projects || []);
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(draft.digitalCard?.socialLinks || []);
+  // Card-only overrides — start seeded from the main profile so a fresh card
+  // isn't blank, but from here on they're independent: edits here never
+  // dispatch to draft.personal/contact/business, and edits made to the main
+  // Profile page elsewhere never overwrite these once the card has its own
+  // saved values (see the sync effect below).
+  const [cardPersonal, setCardPersonal] = useState<PersonalSection>(
+    draft.digitalCard?.cardPersonal || draft.personal || {},
+  );
+  const [cardBusiness, setCardBusiness] = useState<BusinessSection>(
+    draft.digitalCard?.cardBusiness || draft.business || {},
+  );
+  const [cardContact, setCardContact] = useState<ContactSection>(
+    draft.digitalCard?.cardContact || draft.contact || {},
+  );
   const [downloading, setDownloading] = useState(false);
   const [view, setView] = useState<ViewMode>("card");
-  const [createMode, setCreateMode] = useState<CreateMode>("card");
   const [detailView, setDetailView] = useState<string | null>(null);
   const [fontPickerOpen, setFontPickerOpen] = useState(false);
-  const [skillPickerOpen, setSkillPickerOpen] = useState(false);
-  const [socialPickerOpen, setSocialPickerOpen] = useState(false);
   const [showSharePopup, setShowSharePopup] = useState(false);
-  const [editingSocial, setEditingSocial] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -147,117 +126,45 @@ export default function CardPage() {
     if (draft.digitalCard?.paletteStyle) setPaletteStyle(draft.digitalCard.paletteStyle as PaletteStyle);
     if (draft.digitalCard?.backgroundColor) setBackgroundColor(draft.digitalCard.backgroundColor);
     if (draft.digitalCard?.headerColor) setHeaderColor(draft.digitalCard.headerColor);
-    if (draft.digitalCard?.skills) setSkills(draft.digitalCard.skills);
-    if (draft.digitalCard?.projects) setProjects(draft.digitalCard.projects);
-    if (draft.digitalCard?.socialLinks) setSocialLinks(draft.digitalCard.socialLinks);
+    // Only re-sync from the card's own saved overrides — deliberately not
+    // watching draft.personal/business/contact here, so edits made to the
+    // main Profile elsewhere don't leak into (or overwrite) the card.
+    if (draft.digitalCard?.cardPersonal) setCardPersonal(draft.digitalCard.cardPersonal);
+    if (draft.digitalCard?.cardBusiness) setCardBusiness(draft.digitalCard.cardBusiness);
+    if (draft.digitalCard?.cardContact) setCardContact(draft.digitalCard.cardContact);
   }, [draft.digitalCard]);
 
   useEffect(() => {
     loadGoogleFont(fontFamily);
   }, [fontFamily]);
 
-  // Template picker is Card-only — leave its detail view if the mode changes.
-  useEffect(() => {
-    if (createMode !== "card" && detailView === "template") setDetailView(null);
-  }, [createMode, detailView]);
-
   const renderInput: CardRenderInput = useMemo(
     () => ({ templateId, primary, accent, theme }),
     [templateId, primary, accent, theme],
   );
 
-  // Resume/CV detail editing — patches the same profile.experience/education
-  // sections the rest of the app reads from, via the generic updateSection reducer.
-  const experience = draft.experience || [];
-  const education = draft.education || [];
-
-  const onlyDigits = (v: string) => v.replace(/\D/g, "");
-  const onlyPhoneChars = (v: string) => v.replace(/[^\d+ ]/g, "");
-
+  // These patch the card-only copies above — never the shared profile — so
+  // Details edits here stay scoped to the Digital Card.
   const updatePersonal = (patch: Partial<PersonalSection>) =>
-    dispatch(updateSection({ section: "personal", value: { ...draft.personal, ...patch } }));
+    setCardPersonal((prev) => ({ ...prev, ...patch }));
 
   const updateContact = (patch: Partial<ContactSection>) =>
-    dispatch(updateSection({ section: "contact", value: { ...draft.contact, ...patch } }));
+    setCardContact((prev) => ({ ...prev, ...patch }));
 
-  // Portfolio/CV social links are their own list — kept out of profile.social
-  // on purpose, so editing them here doesn't touch the Share page, public
-  // profile, or anywhere else that reads the main profile.
-  const findSocial = (platform: string) =>
-    socialLinks.find((s) => s.platform?.toLowerCase() === platform.toLowerCase());
-  const socialIconRow = [
-    ...SOCIAL_QUICK_ADD,
-    { platform: "GitHub", icon: getSocialIcon("GitHub") },
-    ...socialLinks
-      .filter(
-        (s) =>
-          !SOCIAL_QUICK_ADD.some((q) => q.platform.toLowerCase() === s.platform?.toLowerCase()) &&
-          s.platform?.toLowerCase() !== "github",
-      )
-      .map((s) => ({ platform: s.platform, icon: getSocialIcon(s.platform) })),
-  ];
+  const updateBusiness = (patch: Partial<BusinessSection>) =>
+    setCardBusiness((prev) => ({ ...prev, ...patch }));
 
-  /** Ensures a (possibly blank) entry exists for the platform, then opens its editor. */
-  const openSocialEditor = (platform: string) => {
-    if (!findSocial(platform)) {
-      setSocialLinks((prev) => [...prev, { platform, username: "", url: "", visible: true }]);
-    }
-    setEditingSocial(platform);
-    setSocialPickerOpen(false);
-  };
-  const updateSocial = (platform: string, patchValue: Partial<SocialLink>) =>
-    setSocialLinks((prev) =>
-      prev.map((s) => (s.platform?.toLowerCase() === platform.toLowerCase() ? { ...s, ...patchValue } : s)),
-    );
-  const removeSocial = (platform: string) => {
-    setSocialLinks((prev) => prev.filter((s) => s.platform?.toLowerCase() !== platform.toLowerCase()));
-    setEditingSocial(null);
-  };
-
-  const addExperience = () =>
-    dispatch(
-      updateSection({
-        section: "experience",
-        value: [...experience, { company: "", role: "" } as ExperienceItem],
-      }),
-    );
-  const updateExperience = (index: number, patch: Partial<ExperienceItem>) =>
-    dispatch(
-      updateSection({
-        section: "experience",
-        value: experience.map((item, i) => (i === index ? { ...item, ...patch } : item)),
-      }),
-    );
-  const removeExperience = (index: number) =>
-    dispatch(updateSection({ section: "experience", value: experience.filter((_, i) => i !== index) }));
-
-  const addEducation = () =>
-    dispatch(
-      updateSection({
-        section: "education",
-        value: [...education, { institution: "" } as EducationItem],
-      }),
-    );
-  const updateEducation = (index: number, patch: Partial<EducationItem>) =>
-    dispatch(
-      updateSection({
-        section: "education",
-        value: education.map((item, i) => (i === index ? { ...item, ...patch } : item)),
-      }),
-    );
-  const removeEducation = (index: number) =>
-    dispatch(updateSection({ section: "education", value: education.filter((_, i) => i !== index) }));
-
-  const addProject = () => setProjects((prev) => [...prev, { name: "" } as ProjectItem]);
-  const updateProject = (index: number, patch: Partial<ProjectItem>) =>
-    setProjects((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
-  const removeProject = (index: number) =>
-    setProjects((prev) => prev.filter((_, i) => i !== index));
+  /** Phone/WhatsApp fields are exactly a 10-digit number — no country code, spaces, or symbols. */
+  const onlyPhoneChars = (v: string) => v.replace(/\D/g, "").slice(0, 10);
 
   const onSave = async () => {
     const next = {
       ...draft,
       digitalCard: {
+        // Preserve fields owned by the CV and Portfolio pages (skills,
+        // projects, socialLinks) — this page only ever overrides the
+        // fields below.
+        ...draft.digitalCard,
         templateId,
         primaryColor: primary,
         accentColor: accent,
@@ -267,9 +174,9 @@ export default function CardPage() {
         paletteStyle,
         backgroundColor,
         headerColor,
-        skills,
-        projects,
-        socialLinks,
+        cardPersonal,
+        cardBusiness,
+        cardContact,
       },
     };
     const res = await dispatch(saveProfile({ profile: next }));
@@ -313,13 +220,27 @@ export default function CardPage() {
 
   if (!guard) return null;
 
-  const card = (
+  // The card renders its own copy of personal/business/contact — Details
+  // edits made here layer on top of the main profile without ever writing
+  // back to it.
+  const cardProfile = {
+    ...draft,
+    personal: { ...draft.personal, ...cardPersonal },
+    business: { ...draft.business, ...cardBusiness },
+    contact: { ...draft.contact, ...cardContact },
+  };
+
+  // Portrait templates render both faces side-by-side (see CardPreview),
+  // which needs a wider stage than a single landscape card does.
+  const isPortraitTemplate = CARD_TEMPLATES.find((t) => t.id === templateId)?.card?.orientation === "portrait";
+
+  const stage = (
     <CardPreview
       templateId={templateId}
       primary={primary}
       accent={accent}
       theme={theme}
-      profile={draft}
+      profile={cardProfile}
       username={profileUser?.username}
       fontFamily={fontFamily}
       textColor={textColor}
@@ -328,32 +249,6 @@ export default function CardPage() {
       headerColor={headerColor}
     />
   );
-
-  const stage =
-    createMode === "resume" ? (
-      <ResumePreview
-        profile={draft}
-        primary={primary}
-        accent={accent}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        skills={skills}
-        projects={projects}
-      />
-    ) : createMode === "portfolio" ? (
-      <PortfolioPreview
-        profile={draft}
-        primary={primary}
-        accent={accent}
-        fontFamily={fontFamily}
-        textColor={textColor}
-        skills={skills}
-        projects={projects}
-        socialLinks={socialLinks}
-      />
-    ) : (
-      card
-    );
 
   return (
     <AppShell fullHeight>
@@ -394,15 +289,11 @@ export default function CardPage() {
       <div className="flex min-w-0 flex-col gap-5 lg:min-h-0 lg:flex-1 lg:flex-row">
         {/* stage */}
         <section className="flex min-w-0 flex-col rounded-3xl border border-ink/[0.06] bg-mist p-4 dark:border-white/[0.06] dark:bg-white/[0.02] lg:min-h-0 lg:flex-1">
-          <div
-            className={`flex min-h-[420px] min-w-0 flex-1 justify-center overflow-x-auto py-2 no-scrollbar lg:min-h-0 lg:overflow-y-auto ${
-              (createMode === "resume" || createMode === "portfolio") && view === "card" ? "items-start" : "items-center"
-            }`}
-          >
+          <div className="flex min-h-[420px] min-w-0 flex-1 items-center justify-center overflow-x-auto py-2 no-scrollbar lg:min-h-0 lg:overflow-y-auto">
             {view === "card" && (
               <div
-                className={`w-full ${
-                  createMode === "resume" ? "max-w-[820px]" : createMode === "portfolio" ? "max-w-[600px]" : "max-w-[340px]"
+                className={`w-full rounded-2xl bg-white p-6 shadow-sm dark:bg-white/[0.04] ${
+                  isPortraitTemplate ? "max-w-[760px]" : "max-w-[460px]"
                 }`}
               >
                 {stage}
@@ -425,8 +316,8 @@ export default function CardPage() {
 
             {view === "preview" && (
               <div
-                className={`flex h-[560px] w-full flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#12403c] ${
-                  createMode === "resume" || createMode === "portfolio" ? "max-w-[480px]" : "max-w-[400px]"
+                className={`flex h-[680px] w-full flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#12403c] ${
+                  isPortraitTemplate ? "max-w-[720px]" : "max-w-[480px]"
                 }`}
               >
                 <div className="flex shrink-0 items-center gap-2 border-b border-ink/[0.06] px-3 py-2 dark:border-white/[0.06]">
@@ -445,36 +336,19 @@ export default function CardPage() {
           {/* view switcher */}
           <div className="mt-3 flex justify-center lg:shrink-0">
             <div className="inline-flex items-center gap-1 rounded-xl bg-white p-1 dark:bg-white/5">
-              {VIEW_MODES.map((m) => {
-                const isCardTab = m.id === "card";
-                const label = isCardTab
-                  ? createMode === "resume"
-                    ? "CV"
-                    : createMode === "portfolio"
-                    ? "Portfolio"
-                    : m.label
-                  : m.label;
-                const ModeIcon = isCardTab
-                  ? createMode === "resume"
-                    ? FileText
-                    : createMode === "portfolio"
-                    ? LayoutGrid
-                    : m.icon
-                  : m.icon;
-                return (
-                  <button
-                    key={m.id}
-                    onClick={() => setView(m.id)}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                      view === m.id
-                        ? "bg-brand-50 text-brand-600 dark:bg-white/10 dark:text-white"
-                        : "text-ink/50 hover:text-brand-600 dark:text-white/50"
-                    }`}
-                  >
-                    <ModeIcon size={14} /> {label}
-                  </button>
-                );
-              })}
+              {VIEW_MODES.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => setView(m.id)}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                    view === m.id
+                      ? "bg-brand-50 text-brand-600 dark:bg-white/10 dark:text-white"
+                      : "text-ink/50 hover:text-brand-600 dark:text-white/50"
+                  }`}
+                >
+                  <m.icon size={14} /> {m.label}
+                </button>
+              ))}
             </div>
           </div>
         </section>
@@ -482,87 +356,48 @@ export default function CardPage() {
         {/* control rail — same shell/list/detail-view pattern as the Customize page */}
         <aside className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#12403c] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px]">
           <div className="px-5 py-4">
-            <h3 className="font-display text-lg font-black text-ink dark:text-white">Create</h3>
+            <h3 className="font-display text-lg font-black text-ink dark:text-white">Create Card</h3>
           </div>
 
           {detailView === null && (
             <div className="px-4 pb-4 space-y-3">
-              {/* Create mode — Card / Resume-CV / Portfolio */}
-              <div className="grid grid-cols-3 gap-2">
-                {CREATE_MODES.map((m) => {
-                  const active = createMode === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setCreateMode(m.id)}
-                      className={`relative flex flex-col items-center gap-2 rounded-2xl border-2 bg-white p-2.5 text-center shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04] ${
-                        active ? "border-ink dark:border-white" : "border-transparent"
-                      }`}
-                    >
-                      {active && (
-                        <Check size={13} className="absolute right-2 top-2 text-brand-500" />
-                      )}
-                      <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                        <m.icon size={16} />
-                      </span>
-                      <span className="text-[11px] font-bold leading-tight text-ink dark:text-white">
-                        {m.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
 
-              <p className="px-1 pt-2 text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                Customize
-              </p>
-
-              {/* Template Option — business/visiting-card layouts, Card mode only */}
-              {createMode === "card" && (
-                <button
-                  onClick={() => setDetailView("template")}
-                  className="w-full rounded-2xl bg-white px-5 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04]"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                        <Sparkles size={16} />
-                      </span>
-                      <p className="text-sm font-bold text-ink dark:text-white">Template</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="max-w-[110px] truncate text-xs font-semibold text-ink/60 dark:text-white/60">
-                        {CARD_TEMPLATES.find((t) => t.id === templateId)?.name || "Classic"}
-                      </span>
-                      <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
-                    </div>
+              {/* Template Option — business/visiting-card layouts */}
+              <button
+                onClick={() => setDetailView("template")}
+                className="w-full rounded-2xl bg-white px-5 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04]"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                      <Sparkles size={16} />
+                    </span>
+                    <p className="text-sm font-bold text-ink dark:text-white">Template</p>
                   </div>
-                </button>
-              )}
-
-              {/* Details Option — resume/CV and portfolio only */}
-              {(createMode === "resume" || createMode === "portfolio") && (
-                <button
-                  onClick={() => setDetailView("details")}
-                  className="w-full rounded-2xl bg-white px-5 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04]"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                        <Pencil size={16} />
-                      </span>
-                      <p className="text-sm font-bold text-ink dark:text-white">Details</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-ink/60 dark:text-white/60">
-                        {experience.length + projects.length + education.length} entries
-                      </span>
-                      <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="max-w-[110px] truncate text-xs font-semibold text-ink/60 dark:text-white/60">
+                      {CARD_TEMPLATES.find((t) => t.id === templateId)?.name || "None selected"}
+                    </span>
+                    <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
                   </div>
-                </button>
-              )}
+                </div>
+              </button>
+              
+              {/* Details Option — name, business, contact info shown on the card */}
+              <button
+                onClick={() => setDetailView("details")}
+                className="w-full rounded-2xl bg-white px-5 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04]"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                      <Pencil size={16} />
+                    </span>
+                    <p className="text-sm font-bold text-ink dark:text-white">Details</p>
+                  </div>
+                  <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
+                </div>
+              </button>
 
               {/* Palette Option */}
               <button
@@ -623,6 +458,139 @@ export default function CardPage() {
             </div>
           )}
 
+          {/* Details Detail View — name, business, contact info shown on the card */}
+          {detailView === "details" && (
+            <div className="space-y-1">
+              <button
+                onClick={() => setDetailView(null)}
+                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
+              >
+                ← Details
+              </button>
+              <div className="space-y-6 px-5 pb-4">
+                {/* Personal */}
+                <div className="space-y-2">
+                  <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
+                    Personal
+                  </p>
+                  <input
+                    type="text"
+                    value={cardPersonal.fullName || ""}
+                    onChange={(e) => updatePersonal({ fullName: e.target.value })}
+                    placeholder="Full name"
+                    className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                  />
+                  <input
+                    type="text"
+                    value={cardPersonal.tagline || ""}
+                    onChange={(e) => updatePersonal({ tagline: e.target.value })}
+                    placeholder="Title / tagline"
+                    className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                  />
+                </div>
+
+                {/* Business */}
+                <div className="space-y-2">
+                  <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
+                    Business
+                  </p>
+                  <div>
+                    <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
+                      <Building2 size={12} /> Business name
+                    </label>
+                    <input
+                      type="text"
+                      value={cardBusiness.name || ""}
+                      onChange={(e) => updateBusiness({ name: e.target.value })}
+                      placeholder="Company or brand name"
+                      className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={cardBusiness.category || ""}
+                    onChange={(e) => updateBusiness({ category: e.target.value })}
+                    placeholder="Category (optional)"
+                    className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                  />
+                </div>
+
+                {/* Contact */}
+                <div className="space-y-2">
+                  <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
+                    Contact
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
+                        <Mail size={12} /> Email
+                      </label>
+                      <input
+                        type="email"
+                        value={cardContact.email || ""}
+                        onChange={(e) => updateContact({ email: e.target.value })}
+                        placeholder="you@example.com"
+                        className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
+                        <Phone size={12} /> Phone
+                      </label>
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
+                        value={cardContact.phone || ""}
+                        onChange={(e) => updateContact({ phone: onlyPhoneChars(e.target.value) })}
+                        placeholder="9876543210"
+                        className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
+                        <Phone size={12} /> WhatsApp
+                      </label>
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
+                        value={cardContact.whatsapp || ""}
+                        onChange={(e) => updateContact({ whatsapp: onlyPhoneChars(e.target.value) })}
+                        placeholder="9876543210"
+                        className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
+                        <Globe size={12} /> Website
+                      </label>
+                      <input
+                        type="text"
+                        value={cardContact.website || ""}
+                        onChange={(e) => updateContact({ website: e.target.value })}
+                        placeholder="https://…"
+                        className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
+                        <MapPin size={12} /> Address
+                      </label>
+                      <input
+                        type="text"
+                        value={cardContact.address || ""}
+                        onChange={(e) => updateContact({ address: e.target.value })}
+                        placeholder="Street, area, city"
+                        className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Template Detail View — business/visiting-card layout picker */}
           {detailView === "template" && (
             <div className="space-y-1">
@@ -640,7 +608,7 @@ export default function CardPage() {
                     <button
                       key={tpl.id}
                       type="button"
-                      onClick={() => setTemplateId(tpl.id)}
+                      onClick={() => setTemplateId((prev) => (prev === tpl.id ? "" : tpl.id))}
                       title={tpl.description}
                       className={`flex flex-col items-start gap-2 rounded-2xl border-2 bg-white p-2.5 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-white/[0.04] ${
                         active ? "border-ink dark:border-white" : "border-transparent"
@@ -674,472 +642,6 @@ export default function CardPage() {
                     </button>
                   );
                 })}
-              </div>
-            </div>
-          )}
-
-          {/* Details Detail View — resume/CV content editor */}
-          {detailView === "details" && (
-            <div className="space-y-1">
-              <button
-                onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
-              >
-                ← Details
-              </button>
-              <div className="space-y-6 px-5 pb-4">
-                {/* Personal */}
-                <div className="space-y-2">
-                  <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                    Personal
-                  </p>
-                  <input
-                    type="text"
-                    value={draft.personal?.fullName || ""}
-                    onChange={(e) => updatePersonal({ fullName: e.target.value })}
-                    placeholder="Full name"
-                    className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                  />
-                  <input
-                    type="text"
-                    value={draft.personal?.tagline || ""}
-                    onChange={(e) => updatePersonal({ tagline: e.target.value })}
-                    placeholder="Title / tagline"
-                    className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                  />
-                  <textarea
-                    value={draft.personal?.bio || ""}
-                    onChange={(e) => updatePersonal({ bio: e.target.value })}
-                    placeholder="Summary — a short professional overview"
-                    rows={3}
-                    className="w-full resize-none rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                  />
-                </div>
-
-                {/* Skills */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                      Skills
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setSkillPickerOpen(true)}
-                      className="flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-white/80"
-                    >
-                      <Plus size={12} /> Add skill
-                    </button>
-                  </div>
-                  {skills.length === 0 ? (
-                    <p className="text-xs text-ink/40 dark:text-white/40">No skills added yet.</p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {skills.map((s, i) => (
-                        <span
-                          key={i}
-                          className="flex items-center gap-1.5 rounded-full border border-ink/10 bg-white px-3 py-1.5 text-xs font-semibold text-ink dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
-                        >
-                          {s}
-                          <button
-                            type="button"
-                            onClick={() => setSkills(skills.filter((_, idx) => idx !== i))}
-                            aria-label={`Remove ${s}`}
-                            className="text-ink/40 hover:text-red-500 dark:text-white/40"
-                          >
-                            <X size={12} />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Experience */}
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                        Experience
-                      </p>
-                      <button
-                        type="button"
-                        onClick={addExperience}
-                        className="flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-white/80"
-                      >
-                        <Plus size={12} /> Add
-                      </button>
-                    </div>
-                    {experience.length === 0 && (
-                      <p className="text-xs text-ink/40 dark:text-white/40">No experience added yet.</p>
-                    )}
-                    <div className="space-y-3">
-                      {experience.map((e, i) => (
-                        <div
-                          key={i}
-                          className="space-y-2 rounded-xl border border-ink/10 p-3 dark:border-white/10"
-                        >
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={e.role || ""}
-                              onChange={(ev) => updateExperience(i, { role: ev.target.value })}
-                              placeholder="Role"
-                              className="flex-1 rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeExperience(i)}
-                              aria-label="Remove experience"
-                              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink/40 transition hover:bg-ink/5 hover:text-red-500 dark:text-white/40 dark:hover:bg-white/10"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                          <input
-                            type="text"
-                            value={e.company || ""}
-                            onChange={(ev) => updateExperience(i, { company: ev.target.value })}
-                            placeholder="Company"
-                            className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                          />
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={e.startDate || ""}
-                              onChange={(ev) => updateExperience(i, { startDate: onlyDigits(ev.target.value) })}
-                              placeholder="Start (e.g. 2021)"
-                              className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                            />
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={e.endDate || ""}
-                              disabled={!!e.current}
-                              onChange={(ev) => updateExperience(i, { endDate: onlyDigits(ev.target.value) })}
-                              placeholder="End (e.g. 2023)"
-                              className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                            />
-                          </div>
-                          <label className="flex items-center gap-2 text-xs font-medium text-ink/70 dark:text-white/70">
-                            <input
-                              type="checkbox"
-                              checked={!!e.current}
-                              onChange={(ev) => updateExperience(i, { current: ev.target.checked })}
-                            />
-                            Currently working here
-                          </label>
-                          <textarea
-                            value={e.description || ""}
-                            onChange={(ev) => updateExperience(i, { description: ev.target.value })}
-                            placeholder="Description"
-                            rows={2}
-                            className="w-full resize-none rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                {/* Projects */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                      Projects
-                    </p>
-                    <button
-                      type="button"
-                      onClick={addProject}
-                      className="flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-white/80"
-                    >
-                      <Plus size={12} /> Add
-                    </button>
-                  </div>
-                  {projects.length === 0 && (
-                    <p className="text-xs text-ink/40 dark:text-white/40">No projects added yet.</p>
-                  )}
-                  <div className="space-y-3">
-                    {projects.map((proj, i) => (
-                      <div
-                        key={i}
-                        className="space-y-2 rounded-xl border border-ink/10 p-3 dark:border-white/10"
-                      >
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={proj.name || ""}
-                            onChange={(ev) => updateProject(i, { name: ev.target.value })}
-                            placeholder="Project name"
-                            className="flex-1 rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeProject(i)}
-                            aria-label="Remove project"
-                            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink/40 transition hover:bg-ink/5 hover:text-red-500 dark:text-white/40 dark:hover:bg-white/10"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                        <input
-                          type="text"
-                          value={proj.role || ""}
-                          onChange={(ev) => updateProject(i, { role: ev.target.value })}
-                          placeholder="Your role (optional)"
-                          className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                        />
-                        <input
-                          type="text"
-                          value={proj.link || ""}
-                          onChange={(ev) => updateProject(i, { link: ev.target.value })}
-                          placeholder="Link (optional)"
-                          className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                        />
-                        <div className="grid grid-cols-2 gap-2">
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            value={proj.startDate || ""}
-                            onChange={(ev) => updateProject(i, { startDate: onlyDigits(ev.target.value) })}
-                            placeholder="Start (e.g. 2023)"
-                            className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                          />
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            value={proj.endDate || ""}
-                            onChange={(ev) => updateProject(i, { endDate: onlyDigits(ev.target.value) })}
-                            placeholder="End (e.g. 2024)"
-                            className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                          />
-                        </div>
-                        <textarea
-                          value={proj.description || ""}
-                          onChange={(ev) => updateProject(i, { description: ev.target.value })}
-                          placeholder="Description"
-                          rows={2}
-                          className="w-full resize-none rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Education */}
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                        Education
-                      </p>
-                      <button
-                        type="button"
-                        onClick={addEducation}
-                        className="flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-white/80"
-                      >
-                        <Plus size={12} /> Add
-                      </button>
-                    </div>
-                    {education.length === 0 && (
-                      <p className="text-xs text-ink/40 dark:text-white/40">No education added yet.</p>
-                    )}
-                    <div className="space-y-3">
-                      {education.map((ed, i) => (
-                        <div
-                          key={i}
-                          className="space-y-2 rounded-xl border border-ink/10 p-3 dark:border-white/10"
-                        >
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={ed.institution || ""}
-                              onChange={(ev) => updateEducation(i, { institution: ev.target.value })}
-                              placeholder="Institution"
-                              className="flex-1 rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeEducation(i)}
-                              aria-label="Remove education"
-                              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink/40 transition hover:bg-ink/5 hover:text-red-500 dark:text-white/40 dark:hover:bg-white/10"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              value={ed.degree || ""}
-                              onChange={(ev) => updateEducation(i, { degree: ev.target.value })}
-                              placeholder="Degree"
-                              className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                            />
-                            <input
-                              type="text"
-                              value={ed.field || ""}
-                              onChange={(ev) => updateEducation(i, { field: ev.target.value })}
-                              placeholder="Field of study"
-                              className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                            />
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={ed.startYear || ""}
-                              onChange={(ev) => updateEducation(i, { startYear: onlyDigits(ev.target.value) })}
-                              placeholder="Start year"
-                              className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                            />
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={ed.endYear || ""}
-                              onChange={(ev) => updateEducation(i, { endYear: onlyDigits(ev.target.value) })}
-                              placeholder="End year"
-                              className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                            />
-                          </div>
-                          <textarea
-                            value={ed.description || ""}
-                            onChange={(ev) => updateEducation(i, { description: ev.target.value })}
-                            placeholder="Description"
-                            rows={2}
-                            className="w-full resize-none rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                {/* Contact */}
-                <div className="space-y-2">
-                  <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                    Contact
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
-                        <Mail size={12} /> Email
-                      </label>
-                      <input
-                        type="email"
-                        value={draft.contact?.email || ""}
-                        onChange={(e) => updateContact({ email: e.target.value })}
-                        placeholder="you@example.com"
-                        className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
-                        <Phone size={12} /> Phone
-                      </label>
-                      <input
-                        type="tel"
-                        inputMode="tel"
-                        value={draft.contact?.phone || ""}
-                        onChange={(e) => updateContact({ phone: onlyPhoneChars(e.target.value) })}
-                        placeholder="+91 82196 34560"
-                        className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
-                        <Globe size={12} /> Portfolio / LinkedIn
-                      </label>
-                      <input
-                        type="text"
-                        value={draft.contact?.website || ""}
-                        onChange={(e) => updateContact({ website: e.target.value })}
-                        placeholder="https://…"
-                        className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
-                        <MapPin size={12} /> City
-                      </label>
-                      <input
-                        type="text"
-                        value={draft.contact?.city || ""}
-                        onChange={(e) => updateContact({ city: e.target.value })}
-                        placeholder="City"
-                        className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Social links */}
-                  <div className="mt-4">
-                    <p className="mb-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">Social links</p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {socialIconRow.map(({ platform, icon: Icon }) => {
-                        const added = Boolean(findSocial(platform));
-                        const isEditing = editingSocial === platform;
-                        return (
-                          <button
-                            key={platform}
-                            type="button"
-                            onClick={() => openSocialEditor(platform)}
-                            title={added ? `Edit ${platform}` : `Add ${platform}`}
-                            aria-label={added ? `Edit ${platform}` : `Add ${platform}`}
-                            className={`grid h-9 w-9 place-items-center rounded-full transition ${
-                              isEditing
-                                ? "bg-brand-500 text-white ring-2 ring-brand-500/30"
-                                : added
-                                ? "bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-white"
-                                : "bg-ink/5 text-ink/60 hover:bg-brand-50 hover:text-brand-600 dark:bg-white/10 dark:text-white/60 dark:hover:bg-white/20"
-                            }`}
-                          >
-                            <Icon size={15} />
-                          </button>
-                        );
-                      })}
-                      <button
-                        type="button"
-                        onClick={() => setSocialPickerOpen(true)}
-                        title="Add another social link"
-                        aria-label="Add another social link"
-                        className="grid h-9 w-9 place-items-center rounded-full border border-dashed border-ink/15 text-ink/40 transition hover:border-brand-300 hover:text-brand-600 dark:border-white/15 dark:text-white/40"
-                      >
-                        <Plus size={15} />
-                      </button>
-                    </div>
-
-                    {editingSocial && findSocial(editingSocial) && (
-                      <div className="mt-3 space-y-2 rounded-xl bg-mist p-3 dark:bg-white/[0.03]">
-                        <div className="flex items-center justify-between">
-                          <span className="inline-flex items-center gap-2 text-xs font-bold text-ink dark:text-white">
-                            {(() => {
-                              const Icon = getSocialIcon(editingSocial);
-                              return <Icon size={14} />;
-                            })()}
-                            {editingSocial}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => removeSocial(editingSocial)}
-                            className="flex items-center gap-1 text-xs font-semibold text-rose-500 transition hover:text-rose-600"
-                          >
-                            <Trash2 size={12} /> Remove
-                          </button>
-                        </div>
-                        <input
-                          type="text"
-                          value={findSocial(editingSocial)?.url || ""}
-                          onChange={(e) => updateSocial(editingSocial, { url: e.target.value })}
-                          placeholder="https://…"
-                          className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setEditingSocial(null)}
-                          className="text-xs font-bold text-brand-600 hover:text-brand-700"
-                        >
-                          Done
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
               </div>
             </div>
           )}
@@ -1361,26 +863,9 @@ export default function CardPage() {
         />
       )}
 
-      {skillPickerOpen && (
-        <SkillPickerModal
-          existingSkills={skills}
-          onAdd={(skill) => setSkills((prev) => [...prev, skill])}
-          onClose={() => setSkillPickerOpen(false)}
-        />
-      )}
-
-      {socialPickerOpen && (
-        <SocialIconPickerModal
-          onBack={() => setSocialPickerOpen(false)}
-          onClose={() => setSocialPickerOpen(false)}
-          onPick={openSocialEditor}
-        />
-      )}
-
       {showSharePopup && publicUrl && (
         <SharePopup profileUrl={publicUrl} onClose={() => setShowSharePopup(false)} />
       )}
     </AppShell>
   );
 }
-

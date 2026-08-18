@@ -56,7 +56,7 @@ const SECTIONS: { key: SectionKey; label: string; icon: typeof UserIcon }[] = [
 
 export default function ProfileEditorPage() {
   const dispatch = useAppDispatch();
-  const { draft, saving, status } = useAppSelector((s) => s.profile);
+  const { draft, saving, status, dirty } = useAppSelector((s) => s.profile);
   const authUser = useAppSelector((s) => s.auth.user);
   const socialLinksStyle = useAppSelector((s) => s.design.socialLinksStyle);
   const [active, setActive] = useState<SectionKey>("personal");
@@ -180,11 +180,13 @@ export default function ProfileEditorPage() {
             Build your public page. Changes preview live on the right.
           </p>
         </div>
-        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
-          <Button onClick={onSave} loading={saving} className="text-xs sm:text-sm">
-            <Save size={17} /> Save changes
-          </Button>
-        </div>
+        {(dirty || picture) && (
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+            <Button onClick={onSave} loading={saving} className="text-xs sm:text-sm">
+              <Save size={17} /> Save changes
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="mt-6 flex flex-col gap-6 xl:flex-row xl:items-start">
@@ -344,8 +346,8 @@ export default function ProfileEditorPage() {
                 {(
                   [
                     ["email", "Email", "you@example.com"],
-                    ["phone", "Phone", "+91 98765 43210"],
-                    ["whatsapp", "WhatsApp", "+91 98765 43210"],
+                    ["phone", "Phone", "9876543210"],
+                    ["whatsapp", "WhatsApp", "9876543210"],
                     ["website", "Website", "https://yoursite.com"],
                     ["city", "City", "Mumbai"],
                     ["country", "Country", "India"],
@@ -358,10 +360,13 @@ export default function ProfileEditorPage() {
                       label={label}
                       placeholder={ph}
                       type={isPhoneField ? "tel" : "text"}
-                      inputMode={isPhoneField ? "tel" : undefined}
+                      inputMode={isPhoneField ? "numeric" : undefined}
+                      maxLength={isPhoneField ? 10 : undefined}
                       value={(draft.contact?.[k] as string) || ""}
                       onChange={(e) => {
-                        const v = isPhoneField ? e.target.value.replace(/[^\d+ ]/g, "") : e.target.value;
+                        // Phone/WhatsApp are exactly a 10-digit number — no
+                        // country code, spaces, or symbols.
+                        const v = isPhoneField ? e.target.value.replace(/\D/g, "").slice(0, 10) : e.target.value;
                         patch("contact", { ...draft.contact, [k]: v });
                       }}
                     />

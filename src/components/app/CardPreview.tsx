@@ -3,6 +3,7 @@ import { Phone, Mail, Globe, MessageCircle, MapPin } from "lucide-react";
 import type { FullProfile } from "@/types";
 import { SITE_URL } from "@/lib/config";
 import { getContrastText } from "@/lib/color";
+import { CARD_TEMPLATES, type CardElement, type CardFaceDef } from "@/lib/cardTemplates";
 
 /**
  * Lightweight client-side preview of the digital business-card templates
@@ -124,72 +125,80 @@ function ChevronPattern({ id, fill, bg }: { id: string; fill: string; bg: string
 }
 
 /**
- * Original hand-drawn-style mandala bloom used by the Floral Mandala
- * template — layered petal rings, a dotted halo and outlined shapes, built
- * from primitives rather than reproducing any specific illustration.
+ * Renders one face of a fully data-driven (elements-based) template — each
+ * element is a percentage-positioned text or shape read straight off the
+ * template definition. `x` is treated as the element's horizontal centre.
+ * `designWidth` converts the template's design-canvas px values (fontSize,
+ * letterSpacing) into container query units, so they stay correctly
+ * proportioned at whatever size the face actually renders at.
  */
-function MandalaMotif({
-  size = 160,
-  light,
-  mid,
-  dark,
-  ink,
-  style,
+function ElementsFace({
+  face,
+  fieldValue,
+  designWidth,
+  fallbackBg,
 }: {
-  size?: number;
-  /** Palest fill — outer petals. */
-  light: string;
-  /** Mid-tone fill — inner petals and core ring. */
-  mid: string;
-  /** Deepest tone — accent dots and core centre. */
-  dark: string;
-  /** Line colour for every stroke, mimicking hand-drawn outlines. */
-  ink: string;
-  style?: CSSProperties;
+  face: CardFaceDef;
+  fieldValue: (field?: string) => string;
+  /** The template's reference canvas width — element font sizes/letter-spacing are px values authored against this. */
+  designWidth: number;
+  fallbackBg: string;
 }) {
-  const outer = Array.from({ length: 14 });
-  const middle = Array.from({ length: 12 });
-  const dots = Array.from({ length: 22 });
+  // Container query units, not a one-off px scale computed from a fixed
+  // reference width: `cqw` re-derives from this element's *actual* rendered
+  // width on every layout, so text stays correctly proportioned (and never
+  // overlaps) whether this face renders full-size or squeezed side-by-side
+  // with its other face.
+  const pxToCqw = (px: number) => `${(px / designWidth) * 100}cqw`;
+
   return (
-    <svg viewBox="0 0 200 200" width={size} height={size} style={style} aria-hidden>
-      <g transform="translate(100,100)">
-        {dots.map((_, i) => {
-          const angle = (360 / dots.length) * i;
-          const rad = (angle * Math.PI) / 180;
-          const r = 86;
+    <div
+      className="relative h-full w-full overflow-hidden"
+      style={{
+        background: fallbackBg,
+        backgroundImage: face.background?.image ? `url(${face.background.image})` : undefined,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        containerType: "inline-size",
+      }}
+    >
+      {face.elements.map((el: CardElement) => {
+        const base: CSSProperties = {
+          position: "absolute",
+          left: `${el.position.x}%`,
+          top: `${el.position.y}%`,
+          width: `${el.size.width}%`,
+          transform: "translateX(-50%)",
+        };
+        if (el.type === "shape") {
           return (
-            <circle key={`d-${i}`} cx={Math.sin(rad) * r} cy={-Math.cos(rad) * r} r={2.6} fill={dark} />
+            <div
+              key={el.id}
+              style={{ ...base, height: `${el.size.height}%`, background: el.style.backgroundColor }}
+            />
           );
-        })}
-        {outer.map((_, i) => (
-          <ellipse
-            key={`o-${i}`}
-            rx={15}
-            ry={44}
-            cy={-60}
-            fill={light}
-            stroke={ink}
-            strokeWidth={1.4}
-            transform={`rotate(${(360 / outer.length) * i})`}
-          />
-        ))}
-        {middle.map((_, i) => (
-          <ellipse
-            key={`m-${i}`}
-            rx={11}
-            ry={30}
-            cy={-40}
-            fill={mid}
-            stroke={ink}
-            strokeWidth={1.2}
-            transform={`rotate(${(360 / middle.length) * i + 15})`}
-          />
-        ))}
-        <circle r={23} fill={mid} stroke={ink} strokeWidth={1.4} />
-        <circle r={13} fill={light} stroke={ink} strokeWidth={1} />
-        <circle r={4.5} fill={dark} />
-      </g>
-    </svg>
+        }
+        const text = fieldValue(el.field);
+        if (!text) return null;
+        return (
+          <div
+            key={el.id}
+            className="truncate leading-tight"
+            style={{
+              ...base,
+              fontFamily: el.style.fontFamily,
+              fontSize: el.style.fontSize ? pxToCqw(el.style.fontSize) : undefined,
+              fontWeight: el.style.fontWeight,
+              color: el.style.color,
+              textAlign: el.style.textAlign,
+              letterSpacing: el.style.letterSpacing ? pxToCqw(el.style.letterSpacing) : undefined,
+            }}
+          >
+            {text}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -266,7 +275,7 @@ export default function CardPreview({
     color: t.fg,
     borderRadius: 24,
     width: "100%",
-    maxWidth: 360,
+    maxWidth: 420,
     overflow: "hidden",
     // boxShadow: "0 30px 60px -20px rgba(11,46,43,0.22)",
     fontFamily: fontFamily ? `"${fontFamily}", sans-serif` : undefined,
@@ -342,74 +351,169 @@ export default function CardPreview({
   }
 
   if (templateId === "floral-mandala") {
-    // Fixed ivory/teal palette so this template always reads the same way,
-    // independent of the user's primary/accent picks (matches the reference
-    // colour scheme rather than following the palette picker).
-    const cream = "#FBF3E4";
-    const ink = "#211D18";
-    const light = "#BFE9E1";
-    const mid = "#3FAFA8";
-    const dark = "#0E6E68";
-    const motif = (extra: CSSProperties) => (
-      <MandalaMotif size={200} light={light} mid={mid} dark={dark} ink={ink} style={{ position: "absolute", ...extra }} />
-    );
+    const tpl = CARD_TEMPLATES.find((t) => t.id === "floral-mandala");
+    const colors = tpl?.colors ?? { background: "#FBF3E4", primary: "#0E7C86", secondary: "#083F45", text: "#202020" };
+    const bg = tpl?.background;
+    const layout = tpl?.layout;
+
     // Standard 89×51mm trim size applied to both faces — a fixed CSS aspect
     // ratio so front and back render at true business-card proportions.
     const faceStyle: CSSProperties = {
-      background: cream,
-      borderColor: ink,
+      background: colors.background,
+      borderColor: colors.secondary,
       width: "100%",
       maxWidth: cardStyle.maxWidth,
       aspectRatio: CARD_ASPECT_RATIO,
       fontFamily: cardStyle.fontFamily,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
     };
+
     return (
       <div className="flex w-full flex-col gap-4" style={{ maxWidth: cardStyle.maxWidth }}>
-        {/* Front face — 89×51mm trim, contact details beside a corner mandala bloom */}
+        {/* Front face — pre-designed background art with text overlaid at the template's layout anchors */}
         <div
-          className="relative overflow-hidden rounded-2xl border-[3px] p-4"
-          style={{ ...faceStyle, color: ink }}
+          className="relative overflow-hidden rounded-2xl border-[3px]"
+          style={{
+            ...faceStyle,
+            color: colors.text,
+            backgroundImage: bg?.front ? `url(${bg.front})` : undefined,
+          }}
         >
-          {motif({ left: -60, top: -50 })}
-          <div className="relative ml-[44%] flex h-full flex-col justify-center gap-1.5">
-            <div>
-              <h2 className="break-words text-base font-black uppercase leading-tight tracking-wide">{fullName}</h2>
-              {p.tagline && (
-                <p className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.16em]" style={{ color: `${ink}99` }}>
-                  {p.tagline}
-                </p>
-              )}
+          <div
+            className="absolute max-w-[46%]"
+            style={{ left: `${layout?.front.name.x ?? 52}%`, top: `${layout?.front.name.y ?? 28}%` }}
+          >
+            <span className="block break-words text-sm font-black uppercase leading-tight tracking-wide">
+              {fullName}
+            </span>
+          </div>
+          {p.tagline && (
+            <div
+              className="absolute max-w-[42%]"
+              style={{ left: `${layout?.front.title.x ?? 55}%`, top: `${layout?.front.title.y ?? 42}%` }}
+            >
+              <span className="block text-[8px] font-bold uppercase tracking-[0.16em]" style={{ color: `${colors.text}99` }}>
+                {p.tagline}
+              </span>
             </div>
-            <div className="space-y-1">
-              {contact.slice(0, 3).map((r, i) => (
-                <div key={i} className="flex items-center gap-1.5">
-                  <span
-                    className="grid h-4 w-4 shrink-0 place-items-center rounded-full border"
-                    style={{ borderColor: ink }}
-                  >
-                    <r.icon size={8} style={{ color: ink }} />
-                  </span>
-                  <span className="truncate text-[9px] font-bold" style={{ color: ink }}>
-                    {r.label}
-                  </span>
-                </div>
-              ))}
-            </div>
+          )}
+          <div
+            className="absolute max-w-[42%] space-y-1"
+            style={{ left: `${layout?.front.contact.x ?? 55}%`, top: `${layout?.front.contact.y ?? 58}%` }}
+          >
+            {contact.slice(0, 3).map((r, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                <span
+                  className="grid h-4 w-4 shrink-0 place-items-center rounded-full border"
+                  style={{ borderColor: colors.text }}
+                >
+                  <r.icon size={8} style={{ color: colors.text }} />
+                </span>
+                <span className="truncate text-[9px] font-bold" style={{ color: colors.text }}>
+                  {r.label}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Back face — 89×51mm trim, full mandala field with a centred company badge */}
-        <div className="relative flex items-center justify-center overflow-hidden rounded-2xl border-[3px]" style={faceStyle}>
-          {motif({ left: "50%", top: "50%", transform: "translate(-50%, -50%)" })}
-          {motif({ left: -70, top: -70 })}
-          {motif({ right: -70, bottom: -70 })}
+        {/* Back face — pre-designed background art with the company name centred on it */}
+        <div
+          className="relative overflow-hidden rounded-2xl border-[3px]"
+          style={{
+            ...faceStyle,
+            backgroundImage: bg?.back ? `url(${bg.back})` : undefined,
+          }}
+        >
           <span
-            className="relative rounded-full border-2 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
-            style={{ borderColor: ink, background: cream, color: ink }}
+            className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
+            style={{
+              left: `${layout?.back.companyName.x ?? 50}%`,
+              top: `${layout?.back.companyName.y ?? 50}%`,
+              borderColor: colors.text,
+              background: colors.background,
+              color: colors.text,
+            }}
           >
             {biz.name || "Company"}
           </span>
         </div>
+      </div>
+    );
+  }
+
+  if (templateId === "orange-geometric") {
+    const tpl = CARD_TEMPLATES.find((t) => t.id === "orange-geometric");
+    const colors = tpl?.colors ?? { background: "#FFFFFF", primary: "#F47700", secondary: "#FF9D00", text: "#555555" };
+    const cardDef = tpl?.card;
+
+    // The template's positions/font sizes are authored against this
+    // reference canvas width — ElementsFace re-derives the actual scale
+    // live from each face's rendered width via CSS container query units.
+    // Rendered larger than the design's own scale so the card reads clearly
+    // in the studio preview; ElementsFace's cqw-based sizing keeps every
+    // face proportioned correctly regardless of this value.
+    const RENDER_WIDTH = 340;
+    const designWidth = cardDef?.width || RENDER_WIDTH;
+
+    // Every slot always shows something — matches the other templates
+    // (e.g. floral-mandala's `biz.name || "Company"`) so the card reads as a
+    // finished design immediately instead of leaving gaps until every field
+    // in Details has been filled in.
+    const fieldValue = (field?: string) => {
+      switch (field) {
+        case "fullName":
+          return fullName;
+        case "jobTitle":
+          return p.tagline || "Your Position";
+        case "companyName":
+          return biz.name || "Company Name";
+        case "tagline":
+          // No placeholder here — an empty tagline just leaves the company
+          // name on its own instead of showing filler text under it.
+          return biz.category || "";
+        case "phone": {
+          // Phone and WhatsApp render on the same line instead of two
+          // separate rows — just the phone number when they match or
+          // WhatsApp isn't set.
+          if (c.phone && c.whatsapp && c.phone !== c.whatsapp) return `${c.phone}  /  ${c.whatsapp}`;
+          return c.phone || c.whatsapp || "+1 234 567 89AB";
+        }
+        case "email":
+          return c.email || "you@email.com";
+        case "website":
+          return c.website || "yourwebsite.com";
+        case "address":
+          return c.address || [c.city, c.country].filter(Boolean).join(", ") || "Your Address";
+        default:
+          return "";
+      }
+    };
+
+    const faceStyle: CSSProperties = {
+      width: "100%",
+      maxWidth: RENDER_WIDTH,
+      aspectRatio: cardDef ? `${cardDef.width} / ${cardDef.height}` : "600 / 1050",
+      borderRadius: cardDef?.borderRadius ?? 0,
+      overflow: "hidden",
+      fontFamily: cardStyle.fontFamily,
+    };
+
+    // Portrait faces are too tall to stack — sit the back face beside the
+    // front instead of below it, so the preview doesn't run off the page.
+    return (
+      <div className="flex w-full flex-row items-start justify-center gap-4" style={{ maxWidth: RENDER_WIDTH * 2 + 16 }}>
+        {tpl?.front && (
+          <div style={faceStyle} className="border border-ink/10">
+            <ElementsFace face={tpl.front} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
+          </div>
+        )}
+        {tpl?.back && (
+          <div style={faceStyle} className="border border-ink/10">
+            <ElementsFace face={tpl.back} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
+          </div>
+        )}
       </div>
     );
   }

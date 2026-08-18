@@ -1,6 +1,7 @@
-import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Mail, Phone, Globe, MapPin } from "lucide-react";
-import type { FullProfile, ProjectItem } from "@/types";
+import type { AwardItem, FullProfile, LanguageItem, ProjectItem } from "@/types";
+import { CV_TEMPLATES } from "@/lib/cvTemplates";
 
 type Icon = typeof Mail;
 
@@ -83,43 +84,71 @@ function HeaderBlock({
   fullName,
   tagline,
   contactItems,
-  primary,
-  accent,
-  fg,
+  headingColor,
+  subtleColor,
+  centered,
+  contactBarColor,
+  contactBarTextColor,
 }: {
   fullName: string;
   tagline?: string;
   contactItems: { icon: Icon; label: string }[];
-  primary: string;
-  accent: string;
-  fg: string;
+  headingColor: string;
+  subtleColor: string;
+  centered?: boolean;
+  /** When set, contact info renders as a solid strip instead of a plain inline row (Classic Orange). */
+  contactBarColor?: string;
+  contactBarTextColor?: string;
 }) {
+  const hasBar = Boolean(contactBarColor);
   return (
-    <div className="border-b pb-4" style={{ borderColor: `${primary}33` }}>
-      <h1 className="font-display text-2xl font-black" style={{ color: primary }}>
+    <div className={hasBar ? (centered ? "text-center" : "") : "border-b pb-4"} style={hasBar ? undefined : { borderColor: `${headingColor}33` }}>
+      <h1 className="font-display text-2xl font-black" style={{ color: headingColor }}>
         {fullName}
       </h1>
       {tagline && (
-        <p className="mt-1 text-sm font-semibold" style={{ color: accent }}>
+        <p className="mt-1 text-sm font-semibold uppercase tracking-wide" style={{ color: subtleColor }}>
           {tagline}
         </p>
       )}
-      {contactItems.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px]" style={{ color: `${fg}99` }}>
-          {contactItems.map((item, i) => (
-            <span key={i} className="flex items-center gap-1">
-              <item.icon size={11} />
-              {item.label}
-            </span>
-          ))}
-        </div>
-      )}
+      {contactItems.length > 0 &&
+        (hasBar ? (
+          <div
+            className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold"
+            style={{ background: contactBarColor, color: contactBarTextColor }}
+          >
+            {contactItems.map((item, i) => (
+              <span key={i} className="flex items-center gap-1.5">
+                <item.icon size={12} />
+                {item.label}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px]" style={{ color: subtleColor }}>
+            {contactItems.map((item, i) => (
+              <span key={i} className="flex items-center gap-1">
+                <item.icon size={11} />
+                {item.label}
+              </span>
+            ))}
+          </div>
+        ))}
     </div>
   );
 }
 
 function dateRange(start?: string, end?: string, current?: boolean) {
   return [start, current ? "Present" : end].filter(Boolean).join(" – ");
+}
+
+/** A section heading rendered once per section (only shown on the section's first item). */
+function SectionHeading({ children, color }: { children: ReactNode; color: string }) {
+  return (
+    <h2 className="mb-2 text-[11px] font-black uppercase tracking-wider" style={{ color }}>
+      {children}
+    </h2>
+  );
 }
 
 export default function ResumePreview({
@@ -130,6 +159,9 @@ export default function ResumePreview({
   textColor,
   skills,
   projects,
+  awards,
+  languages,
+  templateId,
 }: {
   profile: FullProfile;
   primary: string;
@@ -139,6 +171,10 @@ export default function ResumePreview({
   textColor?: string;
   skills?: string[];
   projects?: ProjectItem[];
+  awards?: AwardItem[];
+  languages?: LanguageItem[];
+  /** CV template id (@/lib/cvTemplates) — changes colours, the contact bar, section grids, and section order. */
+  templateId?: string;
 }) {
   const p = profile.personal || {};
   const c = profile.contact || {};
@@ -146,6 +182,15 @@ export default function ResumePreview({
   const education = profile.education || [];
   const fg = textColor || "#0b2e2b";
   const fullName = p.fullName || "Your name";
+
+  const tpl = CV_TEMPLATES.find((t) => t.id === templateId);
+  // Template colours override the palette-driven defaults when a template
+  // is selected; with none selected this renders exactly as it always has.
+  const pageBg = tpl?.colors.background || "#ffffff";
+  const headingColor = tpl?.colors.heading || primary;
+  const bodyFg = tpl ? tpl.colors.text : fg;
+  const subtleFg = tpl ? tpl.colors.subtleText : `${fg}80`;
+  const cols = tpl?.layout.sectionColumns;
 
   const { ref: containerRef, width: containerWidth } = useMeasuredWidth<HTMLDivElement>(PAGE_WIDTH);
 
@@ -166,162 +211,282 @@ export default function ResumePreview({
   );
 
   const blocks: Block[] = useMemo(() => {
-    const list: Block[] = [
-      {
-        key: "header",
-        node: (
-          <HeaderBlock
-            fullName={fullName}
-            tagline={p.tagline}
-            contactItems={contactItems}
-            primary={primary}
-            accent={accent}
-            fg={fg}
-          />
-        ),
-      },
-    ];
+    const header: Block = {
+      key: "header",
+      node: (
+        <HeaderBlock
+          fullName={fullName}
+          tagline={p.tagline}
+          contactItems={contactItems}
+          headingColor={headingColor}
+          subtleColor={subtleFg}
+          centered={tpl?.layout.headerStyle === "centered"}
+          contactBarColor={tpl?.layout.contactBar ? tpl.colors.accentBar : undefined}
+          contactBarTextColor={tpl?.colors.accentBarText}
+        />
+      ),
+    };
 
-    if (p.bio) {
-      list.push({
-        key: "summary",
-        node: (
-          <div>
-            <h2 className="text-[11px] font-black uppercase tracking-wider" style={{ color: primary }}>
-              Summary
-            </h2>
-            <p className="mt-1.5 text-xs leading-relaxed" style={{ color: `${fg}cc` }}>
-              {p.bio}
+    const summaryBlocks: Block[] = p.bio
+      ? [
+          {
+            key: "summary",
+            node: (
+              <div>
+                <SectionHeading color={headingColor}>Summary</SectionHeading>
+                <p className="text-xs leading-relaxed" style={{ color: bodyFg }}>
+                  {p.bio}
+                </p>
+              </div>
+            ),
+          },
+        ]
+      : [];
+
+    const skillsBlocks: Block[] =
+      skills && skills.length > 0
+        ? [
+            {
+              key: "skills",
+              node: (
+                <div>
+                  <SectionHeading color={headingColor}>Skills</SectionHeading>
+                  {cols?.skills && cols.skills > 1 ? (
+                    <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${cols.skills}, minmax(0, 1fr))` }}>
+                      {skills.map((s, i) => (
+                        <span
+                          key={i}
+                          className="truncate rounded-md px-2 py-1.5 text-center text-[10px] font-bold"
+                          style={{ color: bodyFg, background: `${headingColor}14` }}
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {skills.map((s, i) => (
+                        <span key={i} className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ color: subtleFg }}>
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ),
+            },
+          ]
+        : [];
+
+    const experienceBlocks: Block[] = experience.map((e, i) => ({
+      key: `exp-${e.id || i}`,
+      node: (
+        <div>
+          {i === 0 && <SectionHeading color={headingColor}>Experience</SectionHeading>}
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="min-w-0 flex-1 truncate text-xs font-bold" style={{ color: bodyFg }}>
+              {e.role || "Role"}
+              {e.company ? ` · ${e.company}` : ""}
+            </p>
+            <p className="shrink-0 whitespace-nowrap text-[10px]" style={{ color: subtleFg }}>
+              {dateRange(e.startDate, e.endDate, e.current)}
             </p>
           </div>
-        ),
-      });
-    }
+          {e.location && (
+            <p className="text-[10px]" style={{ color: subtleFg }}>
+              {e.location}
+            </p>
+          )}
+          {e.description && (
+            <p className="mt-1 text-[11px] leading-relaxed" style={{ color: bodyFg }}>
+              {e.description}
+            </p>
+          )}
+        </div>
+      ),
+    }));
 
-    if (skills && skills.length > 0) {
-      list.push({
-        key: "skills",
-        node: (
-          <div>
-            <h2 className="mb-2 text-[11px] font-black uppercase tracking-wider" style={{ color: primary }}>
-              Skills
-            </h2>
-            <div className="flex flex-wrap gap-1.5">
-              {skills.map((s, i) => (
-                <span
-                  key={i}
-                  className="rounded-full px-2.5 py-1 text-xs font-bold"
-                  style={{ color: `${fg}80` }}
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-          </div>
-        ),
-      });
-    }
+    // Project entry — reused both stacked (default, one block per entry) and
+    // inside a multi-column grid (a template with otherActivities > 1).
+    const projectItem = (proj: ProjectItem) => (
+      <div>
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="min-w-0 flex-1 truncate text-xs font-bold" style={{ color: bodyFg }}>
+            {proj.name || "Project"}
+            {proj.role ? ` · ${proj.role}` : ""}
+          </p>
+          <p className="shrink-0 whitespace-nowrap text-[10px]" style={{ color: subtleFg }}>
+            {dateRange(proj.startDate, proj.endDate)}
+          </p>
+        </div>
+        {proj.link && (
+          <p className="text-[10px]" style={{ color: accent }}>
+            {proj.link}
+          </p>
+        )}
+        {proj.description && (
+          <p className="mt-1 text-[11px] leading-relaxed" style={{ color: bodyFg }}>
+            {proj.description}
+          </p>
+        )}
+      </div>
+    );
+    const projectHeading = tpl ? "Other Activities & Projects" : "Projects";
+    const projectBlocks: Block[] =
+      !projects || projects.length === 0
+        ? []
+        : cols?.otherActivities && cols.otherActivities > 1 && projects.length > 1
+        ? [
+            {
+              key: "projects",
+              node: (
+                <div>
+                  <SectionHeading color={headingColor}>{projectHeading}</SectionHeading>
+                  <div className="grid gap-x-6 gap-y-3" style={{ gridTemplateColumns: `repeat(${cols.otherActivities}, minmax(0, 1fr))` }}>
+                    {projects.map((proj, i) => (
+                      <div key={proj.id || i}>{projectItem(proj)}</div>
+                    ))}
+                  </div>
+                </div>
+              ),
+            },
+          ]
+        : projects.map((proj, i) => ({
+            key: `proj-${proj.id || i}`,
+            node: (
+              <div>
+                {i === 0 && <SectionHeading color={headingColor}>{projectHeading}</SectionHeading>}
+                {projectItem(proj)}
+              </div>
+            ),
+          }));
 
-    experience.forEach((e, i) => {
-      list.push({
-        key: `exp-${e.id || i}`,
-        node: (
-          <div>
-            {i === 0 && (
-              <h2 className="mb-2 text-[11px] font-black uppercase tracking-wider" style={{ color: primary }}>
-                Experience
-              </h2>
-            )}
-            <div className="flex items-baseline justify-between gap-2">
-              <p className="text-xs font-bold">
-                {e.role || "Role"}
-                {e.company ? ` · ${e.company}` : ""}
-              </p>
-              <p className="shrink-0 text-[10px]" style={{ color: `${fg}80` }}>
-                {dateRange(e.startDate, e.endDate, e.current)}
-              </p>
-            </div>
-            {e.location && (
-              <p className="text-[10px]" style={{ color: `${fg}80` }}>
-                {e.location}
-              </p>
-            )}
-            {e.description && (
-              <p className="mt-1 text-[11px] leading-relaxed" style={{ color: `${fg}cc` }}>
-                {e.description}
-              </p>
-            )}
-          </div>
-        ),
-      });
-    });
+    // Education entry — reused stacked or in a multi-column grid.
+    const educationItem = (ed: (typeof education)[number]) => (
+      <div>
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="min-w-0 flex-1 truncate text-xs font-bold" style={{ color: bodyFg }}>
+            {ed.degree ? `${ed.degree}${ed.field ? `, ${ed.field}` : ""}` : ed.institution}
+          </p>
+          <p className="shrink-0 whitespace-nowrap text-[10px]" style={{ color: subtleFg }}>
+            {dateRange(ed.startYear, ed.endYear)}
+          </p>
+        </div>
+        {ed.degree && (
+          <p className="text-[10px]" style={{ color: subtleFg }}>
+            {ed.institution}
+          </p>
+        )}
+        {ed.description && (
+          <p className="mt-1 text-[11px] leading-relaxed" style={{ color: bodyFg }}>
+            {ed.description}
+          </p>
+        )}
+      </div>
+    );
+    const educationBlocks: Block[] =
+      education.length === 0
+        ? []
+        : cols?.education && cols.education > 1 && education.length > 1
+        ? [
+            {
+              key: "education",
+              node: (
+                <div>
+                  <SectionHeading color={headingColor}>Education</SectionHeading>
+                  <div className="grid gap-x-6 gap-y-3" style={{ gridTemplateColumns: `repeat(${cols.education}, minmax(0, 1fr))` }}>
+                    {education.map((ed, i) => (
+                      <div key={ed.id || i}>{educationItem(ed)}</div>
+                    ))}
+                  </div>
+                </div>
+              ),
+            },
+          ]
+        : education.map((ed, i) => ({
+            key: `edu-${ed.id || i}`,
+            node: (
+              <div>
+                {i === 0 && <SectionHeading color={headingColor}>Education</SectionHeading>}
+                {educationItem(ed)}
+              </div>
+            ),
+          }));
 
-    (projects || []).forEach((proj, i) => {
-      list.push({
-        key: `proj-${proj.id || i}`,
-        node: (
-          <div>
-            {i === 0 && (
-              <h2 className="mb-2 text-[11px] font-black uppercase tracking-wider" style={{ color: primary }}>
-                Projects
-              </h2>
-            )}
-            <div className="flex items-baseline justify-between gap-2">
-              <p className="text-xs font-bold">
-                {proj.name || "Project"}
-                {proj.role ? ` · ${proj.role}` : ""}
-              </p>
-              <p className="shrink-0 text-[10px]" style={{ color: `${fg}80` }}>
-                {dateRange(proj.startDate, proj.endDate)}
-              </p>
-            </div>
-            {proj.link && (
-              <p className="text-[10px]" style={{ color: accent }}>
-                {proj.link}
-              </p>
-            )}
-            {proj.description && (
-              <p className="mt-1 text-[11px] leading-relaxed" style={{ color: `${fg}cc` }}>
-                {proj.description}
-              </p>
-            )}
-          </div>
-        ),
-      });
-    });
+    const awardsBlocks: Block[] =
+      awards && awards.length > 0
+        ? [
+            {
+              key: "awards",
+              node: (
+                <div>
+                  <SectionHeading color={headingColor}>Awards</SectionHeading>
+                  <div
+                    className="grid gap-x-6 gap-y-3"
+                    style={{ gridTemplateColumns: `repeat(${cols?.awards && cols.awards > 1 ? cols.awards : 1}, minmax(0, 1fr))` }}
+                  >
+                    {awards.map((a, i) => (
+                      <div key={a.id || i}>
+                        <p className="text-xs font-bold" style={{ color: bodyFg }}>
+                          {a.title}
+                        </p>
+                        {a.description && (
+                          <p className="mt-0.5 text-[10px] leading-relaxed" style={{ color: subtleFg }}>
+                            {a.description}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ),
+            },
+          ]
+        : [];
 
-    education.forEach((ed, i) => {
-      list.push({
-        key: `edu-${ed.id || i}`,
-        node: (
-          <div>
-            {i === 0 && (
-              <h2 className="mb-2 text-[11px] font-black uppercase tracking-wider" style={{ color: primary }}>
-                Education
-              </h2>
-            )}
-            <div className="flex items-baseline justify-between gap-2">
-              <p className="text-xs font-bold">
-                {ed.degree ? `${ed.degree}${ed.field ? `, ${ed.field}` : ""}` : ed.institution}
-              </p>
-              <p className="shrink-0 text-[10px]" style={{ color: `${fg}80` }}>
-                {dateRange(ed.startYear, ed.endYear)}
-              </p>
-            </div>
-            {ed.degree && (
-              <p className="text-[10px]" style={{ color: `${fg}80` }}>
-                {ed.institution}
-              </p>
-            )}
-            {ed.description && (
-              <p className="mt-1 text-[11px] leading-relaxed" style={{ color: `${fg}cc` }}>
-                {ed.description}
-              </p>
-            )}
-          </div>
-        ),
-      });
-    });
+    const languagesBlocks: Block[] =
+      languages && languages.length > 0
+        ? [
+            {
+              key: "languages",
+              node: (
+                <div>
+                  <SectionHeading color={headingColor}>Languages</SectionHeading>
+                  <div
+                    className="grid gap-x-6 gap-y-3"
+                    style={{ gridTemplateColumns: `repeat(${cols?.languages && cols.languages > 1 ? cols.languages : 1}, minmax(0, 1fr))` }}
+                  >
+                    {languages.map((l, i) => (
+                      <div key={l.id || i}>
+                        <p className="text-xs font-bold" style={{ color: bodyFg }}>
+                          {l.name}
+                        </p>
+                        {l.level && (
+                          <p className="mt-0.5 text-[10px] leading-relaxed" style={{ color: subtleFg }}>
+                            {l.level}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ),
+            },
+          ]
+        : [];
+
+    const sectionMap: Record<string, Block[]> = {
+      skills: skillsBlocks,
+      education: educationBlocks,
+      experience: experienceBlocks,
+      otherActivities: projectBlocks,
+      awards: awardsBlocks,
+      languages: languagesBlocks,
+    };
+    const order = tpl?.layout.sectionOrder ?? ["skills", "experience", "otherActivities", "education"];
+    const orderedSections = order.flatMap((key) => sectionMap[key] ?? []);
+
+    const list = [header, ...summaryBlocks, ...orderedSections];
 
     if (list.length === 1) {
       list.push({
@@ -345,21 +510,28 @@ export default function ResumePreview({
     JSON.stringify(education),
     JSON.stringify(skills),
     JSON.stringify(projects),
+    JSON.stringify(awards),
+    JSON.stringify(languages),
     primary,
     accent,
     fg,
+    tpl,
+    headingColor,
+    bodyFg,
+    subtleFg,
+    cols,
   ]);
 
   const signature = useMemo(
-    () => JSON.stringify({ n: blocks.map((b) => b.key), fontFamily, fg, primary, accent, pageWidth }),
-    [blocks, fontFamily, fg, primary, accent, pageWidth],
+    () => JSON.stringify({ n: blocks.map((b) => b.key), fontFamily, fg, primary, accent, pageWidth, templateId }),
+    [blocks, fontFamily, fg, primary, accent, pageWidth, templateId],
   );
 
   const { pageKeys, measureRefs } = usePaginatedBlocks(blocks, contentHeight, signature);
   const blockMap = useMemo(() => new Map(blocks.map((b) => [b.key, b.node])), [blocks]);
 
-  const sharedStyle = {
-    color: fg,
+  const sharedStyle: CSSProperties = {
+    color: bodyFg,
     fontFamily: fontFamily ? `"${fontFamily}", sans-serif` : undefined,
   };
 
@@ -386,17 +558,19 @@ export default function ResumePreview({
       {pageKeys.map((keys, pageIndex) => (
         <div
           key={pageIndex}
-          className="shrink-0 overflow-hidden rounded-lg bg-white break-words"
+          data-cv-page
+          className="shrink-0 overflow-hidden rounded-lg break-words"
           style={{
             width: pageWidth,
             minHeight: pageHeight,
             padding: pagePadding,
+            background: pageBg,
             ...sharedStyle,
           }}
         >
           <div className="space-y-4">{keys.map((k) => <div key={k}>{blockMap.get(k)}</div>)}</div>
           {pageKeys.length > 1 && (
-            <div className="mt-6 text-center text-[10px]" style={{ color: `${fg}55` }}>
+            <div className="mt-6 text-center text-[10px]" style={{ color: `${bodyFg}88` }}>
               Page {pageIndex + 1} of {pageKeys.length}
             </div>
           )}
