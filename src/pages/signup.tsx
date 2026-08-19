@@ -42,6 +42,20 @@ export default function SignupPage() {
   const dispatch = useAppDispatch();
   const reg = useAppSelector((s) => s.registration);
   const [otp, setOtp] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Start (or restart) a 1-minute cooldown every time the OTP step becomes
+  // active — a code was just sent, so resend has nothing new to offer yet.
+  useEffect(() => {
+    if (reg.step === "otp") setResendCooldown(60);
+  }, [reg.step]);
+
+  // Self-scheduling countdown — ticks once a second until it hits 0.
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
 
   const stepIndex = Math.min(STEPS.indexOf(reg.step as never), 2);
 
@@ -242,12 +256,19 @@ export default function SignupPage() {
               </button>
               <button
                 onClick={() => {
+                  if (resendCooldown > 0) return;
                   dispatch(resendRegistrationOtp(reg.email));
                   dispatch(pushToast("New code sent.", "info"));
+                  setResendCooldown(60);
                 }}
-                className="text-sm font-bold text-brand-500 hover:underline lg:text-base"
+                disabled={resendCooldown > 0}
+                className={`text-sm font-bold lg:text-base ${
+                  resendCooldown > 0
+                    ? "cursor-not-allowed text-ink/35 dark:text-white/35"
+                    : "text-brand-500 hover:underline"
+                }`}
               >
-                Resend code
+                {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
               </button>
             </div>
           </div>
