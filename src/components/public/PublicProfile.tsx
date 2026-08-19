@@ -51,6 +51,8 @@ export default function PublicProfile({
         education={profile.education}
         products={profile.products}
         business={profile.business}
+        headerLayout={d.headerLayout}
+        bannerUrl={d.bannerUrl}
         wallpaperType={d.wallpaperType}
         backgroundImageUrl={d.backgroundImageUrl}
         backgroundColor={d.backgroundColor}

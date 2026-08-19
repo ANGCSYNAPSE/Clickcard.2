@@ -8,6 +8,7 @@ import type {
   ButtonShadow,
   SocialLinksStyle,
 } from "@/components/app/LiveProfileCard";
+import { fetchProfile, saveProfile } from "./profileSlice";
 
 export type { HeaderLayout, ButtonStyle, ButtonRoundness, ButtonShadow, SocialLinksStyle };
 export type TitleStyle = "text" | "logo";
@@ -92,11 +93,24 @@ export const STUDIO_DESIGN_KEY = "cc_studio_design_v1";
 // original look; anything else invalid falls back to the current default.
 const LEGACY_TITLE_PX: Record<string, number> = { sm: 16, md: 20, lg: 24, xl: 30 };
 const LEGACY_BODY_PX: Record<string, number> = { sm: 10, md: 12, lg: 14, xl: 16 };
-
 function coerceFontSize(value: unknown, legacyMap: Record<string, number>, fallback: number): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value in legacyMap) return legacyMap[value];
   return fallback;
+}
+
+function applyDesignPayload(state: any, designPayload: any) {
+  const payload = { ...designPayload };
+  if ("titleFontSize" in payload) {
+    payload.titleFontSize = coerceFontSize(payload.titleFontSize, LEGACY_TITLE_PX, DEFAULT_DESIGN.titleFontSize);
+  }
+  if ("bioFontSize" in payload) {
+    payload.bioFontSize = coerceFontSize(payload.bioFontSize, LEGACY_BODY_PX, DEFAULT_DESIGN.bioFontSize);
+  }
+  if ("bodyFontSize" in payload) {
+    payload.bodyFontSize = coerceFontSize(payload.bodyFontSize, LEGACY_BODY_PX, DEFAULT_DESIGN.bodyFontSize);
+  }
+  Object.assign(state, payload, { dirty: false });
 }
 
 const designSlice = createSlice({
@@ -105,17 +119,7 @@ const designSlice = createSlice({
   reducers: {
     /** Applies a saved/loaded design without marking it dirty. */
     hydrateDesign: (state, action: PayloadAction<Partial<DesignState>>) => {
-      const payload = { ...action.payload };
-      if ("titleFontSize" in payload) {
-        payload.titleFontSize = coerceFontSize(payload.titleFontSize, LEGACY_TITLE_PX, DEFAULT_DESIGN.titleFontSize);
-      }
-      if ("bioFontSize" in payload) {
-        payload.bioFontSize = coerceFontSize(payload.bioFontSize, LEGACY_BODY_PX, DEFAULT_DESIGN.bioFontSize);
-      }
-      if ("bodyFontSize" in payload) {
-        payload.bodyFontSize = coerceFontSize(payload.bodyFontSize, LEGACY_BODY_PX, DEFAULT_DESIGN.bodyFontSize);
-      }
-      Object.assign(state, payload, { dirty: false });
+      applyDesignPayload(state, action.payload);
     },
     updateDesign: (state, action: PayloadAction<Partial<Omit<DesignState, "dirty">>>) => {
       Object.assign(state, action.payload);
@@ -124,6 +128,21 @@ const designSlice = createSlice({
     designSaved: (state) => {
       state.dirty = false;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchProfile.fulfilled, (state, action) => {
+        const design = action.payload?.digitalCard?.design;
+        if (design) {
+          applyDesignPayload(state, design);
+        }
+      })
+      .addCase(saveProfile.fulfilled, (state, action) => {
+        const design = action.payload?.digitalCard?.design;
+        if (design) {
+          applyDesignPayload(state, design);
+        }
+      });
   },
 });
 

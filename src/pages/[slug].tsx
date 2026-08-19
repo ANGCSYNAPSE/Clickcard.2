@@ -71,19 +71,24 @@ export default function SlugPage({ profile, slug, shareUrl }: Props) {
 
 export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
   const slug = String(ctx.params?.slug || "");
-  let { profile } = await fetchPublicProfile(slug);
 
-  // Fallback for the signed-in owner: the unauthenticated public endpoint may
-  // not have this slug yet, but "View public page" should still show their
-  // whole customized profile, so fetch it via their session cookie.
-  if (!profile) {
-    const accessToken = ctx.req.cookies["cc_access"];
-    if (accessToken) {
-      const own = await fetchOwnProfile(accessToken);
-      if (own && own.username.toLowerCase() === slug.toLowerCase()) {
-        profile = own;
-      }
+  // If the visitor is the signed-in owner of this slug, always use their
+  // authenticated full profile — the same source dashboard/profile/preview
+  // read from — instead of the separate public endpoint. That endpoint can
+  // lag behind (caching, sync delay), which is exactly what made a shared
+  // QR/link look out of date next to "View public page" even though both
+  // are supposed to show the same profile.
+  let profile: TProfile | null = null;
+  const accessToken = ctx.req.cookies["cc_access"];
+  if (accessToken) {
+    const own = await fetchOwnProfile(accessToken);
+    if (own && own.username.toLowerCase() === slug.toLowerCase()) {
+      profile = own;
     }
+  }
+
+  if (!profile) {
+    ({ profile } = await fetchPublicProfile(slug));
   }
 
   const shareUrl = `${SITE_URL}/${slug}`;

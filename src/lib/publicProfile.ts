@@ -11,6 +11,7 @@
 export interface PublicSocial {
   platform: string;
   url: string;
+  username?: string;
   label?: string;
 }
 export interface PublicProduct {
@@ -71,6 +72,8 @@ export interface PublicCardDesign {
   titleFontSize?: number;
   bioFontSize?: number;
   bodyFontSize?: number;
+  headerLayout?: "classic" | "hero" | "banner" | "cutout" | "shape";
+  bannerUrl?: string;
 }
 
 export interface PublicProfile {
@@ -154,7 +157,12 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
   if (Array.isArray(sl)) {
     social = sl
       .filter((s: any) => s?.url)
-      .map((s: any) => ({ platform: s.platform || s.label || "Link", url: s.url, ...(s.label ? { label: s.label } : {}) }));
+      .map((s: any) => ({
+        platform: s.platform || s.label || "Link",
+        url: s.url,
+        ...(s.username ? { username: s.username } : {}),
+        ...(s.label ? { label: s.label } : {}),
+      }));
   } else if (sl && typeof sl === "object") {
     social = Object.entries(sl)
       .filter(([, v]) => typeof v === "string" && v)
