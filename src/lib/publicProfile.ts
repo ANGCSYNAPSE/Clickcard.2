@@ -171,7 +171,7 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
 
   return {
     username: d.username || slug,
-    isPublic: true,
+    isPublic: d.is_public ?? d.isPublic ?? true,
     fullName: personal.fullName || d.name || undefined,
     tagline: personal.tagline,
     bio: personal.bio || d.profile_bio || undefined,
@@ -266,10 +266,18 @@ export async function fetchPublicProfile(
       const json = await res.json();
       const data = json?.data ?? json;
       if (data && (data.user_id || data.name || data.personal_identity)) {
-        return { profile: mapApiProfile(slug, data), isDemo: false };
+        const profile = mapApiProfile(slug, data);
+        // If the backend returns an explicit is_public: false in the 200 body,
+        // respect that and treat it as private — some backends return 200 with
+        // the profile data even for private profiles so the slug is "claimed".
+        if (data.is_public === false || data.isPublic === false) {
+          profile.isPublic = false;
+        }
+        return { profile, isDemo: false };
       }
-    } else if (res.status === 403) {
-      // accessible-but-protected / inactive → treat as private
+    } else if (res.status === 403 || res.status === 404) {
+      // 403 = protected/inactive, 404 = private profile hidden at the API level
+      // Both mean the visitor cannot see this profile.
       return { profile: { username: slug, isPublic: false }, isDemo: false };
     }
   } catch {
@@ -297,7 +305,10 @@ export async function fetchOwnProfile(accessToken: string): Promise<PublicProfil
     const username = data?.username || data?.personal_identity?.username;
     if (!username) return null;
     const mapped = mapApiProfile(username, data);
-    mapped.isPublic = data.isPublic ?? data.is_public ?? true;
+    // Backend may store this as is_public (snake_case). Override mapApiProfile's
+    // value with the top-level field if it is an explicit boolean.
+    if (data.is_public !== undefined) mapped.isPublic = Boolean(data.is_public);
+    else if (data.isPublic !== undefined) mapped.isPublic = Boolean(data.isPublic);
     return mapped;
   } catch {
     return null;

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Sparkles, ShieldCheck, Zap, ArrowLeft } from "lucide-react";
+import { CreditCard, ShieldCheck, Zap, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import Logo from "@/components/ui/Logo";
 import ThemeToggle from "@/components/ui/ThemeToggle";
@@ -15,7 +15,7 @@ const PERKS = [
     tail: " in seconds",
   },
   {
-    icon: Sparkles,
+    icon: CreditCard,
     tint: "bg-candy-yellow",
     wash: "bg-candy-yellow/20 dark:bg-candy-yellow/15",
     lead: "Design cards, resumes & QR in the ",

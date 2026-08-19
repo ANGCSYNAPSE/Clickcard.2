@@ -52,7 +52,15 @@ export function fromApiProfile(d: any): FullProfile {
     products: d.products_services ?? d.productsServices ?? [],
     social,
     digitalCard: d.digital_card ?? d.digitalCard ?? {},
-    isPublic: d.isPublic ?? d.is_public,
+    // Prefer the explicit boolean the backend returns. Fall back to null (not
+    // undefined) so callers can distinguish "server returned false" from "server
+    // didn't send the field at all" — undefined folds into ?? true and silently
+    // treats a private profile as public.
+    isPublic: d.isPublic !== undefined
+      ? Boolean(d.isPublic)
+      : d.is_public !== undefined
+        ? Boolean(d.is_public)
+        : null,
   };
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */

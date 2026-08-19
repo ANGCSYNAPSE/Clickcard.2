@@ -198,7 +198,8 @@ export interface FullProfile {
   products?: ProductItem[];
   social?: SocialLink[];
   digitalCard?: DigitalCardSection;
-  isPublic?: boolean;
+  /** null = backend didn't return the field; true/false = explicit server value */
+  isPublic?: boolean | null;
 }
 
 /* ---------------- Share links ---------------- */

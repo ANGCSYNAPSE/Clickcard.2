@@ -2,22 +2,28 @@ import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import { Ghost } from "lucide-react";
 import PublicProfile from "@/components/public/PublicProfile";
-import { fetchPublicProfile, fetchOwnProfile, PublicProfile as TProfile } from "@/lib/publicProfile";
-import { SITE_URL } from "@/lib/config";
+import { fetchPublicProfile, PublicProfile as TProfile } from "@/lib/publicProfile";
+import { SHARE_BASE_URL } from "@/lib/config";
 
 interface Props {
   profile: TProfile | null;
-  slug: string;
+  code: string;
   shareUrl: string;
 }
 
-export default function SlugPage({ profile, slug, shareUrl }: Props) {
+/**
+ * Short-link landing page for links created on the Share & QR page
+ * (clickcard.app/s/:code). The backend's public profile endpoint already
+ * resolves an identifier by username, custom slug, *or* short code, so this
+ * reuses the same lookup and rendering as /[slug] instead of duplicating it.
+ */
+export default function ShareCodePage({ profile, code, shareUrl }: Props) {
   if (!profile || profile.isPublic === false) {
     const isPrivate = profile?.isPublic === false;
     return (
       <>
         <Head>
-          <title>{isPrivate ? "Private profile" : "Profile not found"} · ClickCard</title>
+          <title>{isPrivate ? "Private profile" : "Link not found"} · ClickCard</title>
           <meta name="robots" content="noindex" />
         </Head>
         <div className="grid min-h-screen place-items-center bg-paper-soft px-6 text-center">
@@ -26,15 +32,15 @@ export default function SlugPage({ profile, slug, shareUrl }: Props) {
               <Ghost size={34} />
             </span>
             <h1 className="mt-6 font-display text-2xl font-black text-ink">
-              {isPrivate ? "This profile is private" : `clickcard.app/${slug} isn’t taken yet`}
+              {isPrivate ? "This profile is private" : "This link doesn't exist"}
             </h1>
             <p className="mt-2 text-sm text-ink/55">
               {isPrivate
                 ? "The owner has hidden this page from the public."
-                : "Be the one to claim this link and make it yours."}
+                : "It may have expired, been deleted, or never existed."}
             </p>
-            <a href={`/signup?username=${encodeURIComponent(slug)}`} className="mt-6 inline-flex rounded-2xl bg-gradient-to-br from-primary to-secondary px-6 py-3 text-sm font-bold text-white shadow-soft">
-              {isPrivate ? "Create your ClickCard" : `Claim /${slug}`}
+            <a href="/signup" className="mt-6 inline-flex rounded-2xl bg-gradient-to-br from-primary to-secondary px-6 py-3 text-sm font-bold text-white shadow-soft">
+              Create your ClickCard
             </a>
           </div>
         </div>
@@ -52,7 +58,6 @@ export default function SlugPage({ profile, slug, shareUrl }: Props) {
       <Head>
         <title>{title}</title>
         <meta name="description" content={desc} />
-        <link rel="canonical" href={shareUrl} />
         <meta property="og:type" content="profile" />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={desc} />
@@ -70,46 +75,18 @@ export default function SlugPage({ profile, slug, shareUrl }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
-  const slug = String(ctx.params?.slug || "");
+  const code = String(ctx.params?.code || "");
+  const { profile } = await fetchPublicProfile(code);
+  const shareUrl = `${SHARE_BASE_URL}/${code}`;
 
-  // If the visitor is the signed-in owner of this slug, always use their
-  // authenticated full profile — the same source dashboard/profile/preview
-  // read from — instead of the separate public endpoint. That endpoint can
-  // lag behind (caching, sync delay), which is exactly what made a shared
-  // QR/link look out of date next to "View public page" even though both
-  // are supposed to show the same profile.
-  let profile: TProfile | null = null;
-  const accessToken = ctx.req.cookies["cc_access"];
-  let isOwner = false;
-  if (accessToken) {
-    const own = await fetchOwnProfile(accessToken);
-    if (own && own.username.toLowerCase() === slug.toLowerCase()) {
-      profile = own;
-      isOwner = true;
-    }
-  }
-
-  if (!profile) {
-    ({ profile } = await fetchPublicProfile(slug));
-  }
-
-  const shareUrl = `${SITE_URL}/${slug}`;
-
-  // Don't let search engines index private/missing profiles.
-  if (!profile || (profile.isPublic === false && !isOwner)) {
+  // Don't let search engines index private/missing/expired links.
+  if (!profile || profile.isPublic === false) {
     ctx.res.statusCode = 404;
   }
 
-  // getServerSideProps props must be JSON-serializable — any `undefined`
-  // anywhere in the tree (e.g. an optional field the backend didn't send)
-  // makes Next throw a 500. A JSON round-trip drops those keys the same way
-  // JSON.stringify would, without having to chase down every optional field
-  // across PublicProfile/PublicCardDesign by hand.
+  // getServerSideProps props must be JSON-serializable — see the same note
+  // in [slug].tsx for why this round-trip is needed.
   const safeProfile = profile ? (JSON.parse(JSON.stringify(profile)) as TProfile) : null;
 
-  if (safeProfile && isOwner) {
-    safeProfile.isPublic = true;
-  }
-
-  return { props: { profile: safeProfile, slug, shareUrl } };
+  return { props: { profile: safeProfile, code, shareUrl } };
 };

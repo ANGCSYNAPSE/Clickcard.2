@@ -108,9 +108,13 @@ const profileSlice = createSlice({
         s.status = "succeeded";
         s.data = a.payload;
         s.draft = { ...emptyProfile, ...a.payload };
-        // Undefined/missing from the backend means "not set yet" — default to
-        // public rather than silently treating a new profile as private.
-        s.isPublic = a.payload.isPublic ?? true;
+        // Only update isPublic when the backend returns an explicit boolean.
+        // If the server omits the field (null/undefined), keep whatever the
+        // slice already holds — prevents every page-load resetting a private
+        // profile's toggle back to "Public" because the response lacked the key.
+        if (a.payload.isPublic !== null && a.payload.isPublic !== undefined) {
+          s.isPublic = Boolean(a.payload.isPublic);
+        }
         s.dirty = false;
       })
       .addCase(fetchProfile.rejected, (s, a) => {
@@ -125,6 +129,10 @@ const profileSlice = createSlice({
         s.saving = false;
         s.data = a.payload;
         s.draft = { ...emptyProfile, ...a.payload };
+        // Sync isPublic from the re-fetched server profile too.
+        if (a.payload.isPublic !== null && a.payload.isPublic !== undefined) {
+          s.isPublic = Boolean(a.payload.isPublic);
+        }
         s.dirty = false;
       })
       .addCase(saveProfile.rejected, (s, a) => {
