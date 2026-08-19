@@ -2,10 +2,20 @@ import { useEffect, useMemo } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+} from "recharts";
+import {
   Eye,
   MousePointerClick,
   Download,
-  Sparkles,
+  CreditCard as Card,
   Share2,
   BarChart3,
   Pencil,
@@ -13,11 +23,12 @@ import {
   Plus,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
-import LiveProfileFeed from "@/components/app/LiveProfileFeed";
+import ProfilePreview from "@/components/app/ProfilePreview";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProfile } from "@/store/slices/profileSlice";
 import { fetchShareTotals, fetchShareLinks } from "@/store/slices/shareSlice";
 import { fetchDashboardAnalytics } from "@/store/slices/analyticsSlice";
+import type { DashboardTrendPoint } from "@/services/analyticsService";
 
 /** Solid retro-sunset tiles — icon, title, one-line hint. */
 const QUICK = [
@@ -29,10 +40,10 @@ const QUICK = [
     tint: "bg-brand-500",
   },
   {
-    label: "Design card",
+    label: "Card",
     hint: "Customize your card",
     href: "/customize",
-    icon: Sparkles,
+    icon: Card,
     tint: "bg-candy-yellow",
   },
   {
@@ -47,7 +58,7 @@ const QUICK = [
     hint: "Track performance",
     href: "/analytics",
     icon: BarChart3,
-    tint: "bg-ink",
+    tint: "bg-ink dark:bg-white/5",
   },
 ];
 
@@ -148,35 +159,20 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* completion + live phone preview side-by-side on lg */}
+      {/* completion + analytics stacked on the left, live phone preview on the right — the chart grows to fill the remaining height so both columns end up flush */}
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#12403c]">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-bold text-ink dark:text-white">
-              Profile completion
-            </h2>
-            <span className="font-display text-2xl font-black text-brand-600">
-              {completion}%
-            </span>
-          </div>
-          <div className="mt-3 h-3 overflow-hidden rounded-full bg-brand-50 dark:bg-white/5">
-            <div
-              className="h-full rounded-full bg-brand-500 transition-all duration-700"
-              style={{ width: `${completion}%` }}
-            />
-          </div>
-          <p className="mt-3 text-sm text-ink/55 dark:text-white/55">
-            {completion < 100
-              ? "Add more details to make your page shine and rank better."
-              : "Nice! Your profile looks complete. 🎉"}
-          </p>
+        <div className="flex flex-col gap-6">
+          <ProfileCompletionCard completion={completion} />
+          <AnalyticsTrendCard trend={dashboard?.trend} className="flex-1" />
         </div>
 
-        <LiveProfileFeed profile={draft} username={user?.username} />
+        <div className="flex justify-center lg:block">
+          <ProfilePreview profile={draft} avatarUrl={draft.personal?.profilePicture} username={user?.username} />
+        </div>
       </div>
 
       {/* stats */}
-      <div className="mt-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
         {stats.map((s) => (
           <div
             key={s.label}
@@ -236,4 +232,88 @@ function greeting() {
   if (h < 12) return "Good morning";
   if (h < 18) return "Good afternoon";
   return "Good evening";
+}
+
+/** Its own card, independent of the live preview beside it — sized to its own content, not stretched to match. */
+function ProfileCompletionCard({ completion }: { completion: number }) {
+  return (
+    <div className="rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#12403c]">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-lg font-bold text-ink dark:text-white">
+          Profile completion
+        </h2>
+        <span className="font-display text-2xl font-black text-brand-600">
+          {completion}%
+        </span>
+      </div>
+      <div className="mt-3 h-3 overflow-hidden rounded-full bg-brand-50 dark:bg-white/5">
+        <div
+          className="h-full rounded-full bg-brand-500 transition-all duration-700"
+          style={{ width: `${completion}%` }}
+        />
+      </div>
+      <p className="mt-3 text-sm text-ink/55 dark:text-white/55">
+        {completion < 100
+          ? "Add more details to make your page shine and rank better."
+          : "Nice! Your profile looks complete. 🎉"}
+      </p>
+    </div>
+  );
+}
+
+/** 14-day activity trend — profile views, link taps, PDF downloads. Its own card, independent of the others. */
+function AnalyticsTrendCard({ trend, className = "" }: { trend?: DashboardTrendPoint[]; className?: string }) {
+  const series = useMemo(() => {
+    if (trend?.length) {
+      return trend.map((t) => ({
+        date: t.date.slice(5),
+        "Profile views": t.profile_views,
+        "Link taps": t.link_taps,
+        "PDF downloads": t.pdf_downloads,
+      }));
+    }
+    return Array.from({ length: 14 }).map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (13 - i));
+      return { date: d.toISOString().slice(5, 10), "Profile views": 0, "Link taps": 0, "PDF downloads": 0 };
+    });
+  }, [trend]);
+
+  return (
+    <div className={`flex flex-col rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#12403c] ${className}`}>
+      <h2 className="font-display text-lg font-bold text-ink dark:text-white">
+        Activity, last 14 days
+      </h2>
+      <div className="mt-4 h-64 w-full flex-1">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={series} margin={{ left: -20, right: 8, top: 8 }}>
+            <defs>
+              <linearGradient id="views" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#be5103" stopOpacity={0.45} />
+                <stop offset="100%" stopColor="#be5103" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="taps" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#ffce1b" stopOpacity={0.45} />
+                <stop offset="100%" stopColor="#ffce1b" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="downloads" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#069494" stopOpacity={0.45} />
+                <stop offset="100%" stopColor="#069494" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(6,148,148,0.08)" vertical={false} />
+            <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#9ca3af" }} tickLine={false} axisLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} tickLine={false} axisLine={false} allowDecimals={false} />
+            <Tooltip
+              contentStyle={{ borderRadius: 12, border: "none", boxShadow: "0 10px 40px -12px rgba(6,148,148,0.35)", fontSize: 12 }}
+            />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <Area type="monotone" dataKey="Profile views" stroke="#be5103" strokeWidth={2.5} fill="url(#views)" />
+            <Area type="monotone" dataKey="Link taps" stroke="#ffce1b" strokeWidth={2.5} fill="url(#taps)" />
+            <Area type="monotone" dataKey="PDF downloads" stroke="#069494" strokeWidth={2.5} fill="url(#downloads)" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
 }

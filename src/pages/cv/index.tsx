@@ -46,6 +46,7 @@ import type {
   ProjectItem,
   AwardItem,
   LanguageItem,
+  ReferenceItem,
   SocialLink,
 } from "@/types";
 
@@ -83,6 +84,7 @@ export default function CvPage() {
   const [projects, setProjects] = useState<ProjectItem[]>(draft.digitalCard?.projects || []);
   const [awards, setAwards] = useState<AwardItem[]>(draft.digitalCard?.awards || []);
   const [languages, setLanguages] = useState<LanguageItem[]>(draft.digitalCard?.languages || []);
+  const [references, setReferences] = useState<ReferenceItem[]>(draft.digitalCard?.references || []);
   const [view, setView] = useState<ViewMode>("cv");
   const [detailView, setDetailView] = useState<string | null>(null);
   const [fontPickerOpen, setFontPickerOpen] = useState(false);
@@ -109,6 +111,7 @@ export default function CvPage() {
     if (draft.digitalCard?.projects) setProjects(draft.digitalCard.projects);
     if (draft.digitalCard?.awards) setAwards(draft.digitalCard.awards);
     if (draft.digitalCard?.languages) setLanguages(draft.digitalCard.languages);
+    if (draft.digitalCard?.references) setReferences(draft.digitalCard.references);
     if (draft.digitalCard?.socialLinks) setSocialLinks(draft.digitalCard.socialLinks);
   }, [draft.digitalCard]);
 
@@ -200,6 +203,11 @@ export default function CvPage() {
     setLanguages((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
   const removeLanguage = (index: number) => setLanguages((prev) => prev.filter((_, i) => i !== index));
 
+  const addReference = () => setReferences((prev) => [...prev, { name: "" } as ReferenceItem]);
+  const updateReference = (index: number, patch: Partial<ReferenceItem>) =>
+    setReferences((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  const removeReference = (index: number) => setReferences((prev) => prev.filter((_, i) => i !== index));
+
   const onSave = async () => {
     const next = {
       ...draft,
@@ -218,6 +226,7 @@ export default function CvPage() {
         projects,
         awards,
         languages,
+        references,
         socialLinks,
       },
     };
@@ -261,6 +270,7 @@ export default function CvPage() {
       projects={projects}
       awards={awards}
       languages={languages}
+      references={references}
       templateId={templateId}
     />
   );
@@ -395,7 +405,7 @@ export default function CvPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-ink/60 dark:text-white/60">
-                      {experience.length + projects.length + education.length + awards.length + languages.length} entries
+                      {experience.length + projects.length + education.length + awards.length + languages.length + references.length} entries
                     </span>
                     <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
                   </div>
@@ -489,7 +499,7 @@ export default function CvPage() {
                           />
                         )}
                         <span className="absolute bottom-2 left-2 right-2 flex gap-1">
-                          {Array.from({ length: Math.min(tpl.layout.sectionColumns.skills, 5) }).map((_, i) => (
+                          {Array.from({ length: Math.min(tpl.layout.sectionColumns.skills || 1, 5) }).map((_, i) => (
                             <span
                               key={i}
                               className="h-2.5 flex-1 rounded-sm"
@@ -830,6 +840,77 @@ export default function CvPage() {
                           placeholder="Level (e.g. Fluent, Native)"
                           className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
                         />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">References</p>
+                    <button
+                      type="button"
+                      onClick={addReference}
+                      className="flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-white/80"
+                    >
+                      <Plus size={12} /> Add
+                    </button>
+                  </div>
+                  {references.length === 0 && (
+                    <p className="text-xs text-ink/40 dark:text-white/40">No references added yet.</p>
+                  )}
+                  <div className="space-y-3">
+                    {references.map((r, i) => (
+                      <div key={i} className="space-y-2 rounded-xl border border-ink/10 p-3 dark:border-white/10">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={r.name || ""}
+                            onChange={(ev) => updateReference(i, { name: ev.target.value })}
+                            placeholder="Name"
+                            className="flex-1 rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeReference(i)}
+                            aria-label="Remove reference"
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink/40 transition hover:bg-ink/5 hover:text-red-500 dark:text-white/40 dark:hover:bg-white/10"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={r.position || ""}
+                            onChange={(ev) => updateReference(i, { position: ev.target.value })}
+                            placeholder="Position"
+                            className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                          />
+                          <input
+                            type="text"
+                            value={r.company || ""}
+                            onChange={(ev) => updateReference(i, { company: ev.target.value })}
+                            placeholder="Company"
+                            className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="tel"
+                            value={r.phone || ""}
+                            onChange={(ev) => updateReference(i, { phone: ev.target.value })}
+                            placeholder="Phone"
+                            className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                          />
+                          <input
+                            type="email"
+                            value={r.email || ""}
+                            onChange={(ev) => updateReference(i, { email: ev.target.value })}
+                            placeholder="Email"
+                            className="w-full rounded-lg border border-ink/10 bg-white px-2.5 py-2 text-xs font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>

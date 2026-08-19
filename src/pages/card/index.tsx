@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Head from "next/head";
 import {
   Download,
@@ -19,6 +19,8 @@ import {
   Globe,
   MapPin,
   Building2,
+  Camera,
+  X,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import Button from "@/components/ui/Button";
@@ -110,6 +112,7 @@ export default function CardPage() {
   const [detailView, setDetailView] = useState<string | null>(null);
   const [fontPickerOpen, setFontPickerOpen] = useState(false);
   const [showSharePopup, setShowSharePopup] = useState(false);
+  const logoFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -153,6 +156,24 @@ export default function CardPage() {
 
   const updateBusiness = (patch: Partial<BusinessSection>) =>
     setCardBusiness((prev) => ({ ...prev, ...patch }));
+
+  // The business logo has no dedicated upload endpoint, so it's stored as a
+  // data URL directly in cardBusiness.logo — it rides along inside the same
+  // JSON blob as the rest of the card's details, no separate file host needed.
+  // PNG/SVG only, and NOT run through the crop tool — that re-encodes to
+  // JPEG, which would flatten a transparent logo onto a white background.
+  const onPickLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (f.type !== "image/png" && f.type !== "image/svg+xml") {
+      dispatch(pushToast("Logo must be a PNG or SVG file", "error"));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => updateBusiness({ logo: reader.result as string });
+    reader.readAsDataURL(f);
+  };
 
   /** Phone/WhatsApp fields are exactly a 10-digit number — no country code, spaces, or symbols. */
   const onlyPhoneChars = (v: string) => v.replace(/\D/g, "").slice(0, 10);
@@ -494,6 +515,49 @@ export default function CardPage() {
                   <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
                     Business
                   </p>
+
+                  {/* Logo — shown above the business name on any template with a logo slot */}
+                  <div className="flex items-center gap-3 pb-1">
+                    <div className="relative shrink-0">
+                      <span className="grid h-14 w-14 place-items-center overflow-hidden rounded-xl border border-ink/10 bg-white dark:border-white/10 dark:bg-white/[0.04]">
+                        {cardBusiness.logo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={cardBusiness.logo} alt="" className="h-full w-full object-contain p-1" />
+                        ) : (
+                          <Building2 size={20} className="text-ink/30 dark:text-white/30" />
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => logoFileRef.current?.click()}
+                        className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#12403c] dark:text-white"
+                        aria-label="Upload business logo"
+                      >
+                        <Camera size={12} />
+                      </button>
+                      <input
+                        ref={logoFileRef}
+                        type="file"
+                        accept="image/png,image/svg+xml"
+                        hidden
+                        onChange={onPickLogo}
+                      />
+                    </div>
+                    <div className="min-w-0 text-xs text-ink/55 dark:text-white/55">
+                      <p className="font-semibold text-ink dark:text-white">Business logo</p>
+                      <p>Shown above the business name. PNG or SVG only.</p>
+                      {cardBusiness.logo && (
+                        <button
+                          type="button"
+                          onClick={() => updateBusiness({ logo: "" })}
+                          className="mt-0.5 inline-flex items-center gap-1 font-semibold text-rose-500 hover:text-rose-600"
+                        >
+                          <X size={11} /> Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   <div>
                     <label className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-ink/60 dark:text-white/60">
                       <Building2 size={12} /> Business name

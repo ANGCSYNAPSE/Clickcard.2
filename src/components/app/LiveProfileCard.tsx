@@ -283,14 +283,17 @@ export default function LiveProfileCard({
   return (
     <div
       className={
+        // Full viewport on mobile (standard link-in-bio behavior); on sm+
+        // the card sizes to its own content instead of forcing 100vh, so a
+        // short profile doesn't leave a huge blank gap above the footer —
+        // it reads the same compact size as the Dashboard/Studio preview.
         interactive
-          ? "relative min-h-screen w-full overflow-hidden sm:mx-auto sm:my-8 sm:max-w-[420px] sm:rounded-3xl sm:shadow-card"
+          ? "relative min-h-screen w-full overflow-hidden sm:mx-auto sm:my-8 sm:min-h-0 sm:max-w-[420px] sm:rounded-3xl sm:shadow-card"
           : "relative rounded-3xl overflow-hidden"
       }
       style={{
         width: interactive ? undefined : 320,
         height: interactive ? undefined : 680,
-        minHeight: interactive ? "100vh" : undefined,
         background: bg,
         color: textColor,
         fontFamily: pageFontFamily,
@@ -346,8 +349,11 @@ export default function LiveProfileCard({
         )}
       </div>
 
-      {/* Scrollable content — everything filled in shows here */}
-      <div className="no-scrollbar relative z-10 flex h-full flex-col items-center overflow-y-auto pb-16 text-center">
+      {/* Scrollable content — everything filled in shows here. Fills the
+          full-viewport mobile card (so short content still scrolls inside a
+          fixed frame); on sm+ the outer card is content-sized, so this just
+          sizes to match instead of stretching into blank space. */}
+      <div className={`no-scrollbar relative z-10 flex flex-col items-center pb-16 text-center ${interactive ? "h-full overflow-y-auto sm:h-auto sm:overflow-visible" : "h-full overflow-y-auto"}`}>
         {heroMode ? (
           /* Hero image — full-bleed photo that dissolves into the card's own wallpaper underneath */
           <div className="relative w-full shrink-0" style={{ height: 320 }}>

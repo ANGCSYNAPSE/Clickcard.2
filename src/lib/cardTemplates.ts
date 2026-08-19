@@ -12,7 +12,7 @@ import type { CardTemplate } from "@/services/profileService";
 /** A single positioned piece of content on an elements-based template face. */
 export interface CardElement {
   id: string;
-  type: "text" | "shape";
+  type: "text" | "shape" | "icon";
   /** Profile field this text element is bound to (see CardPreview's field→value mapping). */
   field?: string;
   label?: string;
@@ -28,7 +28,13 @@ export interface CardElement {
     color?: string;
     textAlign?: "left" | "center" | "right";
     letterSpacing?: number;
+    textTransform?: "uppercase" | "none";
     backgroundColor?: string;
+    /** `type: "icon"` only — name of a supported icon (see ICON_LIBRARY in CardPreview.tsx). */
+    iconName?: string;
+    /** `type: "icon"` only — design-canvas px size, scaled the same way as fontSize. */
+    iconSize?: number;
+    iconColor?: string;
   };
 }
 
@@ -101,32 +107,263 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
     id: "floral-mandala",
     name: "Floral Mandala",
     description:
-      "Ivory business card with a hand-drawn floral mandala design, featuring separate front and back backgrounds for customizable user details.",
-    swatch: ["#FBF3E4", "#0E7C86", "#083F45"],
+      "Elegant ivory business card with a detailed turquoise floral mandala, featuring a decorative front and a full mandala back.",
+
+    category: "business",
+
+    swatch: ["#FBF3E4", "#19B7BD", "#333333"],
 
     background: {
       front: "/templates/floral-mandala/front.png",
       back: "/templates/floral-mandala/back.png",
     },
 
-    layout: {
-      front: {
-        name: { x: 52, y: 28 },
-        title: { x: 55, y: 42 },
-        contact: { x: 55, y: 58 },
+    card: {
+      orientation: "landscape",
+      width: 1050,
+      height: 600,
+      borderRadius: 24,
+      sides: ["front", "back"],
+    },
+
+    // =========================================================
+    // FRONT
+    // =========================================================
+    // Cream background
+    // Floral artwork in bottom-left
+    // Details on right
+    // =========================================================
+
+    front: {
+  background: {
+    type: "image",
+    image: "/templates/floral-mandala/front.png",
+  },
+
+  elements: [
+    {
+      id: "fullName",
+      type: "text",
+      field: "fullName",
+      label: "Full Name",
+      required: true,
+
+      position: {
+        x: 71,
+        y: 25,
       },
-      back: {
-        companyName: { x: 50, y: 50 },
+
+      size: {
+        width: 48,
+        height: 9,
+      },
+
+      style: {
+        fontFamily: "Inter",
+        fontSize: 36,
+        fontWeight: 800,
+        color: "#252525",
+        textAlign: "center",
+        letterSpacing: 2,
+        textTransform: "uppercase",
       },
     },
+
+    {
+      id: "jobTitle",
+      type: "text",
+      field: "jobTitle",
+      label: "Job Title",
+
+      position: {
+        x: 71,
+        y: 35,
+      },
+
+      size: {
+        width: 42,
+        height: 5,
+      },
+
+      style: {
+        fontFamily: "Inter",
+        fontSize: 16,
+        fontWeight: 600,
+        color: "#0E7C86",
+        textAlign: "center",
+        letterSpacing: 3,
+        textTransform: "uppercase",
+      },
+    },
+
+    // -----------------------------------------
+    // PHONE
+    // -----------------------------------------
+    {
+      id: "phoneIcon",
+      type: "icon",
+      position: { x: 53, y: 48.5 },
+      size: { width: 4, height: 4 },
+      style: { iconName: "phone", iconSize: 24, iconColor: "#19B7BD" },
+    },
+    {
+      id: "phone",
+      type: "text",
+      field: "phone",
+      label: "Phone",
+
+      position: {
+        x: 58,
+        y: 48.5,
+      },
+
+      size: {
+        width: 30,
+        height: 5,
+      },
+
+      style: {
+        fontFamily: "Inter",
+        fontSize: 14,
+        fontWeight: 500,
+        color: "#333333",
+        textAlign: "left",
+      },
+    },
+
+    // -----------------------------------------
+    // EMAIL
+    // -----------------------------------------
+    {
+      id: "emailIcon",
+      type: "icon",
+      position: { x: 53, y: 56.5 },
+      size: { width: 4, height: 4 },
+      style: { iconName: "mail", iconSize: 24, iconColor: "#19B7BD" },
+    },
+    {
+      id: "email",
+      type: "text",
+      field: "email",
+      label: "Email",
+
+      position: {
+        x: 58,
+        y: 56.5,
+      },
+
+      size: {
+        width: 32,
+        height: 5,
+      },
+
+      style: {
+        fontFamily: "Inter",
+        fontSize: 14,
+        fontWeight: 500,
+        color: "#333333",
+        textAlign: "left",
+      },
+    },
+
+    // -----------------------------------------
+    // WEBSITE
+    // -----------------------------------------
+    {
+      id: "websiteIcon",
+      type: "icon",
+      position: { x: 53, y: 64.5 },
+      size: { width: 4, height: 4 },
+      style: { iconName: "globe", iconSize: 24, iconColor: "#19B7BD" },
+    },
+    {
+      id: "website",
+      type: "text",
+      field: "website",
+      label: "Website",
+
+      position: {
+        x: 58,
+        y: 64.5,
+      },
+
+      size: {
+        width: 32,
+        height: 5,
+      },
+
+      style: {
+        fontFamily: "Inter",
+        fontSize: 14,
+        fontWeight: 500,
+        color: "#333333",
+        textAlign: "left",
+      },
+    },
+  ],
+},
+    // =========================================================
+    // BACK
+    // =========================================================
+    // Full mandala background
+    // Company name centered inside the cream label
+    // =========================================================
+
+    back: {
+  background: {
+    type: "image",
+    image: "/templates/floral-mandala/back.png",
+  },
+
+  elements: [
+    {
+      id: "companyName",
+      type: "text",
+      field: "companyName",
+      label: "Company Name",
+      required: true,
+
+      position: {
+        x: 50,
+        y: 48,
+      },
+
+      size: {
+        width: 42,
+        height: 9,
+      },
+
+      style: {
+        fontFamily: "Inter",
+        fontSize: 28,
+        fontWeight: 800,
+        color: "#252525",
+        textAlign: "center",
+        letterSpacing: 1.5,
+        textTransform: "uppercase",
+      },
+    },
+  ],
+},
 
     editableFields: ["fullName", "jobTitle", "phone", "email", "website", "companyName"],
 
     colors: {
       background: "#FBF3E4",
-      primary: "#0E7C86",
-      secondary: "#083F45",
-      text: "#202020",
+      primary: "#19B7BD",
+      secondary: "#0E7C86",
+      text: "#252525",
+      mutedText: "#666666",
+    },
+
+    design: {
+      fontFamily: "Inter",
+      typography: {
+        name: { fontSize: 34, fontWeight: 800, color: "#252525" },
+        jobTitle: { fontSize: 16, fontWeight: 500, color: "#333333" },
+        contact: { fontSize: 14, fontWeight: 400, color: "#333333" },
+        companyName: { fontSize: 28, fontWeight: 800, color: "#252525" },
+      },
     },
   },
   {
@@ -162,6 +399,33 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
     },
 
     elements: [
+      // -----------------------------------------
+      // LOGO — sits directly above the company name
+      // -----------------------------------------
+      {
+        id: "logo",
+        type: "icon",
+        field: "logo",
+        label: "Business Logo",
+        required: false,
+
+        position: {
+          x: 50,
+          y: 62,
+        },
+
+        size: {
+          width: 16,
+          height: 9,
+        },
+
+        style: {
+          iconName: "brandLogo",
+          iconSize: 46,
+          iconColor: "#555555",
+        },
+      },
+
       // -----------------------------------------
       // COMPANY NAME
       // -----------------------------------------
@@ -467,6 +731,7 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
     "website",
     "phone",
     "whatsapp",
+    "logo",
   ],
 
   colors: {
@@ -512,5 +777,234 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
       },
     },
   },
-}
+},
+{
+  id: "navy-geometric",
+  name: "Navy Geometric",
+
+  description:
+    "Modern navy business card with a dark geometric back, white patterned front, angled navy contact panel, and clean professional typography.",
+
+  category: "business",
+
+  swatch: ["#071D35", "#FFFFFF", "#DCE1E5"],
+
+  // Actual asset folder is /public/templates/navy-chevron/ (not navy-geometric).
+  background: {
+    front: "/templates/navy-chevron/front.png",
+    back: "/templates/navy-chevron/back.png",
+  },
+
+  card: {
+    orientation: "landscape",
+    width: 1050,
+    height: 600,
+    borderRadius: 28,
+    sides: ["front", "back"],
+  },
+
+  // =========================================================
+  // FRONT — white geometric background, navy contact panel on
+  // the left, name + designation on the right.
+  // =========================================================
+  front: {
+    background: {
+      type: "image",
+      image: "/templates/navy-chevron/front.png",
+    },
+
+    elements: [
+      {
+        id: "logo",
+        type: "icon",
+        field: "logo",
+        label: "Business Logo",
+        required: false,
+        position: { x: 50, y: 35 },
+        size: { width: 13, height: 13 },
+        style: { iconName: "brandLogo", iconSize: 68, iconColor: "#FFFFFF" },
+      },
+      {
+        id: "companyName",
+        type: "text",
+        field: "companyName",
+        label: "Company Name",
+        required: true,
+        position: { x: 50, y: 51 },
+        size: { width: 60, height: 9 },
+        style: {
+          fontFamily: "Inter",
+          fontSize: 46,
+          fontWeight: 800,
+          color: "#FFFFFF",
+          textAlign: "center",
+          letterSpacing: 5,
+          textTransform: "uppercase",
+        },
+      },
+      {
+        id: "tagline",
+        type: "text",
+        field: "tagline",
+        label: "Tagline",
+        required: false,
+        position: { x: 50, y: 60.5 },
+        size: { width: 40, height: 4 },
+        style: {
+          fontFamily: "Inter",
+          fontSize: 20,
+          fontWeight: 500,
+          color: "#FFFFFF",
+          textAlign: "center",
+          letterSpacing: 4,
+          textTransform: "uppercase",
+        },
+      },
+    ],
+  },
+
+  // =========================================================
+  // BACK — dark navy geometric pattern, logo, company name, tagline.
+  // =========================================================
+  back: {
+    background: {
+      type: "image",
+      image: "/templates/navy-chevron/back.png",
+    },
+
+    elements: [
+      {
+        id: "addressIcon",
+        type: "icon",
+        position: { x: 8.8, y: 32.5 },
+        size: { width: 5, height: 5 },
+        style: { iconName: "location", iconSize: 34, iconColor: "#FFFFFF" },
+      },
+      {
+        id: "address",
+        type: "text",
+        field: "address",
+        label: "Address",
+        required: false,
+        position: { x: 13, y: 32.5 },
+        size: { width: 34, height: 4 },
+        style: { fontFamily: "Inter", fontSize: 32, fontWeight: 700, color: "#FFFFFF", textAlign: "left" },
+      },
+      {
+        id: "phoneIcon",
+        type: "icon",
+        position: { x: 8.8, y: 42 },
+        size: { width: 5, height: 5 },
+        style: { iconName: "phone", iconSize: 34, iconColor: "#FFFFFF" },
+      },
+      {
+        id: "phone",
+        type: "text",
+        field: "phone",
+        label: "Phone",
+        required: false,
+        position: { x: 13, y: 42 },
+        size: { width: 34, height: 4 },
+        style: { fontFamily: "Inter", fontSize: 32, fontWeight: 700, color: "#FFFFFF", textAlign: "left" },
+      },
+      {
+        id: "emailIcon",
+        type: "icon",
+        position: { x: 8.8, y: 52.5 },
+        size: { width: 5, height: 5 },
+        style: { iconName: "mail", iconSize: 34, iconColor: "#FFFFFF" },
+      },
+      {
+        id: "email",
+        type: "text",
+        field: "email",
+        label: "Email",
+        required: false,
+        position: { x: 13, y: 52.5 },
+        size: { width: 38, height: 4 },
+        style: { fontFamily: "Inter", fontSize: 32, fontWeight: 700, color: "#FFFFFF", textAlign: "left" },
+      },
+      {
+        id: "websiteIcon",
+        type: "icon",
+        position: { x: 8.8, y: 62 },
+        size: { width: 5, height: 5 },
+        style: { iconName: "globe", iconSize: 34, iconColor: "#FFFFFF" },
+      },
+      {
+        id: "website",
+        type: "text",
+        field: "website",
+        label: "Website",
+        required: false,
+        position: { x: 13, y: 62 },
+        size: { width: 34, height: 4 },
+        style: { fontFamily: "Inter", fontSize: 32, fontWeight: 700, color: "#FFFFFF", textAlign: "left" },
+      },
+      {
+        id: "fullName",
+        type: "text",
+        field: "fullName",
+        label: "Full Name",
+        required: true,
+        position: { x: 78, y: 40 },
+        size: { width: 46, height: 10 },
+        style: {
+          fontFamily: "Inter",
+          fontSize: 46,
+          fontWeight: 800,
+          color: "#071D35",
+          textAlign: "center",
+          letterSpacing: 2,
+          textTransform: "uppercase",
+        },
+      },
+      {
+        id: "jobTitle",
+        type: "text",
+        field: "jobTitle",
+        label: "Job Title",
+        required: false,
+        position: { x: 78, y: 51 },
+        size: { width: 38, height: 5 },
+        style: {
+          fontFamily: "Inter",
+          fontSize: 22,
+          fontWeight: 600,
+          color: "#071D35",
+          textAlign: "center",
+          letterSpacing: 0.5,
+        },
+      },
+      {
+        id: "frontDivider",
+        type: "shape",
+        position: { x: 78, y: 57 },
+        size: { width: 15, height: 0.7 },
+        style: { backgroundColor: "#071D35" },
+      },
+    ],
+  },
+
+  editableFields: ["fullName", "jobTitle", "companyName", "tagline", "address", "phone", "email", "website", "logo"],
+
+  colors: {
+    background: "#FFFFFF",
+    primary: "#071D35",
+    secondary: "#DCE1E5",
+    text: "#071D35",
+    mutedText: "#657080",
+  },
+
+  design: {
+    fontFamily: "Inter",
+    typography: {
+      name: { fontSize: 40, fontWeight: 700, color: "#071D35" },
+      jobTitle: { fontSize: 20, fontWeight: 600, color: "#071D35" },
+      contact: { fontSize: 18, fontWeight: 500, color: "#FFFFFF" },
+      companyName: { fontSize: 38, fontWeight: 700, color: "#FFFFFF" },
+      tagline: { fontSize: 18, fontWeight: 500, color: "#FFFFFF" },
+    },
+  },
+},
 ];

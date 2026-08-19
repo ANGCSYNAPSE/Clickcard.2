@@ -1,7 +1,15 @@
 import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Mail, Phone, Globe, MapPin } from "lucide-react";
-import type { AwardItem, FullProfile, LanguageItem, ProjectItem } from "@/types";
-import { CV_TEMPLATES } from "@/lib/cvTemplates";
+import type {
+  AwardItem,
+  EducationItem,
+  ExperienceItem,
+  FullProfile,
+  LanguageItem,
+  ProjectItem,
+  ReferenceItem,
+} from "@/types";
+import { CV_TEMPLATES, type CvSectionKey, type CvTemplateDef } from "@/lib/cvTemplates";
 
 type Icon = typeof Mail;
 
@@ -151,6 +159,303 @@ function SectionHeading({ children, color }: { children: ReactNode; color: strin
   );
 }
 
+/** A main-column section heading with a rule under it, matching the two-column reference. */
+function MainSectionHeading({ children, color, dividerColor }: { children: ReactNode; color: string; dividerColor: string }) {
+  return (
+    <h2
+      className="mb-2.5 border-b pb-1.5 text-xs font-black uppercase tracking-wider"
+      style={{ color, borderColor: dividerColor }}
+    >
+      {children}
+    </h2>
+  );
+}
+
+/**
+ * A single, non-paginated A4 page rendered as a sidebar + main-content
+ * layout — used by templates with `layout.mainLayout === "two-column"`.
+ * Unlike the single-column path above, this doesn't auto-paginate; it's
+ * built for a one-page resume, matching the reference it's based on.
+ */
+function TwoColumnResume({
+  tpl,
+  fullName,
+  tagline,
+  contactItems,
+  bio,
+  skills,
+  languages,
+  awards,
+  experience,
+  education,
+  references,
+  fontFamily,
+  pageWidth,
+  pageHeight,
+}: {
+  tpl: CvTemplateDef;
+  fullName: string;
+  tagline?: string;
+  contactItems: { icon: Icon; label: string }[];
+  bio?: string;
+  skills: string[];
+  languages: LanguageItem[];
+  awards: AwardItem[];
+  experience: ExperienceItem[];
+  education: EducationItem[];
+  references: ReferenceItem[];
+  fontFamily?: string;
+  pageWidth: number;
+  pageHeight: number;
+}) {
+  const { colors, layout } = tpl;
+  const heading = colors.heading;
+  const body = colors.text;
+  const subtle = colors.subtleText;
+  const divider = colors.divider || "#D0D0D0";
+  const sidebarBg = colors.sidebarBackground || "#F1F1F1";
+  const summaryBg = colors.summaryBackground || sidebarBg;
+  const pagePadding = layout.spacing.pagePadding ?? 32;
+  const columnGap = layout.columnGap ?? 16;
+
+  const sidebarSection = (key: CvSectionKey) => {
+    switch (key) {
+      case "skills":
+        return skills.length > 0 ? (
+          <div key="skills">
+            <h3 className="mb-2 text-[11px] font-black uppercase tracking-wider" style={{ color: heading }}>
+              Skill
+            </h3>
+            <ul className="space-y-1.5">
+              {skills.map((s, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-[11px]" style={{ color: body }}>
+                  <span className="mt-1 h-1 w-1 shrink-0 rounded-full" style={{ background: body }} />
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null;
+      case "languages":
+        return languages.length > 0 ? (
+          <div key="languages">
+            <h3 className="mb-2 text-[11px] font-black uppercase tracking-wider" style={{ color: heading }}>
+              Language
+            </h3>
+            <ul className="space-y-1.5">
+              {languages.map((l, i) => (
+                <li key={l.id || i} className="text-[11px]" style={{ color: body }}>
+                  {l.name}
+                  {l.level && <span style={{ color: subtle }}> · {l.level}</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null;
+      case "awards":
+        return awards.length > 0 ? (
+          <div key="awards">
+            <h3 className="mb-2 text-[11px] font-black uppercase tracking-wider" style={{ color: heading }}>
+              Awards
+            </h3>
+            <ul className="space-y-2">
+              {awards.map((a, i) => (
+                <li key={a.id || i} className="text-[11px] font-bold leading-snug" style={{ color: body }}>
+                  {a.title}
+                  {a.description && (
+                    <p className="mt-0.5 text-[10px] font-normal" style={{ color: subtle }}>
+                      {a.description}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null;
+      default:
+        return null;
+    }
+  };
+
+  const mainSection = (key: CvSectionKey) => {
+    switch (key) {
+      case "experience":
+        return experience.length > 0 ? (
+          <div key="experience">
+            <MainSectionHeading color={heading} dividerColor={divider}>
+              Experience
+            </MainSectionHeading>
+            <div className="space-y-3">
+              {experience.map((e, i) => (
+                <div key={e.id || i} className="flex gap-3">
+                  <p className="w-16 shrink-0 text-[10px] font-semibold" style={{ color: subtle }}>
+                    {dateRange(e.startDate, e.endDate, e.current)}
+                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-bold" style={{ color: body }}>
+                      {e.role || "Role"}
+                    </p>
+                    {e.company && (
+                      <p className="text-[10px]" style={{ color: subtle }}>
+                        {e.company}
+                      </p>
+                    )}
+                    {e.description && (
+                      <p className="mt-1 text-[10px] leading-relaxed" style={{ color: body }}>
+                        {e.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null;
+      case "education":
+        return education.length > 0 ? (
+          <div key="education">
+            <MainSectionHeading color={heading} dividerColor={divider}>
+              Education
+            </MainSectionHeading>
+            <div className="space-y-3">
+              {education.map((ed, i) => (
+                <div key={ed.id || i} className="flex gap-3">
+                  <p className="w-16 shrink-0 text-[10px] font-semibold" style={{ color: subtle }}>
+                    {dateRange(ed.startYear, ed.endYear)}
+                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-bold" style={{ color: body }}>
+                      {ed.degree ? `${ed.degree}${ed.field ? `, ${ed.field}` : ""}` : ed.institution}
+                    </p>
+                    {ed.degree && (
+                      <p className="text-[10px]" style={{ color: subtle }}>
+                        {ed.institution}
+                      </p>
+                    )}
+                    {ed.description && (
+                      <p className="mt-1 text-[10px] leading-relaxed" style={{ color: body }}>
+                        {ed.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null;
+      case "references": {
+        const refCols = layout.sectionColumns.references && layout.sectionColumns.references > 1 ? layout.sectionColumns.references : 1;
+        return references.length > 0 ? (
+          <div key="references">
+            <MainSectionHeading color={heading} dividerColor={divider}>
+              References
+            </MainSectionHeading>
+            <div className="grid gap-x-6 gap-y-3" style={{ gridTemplateColumns: `repeat(${refCols}, minmax(0, 1fr))` }}>
+              {references.map((r, i) => (
+                <div key={r.id || i}>
+                  <p className="text-xs font-bold" style={{ color: body }}>
+                    {r.name}
+                  </p>
+                  {(r.company || r.position) && (
+                    <p className="text-[10px]" style={{ color: subtle }}>
+                      {[r.company, r.position].filter(Boolean).join(", ")}
+                    </p>
+                  )}
+                  {r.phone && (
+                    <p className="mt-1 text-[10px]" style={{ color: body }}>
+                      Phone: {r.phone}
+                    </p>
+                  )}
+                  {r.email && (
+                    <p className="text-[10px]" style={{ color: body }}>
+                      Email: {r.email}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null;
+      }
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div
+      data-cv-page
+      className="shrink-0 overflow-hidden rounded-lg break-words"
+      style={{
+        width: pageWidth,
+        minHeight: pageHeight,
+        background: colors.background,
+        color: body,
+        fontFamily: fontFamily ? `"${fontFamily}", sans-serif` : undefined,
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4" style={{ padding: `${pagePadding}px ${pagePadding}px 0` }}>
+        <div className="min-w-0">
+          <h1 className="break-words text-2xl font-black uppercase tracking-tight" style={{ color: heading }}>
+            {fullName}
+          </h1>
+          {tagline && (
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide" style={{ color: subtle }}>
+              {tagline}
+            </p>
+          )}
+        </div>
+        {contactItems.length > 0 && (
+          <div className="shrink-0 space-y-1 text-right">
+            {contactItems.map((item, i) => (
+              <div key={i} className="flex items-center justify-end gap-1.5 text-[10px] font-medium" style={{ color: body }}>
+                {item.label}
+                <item.icon size={11} style={{ color: subtle }} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="mt-4 h-px" style={{ background: divider, marginLeft: pagePadding, marginRight: pagePadding }} />
+
+      {/* Summary */}
+      {bio && (
+        <div style={{ margin: `${layout.spacing.headerBottom ?? 14}px ${pagePadding}px 0` }}>
+          <div className="rounded-md" style={{ background: summaryBg, padding: layout.spacing.summaryPadding ?? 12 }}>
+            <h2 className="mb-1.5 text-center text-[11px] font-black uppercase tracking-wider" style={{ color: heading }}>
+              Summary
+            </h2>
+            <p className="text-[10px] leading-relaxed" style={{ color: body }}>
+              {bio}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Sidebar + main content */}
+      <div
+        className="mt-5 flex items-start"
+        style={{ padding: `0 ${pagePadding}px ${pagePadding}px`, gap: columnGap }}
+      >
+        <div
+          className="shrink-0 space-y-5 rounded-md"
+          style={{
+            width: `${layout.sidebarWidth ?? 35}%`,
+            background: sidebarBg,
+            padding: layout.spacing.sidebarPadding ?? 16,
+          }}
+        >
+          {(layout.sidebarSections ?? ["skills", "languages", "awards"]).map(sidebarSection)}
+        </div>
+        <div className="min-w-0 flex-1 space-y-5" style={{ padding: `0 ${layout.spacing.contentPadding ?? 0}px` }}>
+          {(layout.mainSections ?? ["experience", "education", "references"]).map(mainSection)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ResumePreview({
   profile,
   primary,
@@ -161,6 +466,7 @@ export default function ResumePreview({
   projects,
   awards,
   languages,
+  references,
   templateId,
 }: {
   profile: FullProfile;
@@ -173,6 +479,7 @@ export default function ResumePreview({
   projects?: ProjectItem[];
   awards?: AwardItem[];
   languages?: LanguageItem[];
+  references?: ReferenceItem[];
   /** CV template id (@/lib/cvTemplates) — changes colours, the contact bar, section grids, and section order. */
   templateId?: string;
 }) {
@@ -209,6 +516,8 @@ export default function ResumePreview({
       (c.city || c.country) && { icon: MapPin, label: [c.city, c.country].filter(Boolean).join(", ") },
     ].filter(Boolean) as { icon: Icon; label: string }[]
   );
+
+  const isTwoColumn = tpl?.layout.mainLayout === "two-column";
 
   const blocks: Block[] = useMemo(() => {
     const header: Block = {
@@ -534,6 +843,29 @@ export default function ResumePreview({
     color: bodyFg,
     fontFamily: fontFamily ? `"${fontFamily}", sans-serif` : undefined,
   };
+
+  if (isTwoColumn && tpl) {
+    return (
+      <div ref={containerRef} className="flex w-full flex-col items-center gap-6">
+        <TwoColumnResume
+          tpl={tpl}
+          fullName={fullName}
+          tagline={p.tagline}
+          contactItems={contactItems}
+          bio={p.bio}
+          skills={skills || []}
+          languages={languages || []}
+          awards={awards || []}
+          experience={experience}
+          education={education}
+          references={references || []}
+          fontFamily={fontFamily}
+          pageWidth={pageWidth}
+          pageHeight={pageHeight}
+        />
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="flex w-full flex-col items-center gap-6">

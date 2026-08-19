@@ -96,6 +96,15 @@ export interface LanguageItem {
   level?: string;
 }
 
+export interface ReferenceItem {
+  id?: string;
+  name: string;
+  position?: string;
+  company?: string;
+  phone?: string;
+  email?: string;
+}
+
 export interface BusinessHours {
   day: string;
   open?: string;
@@ -162,6 +171,8 @@ export interface DigitalCardSection {
   awards?: AwardItem[];
   /** Language entries shown on the CV layout (templates with a Languages section). */
   languages?: LanguageItem[];
+  /** Reference entries shown on the CV layout (templates with a References section). */
+  references?: ReferenceItem[];
   /**
    * Social links shown on the Resume/CV & Portfolio layouts — separate from
    * the main profile.social list so editing them here doesn't change what

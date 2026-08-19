@@ -8,7 +8,7 @@ import {
   Gift,
   Link2,
   Smartphone,
-  Sparkles,
+  CreditCard as Card,
   Store,
 } from "lucide-react";
 
@@ -95,8 +95,8 @@ export default function BentoGrid() {
 
           {/* Card Studio */}
           <div className={`${tile} bg-yellow`} style={{ borderColor: "transparent" }}>
-            <span className={`${iconBox} bg-dark text-primary`}>
-              <Sparkles className="h-5 w-5" />
+            <span className={`${iconBox} bg-dark text-white`}>
+              <Card className="h-5 w-5" />
             </span>
             <h3 className="mt-4 text-base font-extrabold text-dark">
               Card Studio
@@ -110,7 +110,7 @@ export default function BentoGrid() {
           <div className={`${tile} sm:col-span-2`}>
             <div className="flex flex-wrap items-end justify-between gap-6">
               <div className="max-w-[16rem]">
-                <span className={`${iconBox} bg-secondary text-dark`}>
+                <span className={`${iconBox} bg-secondary text-white`}>
                   <BarChart3 className="h-5 w-5" />
                 </span>
                 <h3 className="mt-4 text-base font-extrabold text-dark">
@@ -136,7 +136,7 @@ export default function BentoGrid() {
 
           {/* PDF resume */}
           <div className={`${tile} bg-paper-soft`}>
-            <span className={`${iconBox} bg-dark text-primary`}>
+            <span className={`${iconBox} bg-dark text-white`}>
               <FileText className="h-5 w-5" />
             </span>
             <h3 className="mt-4 text-base font-extrabold text-dark">

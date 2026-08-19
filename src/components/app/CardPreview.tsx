@@ -1,9 +1,19 @@
 import { CSSProperties, useId } from "react";
-import { Phone, Mail, Globe, MessageCircle, MapPin } from "lucide-react";
+import { Phone, Mail, Globe, MessageCircle, MapPin, Building2 } from "lucide-react";
 import type { FullProfile } from "@/types";
 import { SITE_URL } from "@/lib/config";
 import { getContrastText } from "@/lib/color";
 import { CARD_TEMPLATES, type CardElement, type CardFaceDef } from "@/lib/cardTemplates";
+
+/** Icons an elements-based template's `type: "icon"` entries can reference by name. */
+const ICON_LIBRARY: Record<string, typeof Phone> = {
+  phone: Phone,
+  mail: Mail,
+  globe: Globe,
+  whatsapp: MessageCircle,
+  location: MapPin,
+  brandLogo: Building2,
+};
 
 /**
  * Lightweight client-side preview of the digital business-card templates
@@ -163,12 +173,19 @@ function ElementsFace({
       }}
     >
       {face.elements.map((el: CardElement) => {
+        // `x` is a horizontal anchor whose meaning follows the element's own
+        // alignment: centered text/shapes/icons anchor on their centre
+        // (translateX(-50%)), but a left- or right-aligned text element
+        // anchors on that edge instead — needed once a template (e.g. a
+        // left-aligned contact panel) places text by its edge, not its middle.
+        const anchor = el.type === "text" ? el.style.textAlign ?? "center" : "center";
+        const anchorTransform = anchor === "left" ? undefined : anchor === "right" ? "translateX(-100%)" : "translateX(-50%)";
         const base: CSSProperties = {
           position: "absolute",
           left: `${el.position.x}%`,
           top: `${el.position.y}%`,
           width: `${el.size.width}%`,
-          transform: "translateX(-50%)",
+          transform: anchorTransform,
         };
         if (el.type === "shape") {
           return (
@@ -176,6 +193,29 @@ function ElementsFace({
               key={el.id}
               style={{ ...base, height: `${el.size.height}%`, background: el.style.backgroundColor }}
             />
+          );
+        }
+        if (el.type === "icon") {
+          // A logo icon is bound to a field (the user's uploaded business
+          // logo) — render that actual image once one exists, and render
+          // nothing at all (not even a placeholder glyph) until it does.
+          // Purely decorative icons (no `field`, e.g. the phone/mail/globe
+          // glyphs) always show their fixed icon.
+          if (el.field) {
+            const logoUrl = fieldValue(el.field);
+            if (!logoUrl) return null;
+            return (
+              <div key={el.id} style={{ ...base, height: `${el.size.height}%` }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              </div>
+            );
+          }
+          const IconComp = ICON_LIBRARY[el.style.iconName ?? ""] ?? Building2;
+          return (
+            <div key={el.id} style={{ ...base, height: `${el.size.height}%` }}>
+              <IconComp style={{ width: "100%", height: "100%", color: el.style.iconColor }} />
+            </div>
           );
         }
         const text = fieldValue(el.field);
@@ -192,6 +232,7 @@ function ElementsFace({
               color: el.style.color,
               textAlign: el.style.textAlign,
               letterSpacing: el.style.letterSpacing ? pxToCqw(el.style.letterSpacing) : undefined,
+              textTransform: el.style.textTransform === "uppercase" ? "uppercase" : undefined,
             }}
           >
             {text}
@@ -352,93 +393,52 @@ export default function CardPreview({
 
   if (templateId === "floral-mandala") {
     const tpl = CARD_TEMPLATES.find((t) => t.id === "floral-mandala");
-    const colors = tpl?.colors ?? { background: "#FBF3E4", primary: "#0E7C86", secondary: "#083F45", text: "#202020" };
-    const bg = tpl?.background;
-    const layout = tpl?.layout;
+    const colors = tpl?.colors ?? { background: "#FBF3E4", primary: "#19B7BD", secondary: "#0E7C86", text: "#252525" };
+    const cardDef = tpl?.card;
+    const RENDER_WIDTH = 420;
+    const designWidth = cardDef?.width || RENDER_WIDTH;
 
-    // Standard 89×51mm trim size applied to both faces — a fixed CSS aspect
-    // ratio so front and back render at true business-card proportions.
-    const faceStyle: CSSProperties = {
-      background: colors.background,
-      borderColor: colors.secondary,
-      width: "100%",
-      maxWidth: cardStyle.maxWidth,
-      aspectRatio: CARD_ASPECT_RATIO,
-      fontFamily: cardStyle.fontFamily,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
+    const fieldValue = (field?: string) => {
+      switch (field) {
+        case "fullName":
+          return fullName;
+        case "jobTitle":
+          return p.tagline || "Your Position";
+        case "companyName":
+          return biz.name || "Company Name";
+        case "phone":
+          return c.phone || c.whatsapp || "+1 234 567 89AB";
+        case "email":
+          return c.email || "you@email.com";
+        case "website":
+          return c.website || "yourwebsite.com";
+        default:
+          return "";
+      }
     };
 
-    return (
-      <div className="flex w-full flex-col gap-4" style={{ maxWidth: cardStyle.maxWidth }}>
-        {/* Front face — pre-designed background art with text overlaid at the template's layout anchors */}
-        <div
-          className="relative overflow-hidden rounded-2xl border-[3px]"
-          style={{
-            ...faceStyle,
-            color: colors.text,
-            backgroundImage: bg?.front ? `url(${bg.front})` : undefined,
-          }}
-        >
-          <div
-            className="absolute max-w-[46%]"
-            style={{ left: `${layout?.front.name.x ?? 52}%`, top: `${layout?.front.name.y ?? 28}%` }}
-          >
-            <span className="block break-words text-sm font-black uppercase leading-tight tracking-wide">
-              {fullName}
-            </span>
-          </div>
-          {p.tagline && (
-            <div
-              className="absolute max-w-[42%]"
-              style={{ left: `${layout?.front.title.x ?? 55}%`, top: `${layout?.front.title.y ?? 42}%` }}
-            >
-              <span className="block text-[8px] font-bold uppercase tracking-[0.16em]" style={{ color: `${colors.text}99` }}>
-                {p.tagline}
-              </span>
-            </div>
-          )}
-          <div
-            className="absolute max-w-[42%] space-y-1"
-            style={{ left: `${layout?.front.contact.x ?? 55}%`, top: `${layout?.front.contact.y ?? 58}%` }}
-          >
-            {contact.slice(0, 3).map((r, i) => (
-              <div key={i} className="flex items-center gap-1.5">
-                <span
-                  className="grid h-4 w-4 shrink-0 place-items-center rounded-full border"
-                  style={{ borderColor: colors.text }}
-                >
-                  <r.icon size={8} style={{ color: colors.text }} />
-                </span>
-                <span className="truncate text-[9px] font-bold" style={{ color: colors.text }}>
-                  {r.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+    const faceStyle: CSSProperties = {
+      width: "100%",
+      maxWidth: RENDER_WIDTH,
+      aspectRatio: cardDef ? `${cardDef.width} / ${cardDef.height}` : "1050 / 600",
+      borderRadius: cardDef?.borderRadius ?? 0,
+      overflow: "hidden",
+      fontFamily: cardStyle.fontFamily,
+    };
 
-        {/* Back face — pre-designed background art with the company name centred on it */}
-        <div
-          className="relative overflow-hidden rounded-2xl border-[3px]"
-          style={{
-            ...faceStyle,
-            backgroundImage: bg?.back ? `url(${bg.back})` : undefined,
-          }}
-        >
-          <span
-            className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
-            style={{
-              left: `${layout?.back.companyName.x ?? 50}%`,
-              top: `${layout?.back.companyName.y ?? 50}%`,
-              borderColor: colors.text,
-              background: colors.background,
-              color: colors.text,
-            }}
-          >
-            {biz.name || "Company"}
-          </span>
-        </div>
+    // Landscape faces stack vertically — front always on top, back below.
+    return (
+      <div className="flex w-full flex-col items-center gap-4" style={{ maxWidth: RENDER_WIDTH }}>
+        {tpl?.front && (
+          <div style={faceStyle} className="border border-ink/10">
+            <ElementsFace face={tpl.front} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
+          </div>
+        )}
+        {tpl?.back && (
+          <div style={faceStyle} className="border border-ink/10">
+            <ElementsFace face={tpl.back} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
+          </div>
+        )}
       </div>
     );
   }
@@ -486,6 +486,8 @@ export default function CardPreview({
           return c.website || "yourwebsite.com";
         case "address":
           return c.address || [c.city, c.country].filter(Boolean).join(", ") || "Your Address";
+        case "logo":
+          return biz.logo || "";
         default:
           return "";
       }
@@ -504,6 +506,66 @@ export default function CardPreview({
     // front instead of below it, so the preview doesn't run off the page.
     return (
       <div className="flex w-full flex-row items-start justify-center gap-4" style={{ maxWidth: RENDER_WIDTH * 2 + 16 }}>
+        {tpl?.front && (
+          <div style={faceStyle} className="border border-ink/10">
+            <ElementsFace face={tpl.front} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
+          </div>
+        )}
+        {tpl?.back && (
+          <div style={faceStyle} className="border border-ink/10">
+            <ElementsFace face={tpl.back} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (templateId === "navy-geometric") {
+    const tpl = CARD_TEMPLATES.find((t) => t.id === "navy-geometric");
+    const colors = tpl?.colors ?? { background: "#FFFFFF", primary: "#071D35", secondary: "#DCE1E5", text: "#071D35" };
+    const cardDef = tpl?.card;
+    const RENDER_WIDTH = 420;
+    const designWidth = cardDef?.width || RENDER_WIDTH;
+
+    const fieldValue = (field?: string) => {
+      switch (field) {
+        case "fullName":
+          return fullName;
+        case "jobTitle":
+          return p.tagline || "Your Position";
+        case "companyName":
+          return biz.name || "Company Name";
+        case "tagline":
+          return biz.category || "";
+        case "phone": {
+          if (c.phone && c.whatsapp && c.phone !== c.whatsapp) return `${c.phone}  /  ${c.whatsapp}`;
+          return c.phone || c.whatsapp || "+1 234 567 89AB";
+        }
+        case "email":
+          return c.email || "you@email.com";
+        case "website":
+          return c.website || "yourwebsite.com";
+        case "address":
+          return c.address || [c.city, c.country].filter(Boolean).join(", ") || "Your Address";
+        case "logo":
+          return biz.logo || "";
+        default:
+          return "";
+      }
+    };
+
+    const faceStyle: CSSProperties = {
+      width: "100%",
+      maxWidth: RENDER_WIDTH,
+      aspectRatio: cardDef ? `${cardDef.width} / ${cardDef.height}` : "1050 / 600",
+      borderRadius: cardDef?.borderRadius ?? 0,
+      overflow: "hidden",
+      fontFamily: cardStyle.fontFamily,
+    };
+
+    // Landscape faces stack vertically — front always on top, back below.
+    return (
+      <div className="flex w-full flex-col items-center gap-4" style={{ maxWidth: RENDER_WIDTH }}>
         {tpl?.front && (
           <div style={faceStyle} className="border border-ink/10">
             <ElementsFace face={tpl.front} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
