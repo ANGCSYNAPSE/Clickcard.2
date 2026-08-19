@@ -288,7 +288,7 @@ export default function LiveProfileCard({
         // short profile doesn't leave a huge blank gap above the footer —
         // it reads the same compact size as the Dashboard/Studio preview.
         interactive
-          ? "relative min-h-screen w-full overflow-hidden sm:mx-auto sm:my-8 sm:min-h-0 sm:max-w-[420px] sm:rounded-3xl sm:shadow-card"
+          ? "relative h-[100dvh] w-full overflow-hidden sm:mx-auto sm:my-8 sm:h-[85vh] sm:max-w-[420px] sm:rounded-3xl sm:shadow-card"
           : "relative rounded-3xl overflow-hidden"
       }
       style={{
@@ -353,7 +353,7 @@ export default function LiveProfileCard({
           full-viewport mobile card (so short content still scrolls inside a
           fixed frame); on sm+ the outer card is content-sized, so this just
           sizes to match instead of stretching into blank space. */}
-      <div className={`no-scrollbar relative z-10 flex flex-col items-center pb-16 text-center ${interactive ? "h-full overflow-y-auto sm:h-auto sm:overflow-visible" : "h-full overflow-y-auto"}`}>
+      <div className="no-scrollbar relative z-10 flex flex-col items-center pb-16 text-center h-full w-full overflow-y-auto">
         {heroMode ? (
           /* Hero image — full-bleed photo that dissolves into the card's own wallpaper underneath */
           <div className="relative w-full shrink-0" style={{ height: 320 }}>
