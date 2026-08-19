@@ -102,23 +102,6 @@ function Footer({ t, url }: { t: Tokens; url: string }) {
   );
 }
 
-/** Meandering wave band used by the Wave Bold template — anchored to one edge. */
-function WaveBand({ fill, height = 64, flip }: { fill: string; height?: number; flip?: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 400 100"
-      preserveAspectRatio="none"
-      className="block w-full"
-      style={{ height, transform: flip ? "scaleY(-1)" : undefined }}
-    >
-      <path
-        d="M0,55 C70,95 130,10 210,35 C280,57 320,15 400,25 L400,0 L0,0 Z"
-        fill={fill}
-      />
-    </svg>
-  );
-}
-
 /** Repeating chevron/arrow tile used by the Chevron Pattern template. */
 function ChevronPattern({ id, fill, bg }: { id: string; fill: string; bg: string }) {
   return (
@@ -580,35 +563,93 @@ export default function CardPreview({
     );
   }
 
-  // default: wave-bold — a flowing wave band across a bold colour field.
-  const waveColor = headerColor || accent;
-  const onPrimary = getContrastText(primary);
-  return (
-    <div style={{ ...cardStyle, background: primary, color: onPrimary }} className="relative overflow-hidden">
-      <WaveBand fill={waveColor} height={58} />
-      <div className="px-6 pt-1 pb-3 text-center">
-        <h2
-          className="break-words text-2xl"
-          style={{ color: waveColor, fontFamily: "Georgia, serif", fontStyle: "italic", fontWeight: 700 }}
+  // default: minimal-mono — a clean off-white horizontal card. Front is
+  // just the business/logo lockup, centered; back carries the person's
+  // name, title and every contact line beside it.
+  const RENDER_WIDTH = 420;
+  const monoAccent = headerColor || accent;
+  const cardBg = "#FAFAFA";
+  const cardFg = "#1A1A1A";
+  const cardSubtle = "#6B6B6B";
+
+  const LogoLockup = ({ compact }: { compact: boolean }) => (
+    <div className={`flex items-center flex-col ${compact ? "gap-2.5" : "flex-col gap-3"}`}>
+      {biz.logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={biz.logo}
+          alt=""
+          className={compact ? "h-9 w-9 shrink-0 object-contain" : "h-14 w-14 shrink-0 object-contain"}
+        />
+      ) : (
+        <span
+          className={`grid shrink-0 place-items-center rounded-lg border-2 ${compact ? "h-9 w-9" : "h-14 w-14"}`}
+          style={{ borderColor: primary }}
         >
-          {biz.name || fullName}
-        </h2>
-        {p.tagline && (
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: onPrimary, opacity: 0.85 }}>
-            {p.tagline}
-          </p>
-        )}
+          <Building2 size={compact ? 18 : 26} style={{ color: monoAccent }} />
+        </span>
+      )}
+      <span
+        className={`break-words font-black uppercase leading-tight tracking-wide ${compact ? "text-left text-[11px]" : "text-center text-base"}`}
+        style={{ color: primary }}
+      >
+        {biz.name || fullName}
+      </span>
+    </div>
+  );
+
+  const faceStyle: CSSProperties = {
+    width: "100%",
+    maxWidth: RENDER_WIDTH,
+    aspectRatio: "1050 / 600",
+    borderRadius: 20,
+    overflow: "hidden",
+    fontFamily: cardStyle.fontFamily,
+    background: cardBg,
+    color: cardFg,
+  };
+
+  return (
+    <div className="flex w-full flex-col items-center gap-4" style={{ maxWidth: RENDER_WIDTH }}>
+      {/* Front — just the logo lockup, centered */}
+      <div style={faceStyle} className="grid place-items-center border border-ink/10">
+        <LogoLockup compact={false} />
       </div>
-      <WaveBand fill={waveColor} height={58} flip />
-      <div className="px-5 pb-5 pt-3">
-        <div className="flex justify-center">
-          <Avatar t={t} size={56} picture={p.profilePicture} initials={initials} borderColor={waveColor} />
+
+      {/* Back — logo top-left, divider, name/title/contact on the right */}
+      <div style={faceStyle} className="relative flex items-center gap-5 border border-ink/10 px-7 py-6">
+        <div className="absolute left-7 top-13">
+          <LogoLockup compact />
         </div>
-        <h3 className="mt-2 text-center text-lg font-black" style={{ color: onPrimary }}>
-          {fullName}
-        </h3>
-        <div className="mt-3 space-y-1.5">{rows}</div>
-        <Footer t={{ ...t, subtle: onPrimary === "#FFFFFF" ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)" }} url={publicUrl} />
+        <div className="h-full w-px shrink-0" style={{ background: monoAccent, marginLeft: "34%" }} />
+        <div className="min-w-0 flex-1 space-y-3">
+          <div>
+            <p className="truncate text-lg font-black" style={{ color: cardFg }}>
+              {fullName}
+            </p>
+            {p.tagline && (
+              <p className="truncate text-sm" style={{ color: cardSubtle }}>
+                {p.tagline}
+              </p>
+            )}
+          </div>
+          {(c.phone || c.email) && (
+            <div className="space-y-0.5 text-[13px] font-semibold" style={{ color: cardFg }}>
+              {c.phone && <p className="truncate">{c.phone}</p>}
+              {c.email && <p className="truncate">{c.email}</p>}
+            </div>
+          )}
+          {(c.address || c.city || c.country) && (
+            <p className="text-[13px] leading-snug" style={{ color: cardFg }}>
+              {c.address || [c.city, c.country].filter(Boolean).join(", ")}
+            </p>
+          )}
+          {c.website && (
+            <p className="truncate text-[13px] font-black" style={{ color: cardFg }}>
+              {c.website}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

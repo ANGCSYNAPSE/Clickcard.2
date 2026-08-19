@@ -12,6 +12,18 @@ const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM = 297;
 
 async function captureCanvas(el: HTMLElement) {
+  // Without this, html2canvas can capture mid font-swap (FOUT) — the
+  // fallback and web font both partially painted — which shows up as
+  // smudged/overlapping "ghost" text in the exported PDF, especially for
+  // templates using a Google Font that's still loading over the network.
+  if (typeof document !== "undefined" && document.fonts) {
+    try {
+      await document.fonts.ready;
+    } catch {
+      /* fonts API not fully supported — proceed with best-effort capture */
+    }
+  }
+
   return html2canvas(el, {
     scale: 2,
     useCORS: true,

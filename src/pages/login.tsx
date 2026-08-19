@@ -26,6 +26,20 @@ export default function LoginPage() {
   const [stage, setStage] = useState<"credential" | "otp">("credential");
   const [credential, setCredential] = useState("");
   const [otp, setOtp] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Start (or restart) a 1-minute cooldown every time the OTP stage becomes
+  // active — a code was just sent, so resend has nothing new to offer yet.
+  useEffect(() => {
+    if (stage === "otp") setResendCooldown(60);
+  }, [stage]);
+
+  // Self-scheduling countdown — ticks once a second until it hits 0.
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
 
   useEffect(() => {
     if (router.query.session === "expired") {
@@ -52,6 +66,15 @@ export default function LoginPage() {
       }
     },
   });
+
+  const resend = async () => {
+    if (resendCooldown > 0) return;
+    const res = await dispatch(loginInitiate(credential));
+    if (loginInitiate.fulfilled.match(res)) {
+      dispatch(pushToast("New code sent.", "info"));
+      setResendCooldown(60);
+    }
+  };
 
   const verify = async () => {
     const res = await dispatch(loginVerify({ credential, otp }));
@@ -136,16 +159,29 @@ export default function LoginPage() {
             >
               Verify & sign in
             </SplitButton>
-            <button
-              onClick={() => {
-                setStage("credential");
-                setOtp("");
-                dispatch(clearAuthError());
-              }}
-              className="flex items-center gap-1.5 text-sm font-semibold text-ink/60 transition hover:text-brand-600 dark:text-white/60 lg:text-base"
-            >
-              <ArrowLeft size={15} /> Use a different account
-            </button>
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setStage("credential");
+                  setOtp("");
+                  dispatch(clearAuthError());
+                }}
+                className="flex items-center gap-1.5 text-sm font-semibold text-ink/60 transition hover:text-brand-600 dark:text-white/60 lg:text-base"
+              >
+                <ArrowLeft size={15} /> Use a different account
+              </button>
+              <button
+                onClick={resend}
+                disabled={resendCooldown > 0}
+                className={`text-sm font-bold lg:text-base ${
+                  resendCooldown > 0
+                    ? "cursor-not-allowed text-ink/35 dark:text-white/35"
+                    : "text-brand-500 hover:underline"
+                }`}
+              >
+                {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
+              </button>
+            </div>
           </div>
         )}
       </AuthShell>

@@ -169,6 +169,13 @@ export default function StudioPage() {
   const [activePreset, setActivePreset] = useState<string | null>(null);
 
   const applyPreset = (preset: StylePreset) => {
+    // Clicking the already-active preset unselects it — the design keeps
+    // whatever values it currently has (no revert), it's just no longer
+    // badged as matching a named preset.
+    if (activePreset === preset.key) {
+      setActivePreset(null);
+      return;
+    }
     set(preset.values);
     setActivePreset(preset.key);
   };
