@@ -80,7 +80,7 @@ export default function AppShell({
   const { user } = useAppSelector((s) => s.auth);
   const profilePicture = useAppSelector((s) => s.profile.draft.personal?.profilePicture);
   const profileStatus = useAppSelector((s) => s.profile.status);
-  const { planName, isPaid } = useEntitlement();
+  const { isPaid } = useEntitlement();
   const sidebarOpen = useAppSelector((s) => s.ui.sidebarOpen);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -174,13 +174,17 @@ export default function AppShell({
               </p>
             </div>
           </div>
-          <Link
-            href="/billing"
-            className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-brand-100/70 py-2 text-xs font-bold text-brand-600 transition hover:bg-brand-100 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10"
-          >
-            <Crown size={13} />
-            {isPaid ? `${planName} plan` : "Free plan · Upgrade"}
-          </Link>
+          {/* Only free users get nudged to upgrade — Pro/Business already
+              have the plan, so this badge/link has nothing useful to say. */}
+          {!isPaid && (
+            <Link
+              href="/billing"
+              className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-brand-100/70 py-2 text-xs font-bold text-brand-600 transition hover:bg-brand-100 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10"
+            >
+              <Crown size={13} />
+              Upgrade to Pro
+            </Link>
+          )}
         </div>
 
         {/* grouped nav */}

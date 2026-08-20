@@ -149,7 +149,14 @@ export interface DigitalCardSection {
   primaryColor?: string;
   accentColor?: string;
   fontFamily?: string;
-  textColor?: string;
+  /**
+   * Text colour override — separate per surface (Card/CV/Portfolio each
+   * used to read/write the same `textColor` field, so picking a colour on
+   * one silently changed the others too).
+   */
+  cardTextColor?: string;
+  cvTextColor?: string;
+  portfolioTextColor?: string;
   paletteStyle?: string;
   backgroundColor?: string;
   headerColor?: string;

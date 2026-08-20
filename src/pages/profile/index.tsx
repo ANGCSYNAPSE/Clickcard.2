@@ -74,6 +74,20 @@ export default function ProfileEditorPage() {
   const patch = <K extends keyof FullProfile>(section: K, value: FullProfile[K]) =>
     dispatch(updateSection({ section, value }));
 
+  // The icons/buttons toggle lives on this page but the setting itself is
+  // part of the Studio design. Updating `design` alone made the live
+  // preview change but never touched the profile draft — so the page never
+  // went dirty (no Save button appeared) and, worse, the next unrelated
+  // save would overwrite `design` from the stale saved snapshot and quietly
+  // revert the toggle. Writing it into the draft too keeps both in sync.
+  const setSocialLinksStyle = (opt: "icons" | "buttons") => {
+    dispatch(updateDesign({ socialLinksStyle: opt }));
+    patch("digitalCard", {
+      ...draft.digitalCard,
+      design: { ...(draft.digitalCard?.design || {}), socialLinksStyle: opt },
+    });
+  };
+
   const social = draft.social || [];
   const findSocial = (platform: string) =>
     social.find((s) => s.platform?.toLowerCase() === platform.toLowerCase());
@@ -231,7 +245,7 @@ export default function ProfileEditorPage() {
                         <button
                           key={opt}
                           type="button"
-                          onClick={() => dispatch(updateDesign({ socialLinksStyle: opt }))}
+                          onClick={() => setSocialLinksStyle(opt)}
                           className={`rounded-full px-2.5 py-1 text-[11px] font-bold capitalize transition ${
                             socialLinksStyle === opt
                               ? "bg-white text-ink shadow-sm dark:bg-[#12403c] dark:text-white"

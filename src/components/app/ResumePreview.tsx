@@ -126,18 +126,18 @@ function HeaderBlock({
             style={{ background: contactBarColor, color: contactBarTextColor }}
           >
             {contactItems.map((item, i) => (
-              <span key={i} className="flex items-center gap-1.5">
-                <item.icon size={12} />
-                {item.label}
+              <span key={i} className="flex items-center gap-1.5 leading-none">
+                <item.icon size={12} className="shrink-0" />
+                <span className="leading-none">{item.label}</span>
               </span>
             ))}
           </div>
         ) : (
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px]" style={{ color: subtleColor }}>
             {contactItems.map((item, i) => (
-              <span key={i} className="flex items-center gap-1">
-                <item.icon size={11} />
-                {item.label}
+              <span key={i} className="flex items-center gap-1 leading-none">
+                <item.icon size={11} className="shrink-0" />
+                <span className="leading-none">{item.label}</span>
               </span>
             ))}
           </div>
@@ -292,7 +292,7 @@ function TwoColumnResume({
                     {dateRange(e.startDate, e.endDate, e.current)}
                   </p>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-bold" style={{ color: body }}>
+                    <p className="break-words text-xs font-bold" style={{ color: body }}>
                       {e.role || "Role"}
                     </p>
                     {e.company && (
@@ -324,7 +324,7 @@ function TwoColumnResume({
                     {dateRange(ed.startYear, ed.endYear)}
                   </p>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-bold" style={{ color: body }}>
+                    <p className="break-words text-xs font-bold" style={{ color: body }}>
                       {ed.degree ? `${ed.degree}${ed.field ? `, ${ed.field}` : ""}` : ed.institution}
                     </p>
                     {ed.degree && (
@@ -592,8 +592,8 @@ export default function ResumePreview({
       node: (
         <div>
           {i === 0 && <SectionHeading color={headingColor}>Experience</SectionHeading>}
-          <div className="flex items-baseline justify-between gap-2">
-            <p className="min-w-0 flex-1 truncate text-xs font-bold" style={{ color: bodyFg }}>
+          <div className="flex items-start justify-between gap-2">
+            <p className="min-w-0 flex-1 break-words text-xs font-bold" style={{ color: bodyFg }}>
               {e.role || "Role"}
               {e.company ? ` · ${e.company}` : ""}
             </p>
@@ -619,8 +619,8 @@ export default function ResumePreview({
     // inside a multi-column grid (a template with otherActivities > 1).
     const projectItem = (proj: ProjectItem) => (
       <div>
-        <div className="flex items-baseline justify-between gap-2">
-          <p className="min-w-0 flex-1 truncate text-xs font-bold" style={{ color: bodyFg }}>
+        <div className="flex items-start justify-between gap-2">
+          <p className="min-w-0 flex-1 break-words text-xs font-bold" style={{ color: bodyFg }}>
             {proj.name || "Project"}
             {proj.role ? ` · ${proj.role}` : ""}
           </p>
@@ -673,8 +673,8 @@ export default function ResumePreview({
     // Education entry — reused stacked or in a multi-column grid.
     const educationItem = (ed: (typeof education)[number]) => (
       <div>
-        <div className="flex items-baseline justify-between gap-2">
-          <p className="min-w-0 flex-1 truncate text-xs font-bold" style={{ color: bodyFg }}>
+        <div className="flex items-start justify-between gap-2">
+          <p className="min-w-0 flex-1 break-words text-xs font-bold" style={{ color: bodyFg }}>
             {ed.degree ? `${ed.degree}${ed.field ? `, ${ed.field}` : ""}` : ed.institution}
           </p>
           <p className="shrink-0 whitespace-nowrap text-[10px]" style={{ color: subtleFg }}>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Head from "next/head";
 import {
   Download,
@@ -34,7 +34,7 @@ import { useRequireAuth } from "@/lib/authGuards";
 import { SITE_URL } from "@/lib/config";
 import { loadGoogleFont } from "@/lib/fonts";
 import { CARD_TEMPLATES } from "@/lib/cardTemplates";
-import { profileService, CardRenderInput } from "@/services/profileService";
+import { exportCardFacesToPdf } from "@/lib/exportPdf";
 import type { PersonalSection, ContactSection, BusinessSection } from "@/types";
 
 const PALETTES: {
@@ -85,7 +85,7 @@ export default function CardPage() {
   const [fontFamily, setFontFamily] = useState<string>(
     draft.digitalCard?.fontFamily || "Inter",
   );
-  const [textColor, setTextColor] = useState<string>(draft.digitalCard?.textColor || "");
+  const [textColor, setTextColor] = useState<string>(draft.digitalCard?.cardTextColor || "");
   const [paletteStyle, setPaletteStyle] = useState<PaletteStyle>(
     (draft.digitalCard?.paletteStyle as PaletteStyle) || "fill",
   );
@@ -113,6 +113,7 @@ export default function CardPage() {
   const [fontPickerOpen, setFontPickerOpen] = useState(false);
   const [showSharePopup, setShowSharePopup] = useState(false);
   const logoFileRef = useRef<HTMLInputElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -125,7 +126,7 @@ export default function CardPage() {
     if (draft.digitalCard?.accentColor) setAccent(draft.digitalCard.accentColor);
     if (draft.digitalCard?.theme) setTheme(draft.digitalCard.theme as "light" | "dark");
     if (draft.digitalCard?.fontFamily) setFontFamily(draft.digitalCard.fontFamily);
-    if (draft.digitalCard?.textColor) setTextColor(draft.digitalCard.textColor);
+    if (draft.digitalCard?.cardTextColor) setTextColor(draft.digitalCard.cardTextColor);
     if (draft.digitalCard?.paletteStyle) setPaletteStyle(draft.digitalCard.paletteStyle as PaletteStyle);
     if (draft.digitalCard?.backgroundColor) setBackgroundColor(draft.digitalCard.backgroundColor);
     if (draft.digitalCard?.headerColor) setHeaderColor(draft.digitalCard.headerColor);
@@ -141,10 +142,6 @@ export default function CardPage() {
     loadGoogleFont(fontFamily);
   }, [fontFamily]);
 
-  const renderInput: CardRenderInput = useMemo(
-    () => ({ templateId, primary, accent, theme }),
-    [templateId, primary, accent, theme],
-  );
 
   // These patch the card-only copies above — never the shared profile — so
   // Details edits here stay scoped to the Digital Card.
@@ -191,7 +188,7 @@ export default function CardPage() {
         accentColor: accent,
         theme,
         fontFamily,
-        textColor,
+        cardTextColor: textColor,
         paletteStyle,
         backgroundColor,
         headerColor,
@@ -209,24 +206,15 @@ export default function CardPage() {
   };
 
   const onDownload = async () => {
+    const el = exportRef.current;
+    if (!el) return;
     setDownloading(true);
     try {
-      const res = await profileService.downloadCardPdf(renderInput);
-      const blob = res.data instanceof Blob ? res.data : new Blob([res.data]);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `card-${templateId}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const faces = Array.from(el.querySelectorAll<HTMLElement>("[data-card-face]"));
+      await exportCardFacesToPdf(faces.length ? faces : [el], `card-${templateId || "default"}.pdf`);
       dispatch(pushToast("PDF downloaded", "success"));
-    } catch (e: unknown) {
-      const err = e as { response?: { status?: number } };
-      if (err?.response?.status === 503) {
-        dispatch(pushToast("Server PDF rendering not configured yet — coming online soon.", "info"));
-      } else {
-        dispatch(pushToast("PDF download failed", "error"));
-      }
+    } catch {
+      dispatch(pushToast("PDF download failed", "error"));
     } finally {
       setDownloading(false);
     }
@@ -276,6 +264,14 @@ export default function CardPage() {
       <Head>
         <title>Digital Card · ClickCard</title>
       </Head>
+
+      {/* Hidden full-size copy for PDF export — independent of whichever
+          responsive layout (mobile/desktop) is currently visible on screen,
+          so downloading always captures the real card regardless of
+          viewport. */}
+      <div ref={exportRef} aria-hidden style={{ position: "fixed", top: 0, left: -99999, width: isPortraitTemplate ? 900 : 460 }}>
+        {stage}
+      </div>
 
       {/* ── header ─────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4 lg:shrink-0">

@@ -4,7 +4,6 @@ import {
   FileText,
   CreditCard,
   QrCode,
-  Download,
   Sparkles,
   Palette,
   ChevronRight,
@@ -45,12 +44,6 @@ import { useRequireAuth } from "@/lib/authGuards";
 import { STYLE_PRESETS, type StylePreset } from "@/lib/stylePresets";
 import { FONT_ITEMS, loadGoogleFont } from "@/lib/fonts";
 import { getContrastText } from "@/lib/color";
-import {
-  studioService,
-  StudioCategory,
-  StudioFormat,
-  StudioTemplate,
-} from "@/services/studioService";
 
 const PALETTES = [
   { name: "Brand", primary: "#BE5103", accent: "#069494" },
@@ -147,11 +140,6 @@ export default function StudioPage() {
   const profileDirty = useAppSelector((s) => s.profile.dirty);
   const savingProfile = useAppSelector((s) => s.profile.saving);
 
-  const [category, setCategory] = useState<StudioCategory>("resume");
-  const [templates, setTemplates] = useState<StudioTemplate[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
-  const [exporting, setExporting] = useState<StudioFormat | null>(null);
   const [expandedSection, setExpandedSection] = useState<string | null>("palette");
   const [detailView, setDetailView] = useState<string | null>(null);
   const [gradientStyle, setGradientStyle] = useState<"custom" | "premade">("custom");
@@ -270,57 +258,6 @@ export default function StudioPage() {
     dispatch(pushToast("Changes saved", "success"));
   };
 
-  useEffect(() => {
-    setLoading(true);
-    studioService
-      .list(category)
-      .then((r) => {
-        const items = r.data?.data ?? [];
-        setTemplates(items);
-        if (items.length && !items.find((t) => t.slug === selectedSlug)) {
-          setSelectedSlug(items[0].slug);
-        }
-      })
-      .catch(() => setTemplates([]))
-      .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]);
-
-  const selected = useMemo(
-    () => templates.find((t) => t.slug === selectedSlug) || templates[0] || null,
-    [templates, selectedSlug],
-  );
-
-  const exportFile = async (format: StudioFormat) => {
-    if (!selected) return;
-    setExporting(format);
-    try {
-      const res = await studioService.render({
-        slug: selected.slug,
-        format,
-        theme,
-        primary,
-        accent,
-      });
-      const blob = res.data instanceof Blob ? res.data : new Blob([res.data]);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${selected.slug}.${format}`;
-      a.click();
-      URL.revokeObjectURL(url);
-      dispatch(pushToast(`${format.toUpperCase()} downloaded`, "success"));
-    } catch (e: unknown) {
-      const err = e as { response?: { status?: number } };
-      if (err?.response?.status === 503) {
-        dispatch(pushToast("Server-side rendering not configured yet.", "info"));
-      } else {
-        dispatch(pushToast(`${format.toUpperCase()} export failed`, "error"));
-      }
-    } finally {
-      setExporting(null);
-    }
-  };
 
   if (!guard) return null;
 
@@ -385,11 +322,6 @@ export default function StudioPage() {
               bioFontSize={bioFontSize}
               bodyFontSize={bodyFontSize}
             />
-            {!selected && (
-              <p className="mt-3 text-xs text-ink/45 dark:text-white/45">
-                {loading ? "Loading templates…" : "No export templates published yet."}
-              </p>
-            )}
           </div>
 
         </div>
@@ -551,22 +483,6 @@ export default function StudioPage() {
                       </span>
                     </span>
                     <p className="text-sm font-bold text-ink dark:text-white">Colors</p>
-                  </div>
-                  <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
-                </div>
-              </button>
-
-              {/* Export Option */}
-              <button
-                onClick={() => setDetailView("export")}
-                className="w-full rounded-2xl bg-white px-5 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04]"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-500 text-white">
-                      <Download size={16} />
-                    </span>
-                    <p className="text-sm font-bold text-ink dark:text-white">Export</p>
                   </div>
                   <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
                 </div>
@@ -1408,41 +1324,6 @@ export default function StudioPage() {
             </div>
           )}
 
-          {/* Export Detail View */}
-          {detailView === "export" && (
-            <div className="space-y-4">
-              {/* Back Button */}
-              <button
-                onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
-              >
-                ← Export
-              </button>
-
-              {/* Export Options */}
-              <div className="px-5 py-4">
-                <p className="mb-4 text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
-                  Export Format
-                </p>
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {(["pdf", "png", "svg"] as StudioFormat[]).map((f) => (
-                    <button
-                      key={f}
-                      disabled={!selected || exporting !== null}
-                      onClick={() => exportFile(f)}
-                      className="inline-flex flex-col items-center gap-2 rounded-xl bg-brand-500 px-3 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-soft transition hover:bg-brand-600 disabled:opacity-60"
-                    >
-                      <Download size={16} />
-                      {exporting === f ? "…" : f}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[9px] text-ink/45 dark:text-white/45">
-                  SVG renders without server Chromium. PDF/PNG require it on the host.
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

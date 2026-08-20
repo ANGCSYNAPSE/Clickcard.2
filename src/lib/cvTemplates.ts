@@ -95,7 +95,7 @@ export const CV_TEMPLATES: CvTemplateDef[] = [
       contactBar: true,
 
       sectionColumns: {
-        skills: 5,
+        skills: 3,
         education: 2,
         experience: 1,
         otherActivities: 3,

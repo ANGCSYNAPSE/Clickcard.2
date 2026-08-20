@@ -374,57 +374,6 @@ export default function CardPreview({
     );
   }
 
-  if (templateId === "floral-mandala") {
-    const tpl = CARD_TEMPLATES.find((t) => t.id === "floral-mandala");
-    const colors = tpl?.colors ?? { background: "#FBF3E4", primary: "#19B7BD", secondary: "#0E7C86", text: "#252525" };
-    const cardDef = tpl?.card;
-    const RENDER_WIDTH = 420;
-    const designWidth = cardDef?.width || RENDER_WIDTH;
-
-    const fieldValue = (field?: string) => {
-      switch (field) {
-        case "fullName":
-          return fullName;
-        case "jobTitle":
-          return p.tagline || "Your Position";
-        case "companyName":
-          return biz.name || "Company Name";
-        case "phone":
-          return c.phone || c.whatsapp || "+1 234 567 89AB";
-        case "email":
-          return c.email || "you@email.com";
-        case "website":
-          return c.website || "yourwebsite.com";
-        default:
-          return "";
-      }
-    };
-
-    const faceStyle: CSSProperties = {
-      width: "100%",
-      maxWidth: RENDER_WIDTH,
-      aspectRatio: cardDef ? `${cardDef.width} / ${cardDef.height}` : "1050 / 600",
-      borderRadius: cardDef?.borderRadius ?? 0,
-      overflow: "hidden",
-      fontFamily: cardStyle.fontFamily,
-    };
-
-    // Landscape faces stack vertically — front always on top, back below.
-    return (
-      <div className="flex w-full flex-col items-center gap-4" style={{ maxWidth: RENDER_WIDTH }}>
-        {tpl?.front && (
-          <div style={faceStyle} className="border border-ink/10">
-            <ElementsFace face={tpl.front} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
-          </div>
-        )}
-        {tpl?.back && (
-          <div style={faceStyle} className="border border-ink/10">
-            <ElementsFace face={tpl.back} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
-          </div>
-        )}
-      </div>
-    );
-  }
 
   if (templateId === "orange-geometric") {
     const tpl = CARD_TEMPLATES.find((t) => t.id === "orange-geometric");
@@ -440,10 +389,9 @@ export default function CardPreview({
     const RENDER_WIDTH = 340;
     const designWidth = cardDef?.width || RENDER_WIDTH;
 
-    // Every slot always shows something — matches the other templates
-    // (e.g. floral-mandala's `biz.name || "Company"`) so the card reads as a
-    // finished design immediately instead of leaving gaps until every field
-    // in Details has been filled in.
+    // Every slot always shows something (e.g. `biz.name || "Company"`) so
+    // the card reads as a finished design immediately instead of leaving
+    // gaps until every field in Details has been filled in.
     const fieldValue = (field?: string) => {
       switch (field) {
         case "fullName":
@@ -490,12 +438,12 @@ export default function CardPreview({
     return (
       <div className="flex w-full flex-row items-start justify-center gap-4" style={{ maxWidth: RENDER_WIDTH * 2 + 16 }}>
         {tpl?.front && (
-          <div style={faceStyle} className="border border-ink/10">
+          <div data-card-face="front" style={faceStyle} className="border border-ink/10">
             <ElementsFace face={tpl.front} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
           </div>
         )}
         {tpl?.back && (
-          <div style={faceStyle} className="border border-ink/10">
+          <div data-card-face="back" style={faceStyle} className="border border-ink/10">
             <ElementsFace face={tpl.back} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
           </div>
         )}
@@ -550,12 +498,12 @@ export default function CardPreview({
     return (
       <div className="flex w-full flex-col items-center gap-4" style={{ maxWidth: RENDER_WIDTH }}>
         {tpl?.front && (
-          <div style={faceStyle} className="border border-ink/10">
+          <div data-card-face="front" style={faceStyle} className="border border-ink/10">
             <ElementsFace face={tpl.front} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
           </div>
         )}
         {tpl?.back && (
-          <div style={faceStyle} className="border border-ink/10">
+          <div data-card-face="back" style={faceStyle} className="border border-ink/10">
             <ElementsFace face={tpl.back} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
           </div>
         )}
@@ -563,17 +511,20 @@ export default function CardPreview({
     );
   }
 
-  // default: minimal-mono — a clean off-white horizontal card. Front is
-  // just the business/logo lockup, centered; back carries the person's
-  // name, title and every contact line beside it.
+  // default: minimal-mono — a horizontal card carrying the same palette as
+  // every other card (paletteStyle/primary/accent/backgroundColor, via the
+  // same `resolvedBg`/`t.fg` used above), with a couple of flat decorative
+  // circles so it doesn't read as a bare rectangle. Front is just the
+  // business/logo lockup, centered; back carries the person's name, title
+  // and every contact line beside it.
   const RENDER_WIDTH = 420;
-  const monoAccent = headerColor || accent;
-  const cardBg = "#FAFAFA";
-  const cardFg = "#1A1A1A";
-  const cardSubtle = "#6B6B6B";
+  const cardBg = resolvedBg;
+  const cardFg = t.fg;
+  const cardSubtle = `${t.fg}99`;
+  const cardDivider = `${t.fg}40`;
 
   const LogoLockup = ({ compact }: { compact: boolean }) => (
-    <div className={`flex items-center flex-col ${compact ? "gap-2.5" : "flex-col gap-3"}`}>
+    <div className={compact ? "flex flex-col items-center gap-2.5" : "flex flex-col items-center gap-3"}>
       {biz.logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -584,17 +535,33 @@ export default function CardPreview({
       ) : (
         <span
           className={`grid shrink-0 place-items-center rounded-lg border-2 ${compact ? "h-9 w-9" : "h-14 w-14"}`}
-          style={{ borderColor: primary }}
+          style={{ borderColor: cardFg }}
         >
-          <Building2 size={compact ? 18 : 26} style={{ color: monoAccent }} />
+          <Building2 size={compact ? 18 : 26} style={{ color: cardFg }} />
         </span>
       )}
       <span
-        className={`break-words font-black uppercase leading-tight tracking-wide ${compact ? "text-left text-[11px]" : "text-center text-base"}`}
-        style={{ color: primary }}
+        className={`break-words font-black uppercase leading-tight tracking-wide ${compact ? "text-left text-[13px]" : "text-center text-xl"}`}
+        style={{ color: cardFg }}
       >
         {biz.name || fullName}
       </span>
+    </div>
+  );
+
+  // Flat, low-opacity circles in the palette's own colours — the same
+  // "retro-sunset" geometric-shape language used elsewhere in the app —
+  // so the face reads as designed instead of an empty rectangle.
+  const Backdrop = () => (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div
+        className="absolute -right-10 -top-14 aspect-square w-40 rounded-full"
+        style={{ background: accent, opacity: 0.16 }}
+      />
+      <div
+        className="absolute -bottom-16 -left-10 aspect-square w-48 rounded-full"
+        style={{ background: primary, opacity: 0.14 }}
+      />
     </div>
   );
 
@@ -612,40 +579,44 @@ export default function CardPreview({
   return (
     <div className="flex w-full flex-col items-center gap-4" style={{ maxWidth: RENDER_WIDTH }}>
       {/* Front — just the logo lockup, centered */}
-      <div style={faceStyle} className="grid place-items-center border border-ink/10">
-        <LogoLockup compact={false} />
+      <div data-card-face="front" style={faceStyle} className="relative grid place-items-center border border-ink/10">
+        <Backdrop />
+        <div className="relative z-10">
+          <LogoLockup compact={false} />
+        </div>
       </div>
 
       {/* Back — logo top-left, divider, name/title/contact on the right */}
-      <div style={faceStyle} className="relative flex items-center gap-5 border border-ink/10 px-7 py-6">
-        <div className="absolute left-7 top-13">
+      <div data-card-face="back" style={faceStyle} className="relative flex items-center gap-5 border border-ink/10 px-7 py-6">
+        <Backdrop />
+        <div className="absolute left-7 top-13 z-10">
           <LogoLockup compact />
         </div>
-        <div className="h-full w-px shrink-0" style={{ background: monoAccent, marginLeft: "34%" }} />
-        <div className="min-w-0 flex-1 space-y-3">
+        <div className="relative z-10 h-full w-px shrink-0" style={{ background: cardDivider, marginLeft: "34%" }} />
+        <div className="relative z-10 min-w-0 flex-1 space-y-3">
           <div>
-            <p className="truncate text-lg font-black" style={{ color: cardFg }}>
+            <p className="truncate text-2xl font-black" style={{ color: cardFg }}>
               {fullName}
             </p>
             {p.tagline && (
-              <p className="truncate text-sm" style={{ color: cardSubtle }}>
+              <p className="truncate text-xs" style={{ color: cardSubtle }}>
                 {p.tagline}
               </p>
             )}
           </div>
           {(c.phone || c.email) && (
-            <div className="space-y-0.5 text-[13px] font-semibold" style={{ color: cardFg }}>
+            <div className="space-y-0.5 text-[14px] font-semibold" style={{ color: cardFg }}>
               {c.phone && <p className="truncate">{c.phone}</p>}
               {c.email && <p className="truncate">{c.email}</p>}
             </div>
           )}
           {(c.address || c.city || c.country) && (
-            <p className="text-[13px] leading-snug" style={{ color: cardFg }}>
+            <p className="truncate text-[14px] leading-snug" style={{ color: cardFg }}>
               {c.address || [c.city, c.country].filter(Boolean).join(", ")}
             </p>
           )}
           {c.website && (
-            <p className="truncate text-[13px] font-black" style={{ color: cardFg }}>
+            <p className="truncate text-[14px] font-black" style={{ color: cardFg }}>
               {c.website}
             </p>
           )}

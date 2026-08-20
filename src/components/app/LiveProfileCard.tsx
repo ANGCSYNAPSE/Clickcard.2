@@ -310,21 +310,25 @@ export default function LiveProfileCard({
         />
       )}
 
-      {/* Header with icons */}
+      {/* Header with icons — filled with the theme's own button colours
+          (not a fixed white-on-textColor guess) so they read as real
+          buttons and stay legible against any wallpaper, and the share
+          icon actually gets a matching circle instead of floating with no
+          background at all. */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3">
         {interactive ? (
           <a
             href="/"
             aria-label="ClickCard home"
-            className={`grid h-8 w-8 place-items-center rounded-full text-white ${heroMode ? "backdrop-blur-sm" : ""}`}
-            style={{ background: heroMode ? "#ffffff33" : textColor }}
+            className={`grid h-8 w-8 place-items-center rounded-full ${heroMode ? "text-white backdrop-blur-sm" : ""}`}
+            style={heroMode ? { background: "#ffffff33" } : { background: buttonColor, color: buttonTextColor || pageColor }}
           >
             <h3 className="text-sm ">CC</h3>
           </a>
         ) : (
           <div
-            className={`grid h-8 w-8 place-items-center rounded-full text-white ${heroMode ? "backdrop-blur-sm" : ""}`}
-            style={{ background: heroMode ? "#ffffff33" : textColor }}
+            className={`grid h-8 w-8 place-items-center rounded-full ${heroMode ? "text-white backdrop-blur-sm" : ""}`}
+            style={heroMode ? { background: "#ffffff33" } : { background: buttonColor, color: buttonTextColor || pageColor }}
           >
             <h3 className="text-sm ">CC</h3>
           </div>
@@ -334,15 +338,15 @@ export default function LiveProfileCard({
             type="button"
             onClick={onShare}
             aria-label="Share"
-            className={`grid h-8 w-8 place-items-center rounded-full text-white ${heroMode ? "backdrop-blur-sm" : ""}`}
-            style={{ background: heroMode ? "#ffffff33" : undefined }}
+            className={`grid h-8 w-8 place-items-center rounded-full ${heroMode ? "text-white backdrop-blur-sm" : ""}`}
+            style={heroMode ? { background: "#ffffff33" } : { background: buttonColor, color: buttonTextColor || pageColor }}
           >
             <Share className="w-5 h-5" />
           </button>
         ) : (
           <div
-            className={`grid h-8 w-8 place-items-center rounded-full text-white ${heroMode ? "backdrop-blur-sm" : ""}`}
-            style={{ background: heroMode ? "#ffffff33" : undefined }}
+            className={`grid h-8 w-8 place-items-center rounded-full ${heroMode ? "text-white backdrop-blur-sm" : ""}`}
+            style={heroMode ? { background: "#ffffff33" } : { background: buttonColor, color: buttonTextColor || pageColor }}
           >
             <Share className="w-5 h-5" />
           </div>

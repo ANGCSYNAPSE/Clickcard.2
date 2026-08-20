@@ -79,7 +79,7 @@ export default function CvPage() {
   const [accent, setAccent] = useState<string>(draft.digitalCard?.accentColor || PALETTES[0].accent);
   const [theme, setTheme] = useState<"light" | "dark">((draft.digitalCard?.theme as "light" | "dark") || "light");
   const [fontFamily, setFontFamily] = useState<string>(draft.digitalCard?.fontFamily || "Inter");
-  const [textColor, setTextColor] = useState<string>(draft.digitalCard?.textColor || "");
+  const [textColor, setTextColor] = useState<string>(draft.digitalCard?.cvTextColor || "");
   const [skills, setSkills] = useState<string[]>(draft.digitalCard?.skills || []);
   const [projects, setProjects] = useState<ProjectItem[]>(draft.digitalCard?.projects || []);
   const [awards, setAwards] = useState<AwardItem[]>(draft.digitalCard?.awards || []);
@@ -101,12 +101,15 @@ export default function CvPage() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (draft.digitalCard?.cvTemplateId) setTemplateId(draft.digitalCard.cvTemplateId);
+    // `!== undefined`, not truthy — an explicitly saved "" (user unselected
+    // the template) must stick after a refresh instead of falling back to
+    // the first template, which a plain truthy check would do.
+    if (draft.digitalCard?.cvTemplateId !== undefined) setTemplateId(draft.digitalCard.cvTemplateId);
     if (draft.digitalCard?.primaryColor) setPrimary(draft.digitalCard.primaryColor);
     if (draft.digitalCard?.accentColor) setAccent(draft.digitalCard.accentColor);
     if (draft.digitalCard?.theme) setTheme(draft.digitalCard.theme as "light" | "dark");
     if (draft.digitalCard?.fontFamily) setFontFamily(draft.digitalCard.fontFamily);
-    if (draft.digitalCard?.textColor) setTextColor(draft.digitalCard.textColor);
+    if (draft.digitalCard?.cvTextColor) setTextColor(draft.digitalCard.cvTextColor);
     if (draft.digitalCard?.skills) setSkills(draft.digitalCard.skills);
     if (draft.digitalCard?.projects) setProjects(draft.digitalCard.projects);
     if (draft.digitalCard?.awards) setAwards(draft.digitalCard.awards);
@@ -221,7 +224,7 @@ export default function CvPage() {
         accentColor: accent,
         theme,
         fontFamily,
-        textColor,
+        cvTextColor: textColor,
         skills,
         projects,
         awards,

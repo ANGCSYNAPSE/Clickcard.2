@@ -1,9 +1,11 @@
 /**
- * Client-side "render the DOM to a PDF" helpers for CV and Portfolio
- * downloads — there's no backend PDF route for either (unlike the Digital
- * Card, which renders server-side via profileService.downloadCardPdf), so
- * these capture the already-rendered preview with html2canvas and assemble
- * a real downloadable PDF file with jsPDF, entirely in the browser.
+ * Client-side "render the DOM to a PDF" helpers for CV, Portfolio, and
+ * Digital Card downloads. The Card's server-side route
+ * (profileService.downloadCardPdf) depends on a Chromium binary the Vercel
+ * deployment doesn't provision (puppeteer-core has nothing to launch there,
+ * so it 503s) — these capture the already-rendered preview with
+ * html2canvas and assemble a real downloadable PDF file with jsPDF,
+ * entirely in the browser, no backend rendering required.
  */
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -48,6 +50,42 @@ export async function exportPagesToPdf(pages: HTMLElement[], filename: string) {
   }
 
   pdf.save(filename);
+}
+
+/**
+ * One PDF page per card face (front, back — each its own element, e.g.
+ * CardPreview's `[data-card-face]` divs), every page sized to that face's
+ * own aspect ratio instead of an A4 sheet or one shared page. Capturing
+ * both faces together onto a single tall page (stacked, as they appear on
+ * screen) made the PDF page itself absurdly tall — a PDF viewer showing
+ * "fit width" then only displayed the top portion, making the front face
+ * look blown up and cutting the back face off entirely. Separate
+ * correctly-proportioned pages match what's on screen exactly.
+ */
+export async function exportCardFacesToPdf(faces: HTMLElement[], filename: string) {
+  if (faces.length === 0) throw new Error("Nothing to export");
+  const widthMm = 90;
+  let pdf: jsPDF | null = null;
+
+  for (let i = 0; i < faces.length; i++) {
+    const canvas = await captureCanvas(faces[i]);
+    const heightMm = (canvas.height * widthMm) / canvas.width;
+    // jsPDF defaults to portrait orientation — for a landscape card (wider
+    // than tall) that leaves the actual page shape wrong even though the
+    // format array itself says [width, height], and the image then only
+    // fills a small portion of a much taller-than-expected page (the huge
+    // blank gap under a cropped-looking face in the downloaded PDF). Has
+    // to be told explicitly which way this particular face goes.
+    const orientation = widthMm > heightMm ? "landscape" : "portrait";
+    if (!pdf) {
+      pdf = new jsPDF({ unit: "mm", format: [widthMm, heightMm], orientation });
+    } else {
+      pdf.addPage([widthMm, heightMm], orientation);
+    }
+    pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, widthMm, heightMm);
+  }
+
+  pdf!.save(filename);
 }
 
 /**

@@ -72,7 +72,7 @@ export default function PortfolioPage() {
   const [accent, setAccent] = useState<string>(draft.digitalCard?.accentColor || PALETTES[0].accent);
   const [theme, setTheme] = useState<"light" | "dark">((draft.digitalCard?.theme as "light" | "dark") || "light");
   const [fontFamily, setFontFamily] = useState<string>(draft.digitalCard?.fontFamily || "Inter");
-  const [textColor, setTextColor] = useState<string>(draft.digitalCard?.textColor || "");
+  const [textColor, setTextColor] = useState<string>(draft.digitalCard?.portfolioTextColor || "");
   const [skills, setSkills] = useState<string[]>(draft.digitalCard?.skills || []);
   const [projects, setProjects] = useState<ProjectItem[]>(draft.digitalCard?.projects || []);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(draft.digitalCard?.socialLinks || []);
@@ -95,7 +95,7 @@ export default function PortfolioPage() {
     if (draft.digitalCard?.accentColor) setAccent(draft.digitalCard.accentColor);
     if (draft.digitalCard?.theme) setTheme(draft.digitalCard.theme as "light" | "dark");
     if (draft.digitalCard?.fontFamily) setFontFamily(draft.digitalCard.fontFamily);
-    if (draft.digitalCard?.textColor) setTextColor(draft.digitalCard.textColor);
+    if (draft.digitalCard?.portfolioTextColor) setTextColor(draft.digitalCard.portfolioTextColor);
     if (draft.digitalCard?.skills) setSkills(draft.digitalCard.skills);
     if (draft.digitalCard?.projects) setProjects(draft.digitalCard.projects);
     if (draft.digitalCard?.socialLinks) setSocialLinks(draft.digitalCard.socialLinks);
@@ -192,7 +192,7 @@ export default function PortfolioPage() {
         accentColor: accent,
         theme,
         fontFamily,
-        textColor,
+        portfolioTextColor: textColor,
         skills,
         projects,
         socialLinks,

@@ -50,29 +50,33 @@ export interface DesignState {
   dirty: boolean;
 }
 
+// Mirrors STYLE_PRESETS' "classic" entry (@/lib/stylePresets) exactly — a
+// brand-new user who never opens Studio should see the actual Classic look,
+// not a different, unnamed dark theme that happened to also set
+// headerLayout: "classic".
 export const DEFAULT_DESIGN: DesignState = {
   primary: "#BE5103",
   accent: "#069494",
   theme: "light",
   wallpaperType: "fill",
   backgroundImageUrl: "",
-  backgroundColor: "#301414",
-  gradientColor: "#301414",
+  backgroundColor: "#FFFFFF",
+  gradientColor: "#BE5103",
   gradientColorEnd: "#069494",
   gradientDirection: "up",
-  noise: true,
+  noise: false,
   patternIndex: 0,
-  buttonColor: "#FFFFFF",
-  buttonTextColor: "#FFEED5",
+  buttonColor: "#111111",
+  buttonTextColor: "#FFFFFF",
   buttonStyle: "solid",
   buttonRoundness: "slight",
   buttonShadow: "none",
   socialLinksStyle: "buttons",
   pageFont: "Inter",
-  pageTextColor: "#FFEED5",
+  pageTextColor: "#111111",
   matchTitleFont: true,
   titleFont: "Inter",
-  titleColor: "#FFEED5",
+  titleColor: "#111111",
   headerLayout: "classic",
   titleStyle: "text",
   titleFontSize: 20,

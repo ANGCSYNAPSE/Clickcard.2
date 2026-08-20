@@ -13,32 +13,7 @@ export interface StylePreset {
  * entire card at once, instead of tuning every panel by hand.
  */
 export const STYLE_PRESETS: StylePreset[] = [
-  {
-    key: "classic",
-    label: "Classic",
-    values: {
-      primary: "#BE5103",
-      accent: "#069494",
-      theme: "light",
-      wallpaperType: "fill",
-      backgroundColor: "#FFFFFF",
-      headerLayout: "classic",
-      buttonColor: "#111111",
-      buttonTextColor: "#FFFFFF",
-      buttonStyle: "solid",
-      buttonRoundness: "slight",
-      buttonShadow: "none",
-      socialLinksStyle: "buttons",
-      pageFont: "Inter",
-      pageTextColor: "#111111",
-      matchTitleFont: true,
-      titleFont: "Inter",
-      titleColor: "#111111",
-      titleFontSize: 20,
-      bioFontSize: 12,
-      bodyFontSize: 12,
-    },
-  },
+  
   {
     key: "aura",
     label: "Aura",
@@ -132,7 +107,7 @@ export const STYLE_PRESETS: StylePreset[] = [
       theme: "dark",
       wallpaperType: "image",
       backgroundImageUrl: "https://picsum.photos/seed/clickcard-botanica/720/1280",
-      headerLayout: "banner",
+      headerLayout: "classic",
       buttonColor: "#FFFFFF",
       buttonTextColor: "#234026",
       buttonStyle: "solid",
