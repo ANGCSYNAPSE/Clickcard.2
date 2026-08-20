@@ -1,4 +1,4 @@
-import { CSSProperties, useId } from "react";
+import { CSSProperties, useEffect, useId, useRef, useState } from "react";
 import { Phone, Mail, Globe, MessageCircle, MapPin, Building2 } from "lucide-react";
 import type { FullProfile } from "@/types";
 import { SITE_URL } from "@/lib/config";
@@ -88,8 +88,8 @@ function Row({ t, icon: I, label }: { t: Tokens; icon: Icon; label: string }) {
       className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold"
       style={{ background: t.surface, color: t.fg }}
     >
-      <I size={13} style={{ color: t.accent }} />
-      <span className="truncate">{label}</span>
+      <I size={13} style={{ color: t.accent }} className="shrink-0" />
+      <span className="min-w-0 break-words">{label}</span>
     </div>
   );
 }
@@ -137,22 +137,40 @@ function ElementsFace({
   designWidth: number;
   fallbackBg: string;
 }) {
-  // Container query units, not a one-off px scale computed from a fixed
-  // reference width: `cqw` re-derives from this element's *actual* rendered
-  // width on every layout, so text stays correctly proportioned (and never
-  // overlaps) whether this face renders full-size or squeezed side-by-side
-  // with its other face.
-  const pxToCqw = (px: number) => `${(px / designWidth) * 100}cqw`;
+  // Re-derived from this element's *actual* rendered width on every
+  // layout (via ResizeObserver), so text stays correctly proportioned
+  // whether this face renders full-size or squeezed side-by-side with its
+  // other face — same goal container query units (cqw) served before, but
+  // as plain computed px. html2canvas manually reimplements CSS layout in
+  // JS and doesn't understand container query units, so it was silently
+  // miscomputing font-size/letter-spacing during PDF export capture,
+  // producing doubled/overlapping glyphs. Plain px renders identically
+  // on-screen and in html2canvas's capture.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(designWidth);
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
+    const ro = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setContainerWidth(width);
+    });
+    ro.observe(node);
+    return () => ro.disconnect();
+  }, []);
+
+  const pxToActual = (px: number) => `${(px / designWidth) * containerWidth}px`;
 
   return (
     <div
+      ref={containerRef}
       className="relative h-full w-full overflow-hidden"
       style={{
         background: fallbackBg,
         backgroundImage: face.background?.image ? `url(${face.background.image})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
-        containerType: "inline-size",
       }}
     >
       {face.elements.map((el: CardElement) => {
@@ -206,15 +224,31 @@ function ElementsFace({
         return (
           <div
             key={el.id}
-            className="truncate leading-tight"
+            // Deliberately not `truncate` (its ellipsis triggers an
+            // html2canvas glyph-rendering bug during PDF export — ghosted,
+            // overlapping characters) and not `break-words` either — these
+            // fields are independently positioned by fixed y% with no
+            // spare vertical room for a neighbour, so a wrapped second
+            // line just overlaps the field below it instead. `nowrap`
+            // without `overflow-hidden` is the one option that's both
+            // safe to export and safe to stack tightly: with
+            // overflow-hidden, an explicit `lineHeight` was still getting
+            // computed differently by html2canvas than by the real
+            // browser, which pushed each glyph's top edge above its own
+            // box and clipped it off — every line of every card's back
+            // face lost roughly the top half of its text. An explicit
+            // `lineHeight` (not left to the `leading-tight` class) plus
+            // no self-clipping fixes it whichever way html2canvas rounds.
+            className="whitespace-nowrap"
             style={{
               ...base,
               fontFamily: el.style.fontFamily,
-              fontSize: el.style.fontSize ? pxToCqw(el.style.fontSize) : undefined,
+              fontSize: el.style.fontSize ? pxToActual(el.style.fontSize) : undefined,
+              lineHeight: el.style.fontSize ? pxToActual(el.style.fontSize * 1.2) : undefined,
               fontWeight: el.style.fontWeight,
               color: el.style.color,
               textAlign: el.style.textAlign,
-              letterSpacing: el.style.letterSpacing ? pxToCqw(el.style.letterSpacing) : undefined,
+              letterSpacing: el.style.letterSpacing ? pxToActual(el.style.letterSpacing) : undefined,
               textTransform: el.style.textTransform === "uppercase" ? "uppercase" : undefined,
             }}
           >
@@ -587,36 +621,36 @@ export default function CardPreview({
       </div>
 
       {/* Back — logo top-left, divider, name/title/contact on the right */}
-      <div data-card-face="back" style={faceStyle} className="relative flex items-center gap-5 border border-ink/10 px-7 py-6">
+      <div data-card-face="back" style={faceStyle} className="relative flex items-start gap-5 border border-ink/10 px-7 py-6">
         <Backdrop />
-        <div className="absolute left-7 top-13 z-10">
+        <div className="absolute left-7 z-10" style={{ top: 80 }}>
           <LogoLockup compact />
         </div>
         <div className="relative z-10 h-full w-px shrink-0" style={{ background: cardDivider, marginLeft: "34%" }} />
         <div className="relative z-10 min-w-0 flex-1 space-y-3">
           <div>
-            <p className="truncate text-2xl font-black" style={{ color: cardFg }}>
+            <p className="break-words text-2xl font-black" style={{ color: cardFg }}>
               {fullName}
             </p>
             {p.tagline && (
-              <p className="truncate text-xs" style={{ color: cardSubtle }}>
+              <p className="break-words text-xs" style={{ color: cardSubtle }}>
                 {p.tagline}
               </p>
             )}
           </div>
           {(c.phone || c.email) && (
             <div className="space-y-0.5 text-[14px] font-semibold" style={{ color: cardFg }}>
-              {c.phone && <p className="truncate">{c.phone}</p>}
-              {c.email && <p className="truncate">{c.email}</p>}
+              {c.phone && <p className="break-words">{c.phone}</p>}
+              {c.email && <p className="break-words">{c.email}</p>}
             </div>
           )}
           {(c.address || c.city || c.country) && (
-            <p className="truncate text-[14px] leading-snug" style={{ color: cardFg }}>
+            <p className="break-words text-[14px] leading-snug" style={{ color: cardFg }}>
               {c.address || [c.city, c.country].filter(Boolean).join(", ")}
             </p>
           )}
           {c.website && (
-            <p className="truncate text-[14px] font-black" style={{ color: cardFg }}>
+            <p className="break-words text-[14px] font-black" style={{ color: cardFg }}>
               {c.website}
             </p>
           )}

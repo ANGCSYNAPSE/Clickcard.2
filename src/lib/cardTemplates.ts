@@ -253,7 +253,7 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
 
         position: {
           x: 50,
-          y: 64.8,
+          y: 62.8,
         },
 
         size: {
@@ -310,7 +310,7 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
 
         position: {
           x: 50,
-          y: 74.5,
+          y: 75,
         },
 
         size: {
@@ -596,8 +596,8 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
       {
         id: "addressIcon",
         type: "icon",
-        position: { x: 8.8, y: 32.5 },
-        size: { width: 5, height: 5 },
+        position: { x: 4.8, y: 30.5 },
+        size: { width: 6, height: 6 },
         style: { iconName: "location", iconSize: 34, iconColor: "#FFFFFF" },
       },
       {
@@ -606,15 +606,15 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
         field: "address",
         label: "Address",
         required: false,
-        position: { x: 13, y: 32.5 },
+        position: { x: 8, y: 30.5 },
         size: { width: 34, height: 4 },
         style: { fontFamily: "Inter", fontSize: 32, fontWeight: 700, color: "#FFFFFF", textAlign: "left" },
       },
       {
         id: "phoneIcon",
         type: "icon",
-        position: { x: 8.8, y: 42 },
-        size: { width: 5, height: 5 },
+        position: { x: 4.8, y: 42 },
+        size: { width: 6, height: 6 },
         style: { iconName: "phone", iconSize: 34, iconColor: "#FFFFFF" },
       },
       {
@@ -623,15 +623,15 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
         field: "phone",
         label: "Phone",
         required: false,
-        position: { x: 13, y: 42 },
+        position: { x: 8, y: 42 },
         size: { width: 34, height: 4 },
         style: { fontFamily: "Inter", fontSize: 32, fontWeight: 700, color: "#FFFFFF", textAlign: "left" },
       },
       {
         id: "emailIcon",
         type: "icon",
-        position: { x: 8.8, y: 52.5 },
-        size: { width: 5, height: 5 },
+        position: { x: 4.8, y: 53.5 },
+        size: { width: 6, height: 6 },
         style: { iconName: "mail", iconSize: 34, iconColor: "#FFFFFF" },
       },
       {
@@ -640,15 +640,15 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
         field: "email",
         label: "Email",
         required: false,
-        position: { x: 13, y: 52.5 },
-        size: { width: 38, height: 4 },
+        position: { x: 8, y: 52.5 },
+        size: { width: 43, height: 4 },
         style: { fontFamily: "Inter", fontSize: 32, fontWeight: 700, color: "#FFFFFF", textAlign: "left" },
       },
       {
         id: "websiteIcon",
         type: "icon",
-        position: { x: 8.8, y: 62 },
-        size: { width: 5, height: 5 },
+        position: { x: 4.8, y: 63.5 },
+        size: { width: 6, height: 6 },
         style: { iconName: "globe", iconSize: 34, iconColor: "#FFFFFF" },
       },
       {
@@ -657,7 +657,7 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
         field: "website",
         label: "Website",
         required: false,
-        position: { x: 13, y: 62 },
+        position: { x: 8, y: 63 },
         size: { width: 34, height: 4 },
         style: { fontFamily: "Inter", fontSize: 32, fontWeight: 700, color: "#FFFFFF", textAlign: "left" },
       },

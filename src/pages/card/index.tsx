@@ -7,7 +7,7 @@ import {
   CaseSensitive,
   Save,
   Check,
-  Sparkles,
+  LayoutTemplate,
   CreditCard,
   Smartphone,
   Eye,
@@ -387,7 +387,7 @@ export default function CardPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                      <Sparkles size={16} />
+                      <LayoutTemplate size={16} />
                     </span>
                     <p className="text-sm font-bold text-ink dark:text-white">Template</p>
                   </div>

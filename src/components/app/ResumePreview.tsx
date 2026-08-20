@@ -126,18 +126,26 @@ function HeaderBlock({
             style={{ background: contactBarColor, color: contactBarTextColor }}
           >
             {contactItems.map((item, i) => (
-              <span key={i} className="flex items-center gap-1.5 leading-none">
-                <item.icon size={12} className="shrink-0" />
-                <span className="leading-none">{item.label}</span>
+              // Alignment is fully inline (not left to Tailwind classes
+              // alone) — html2canvas has known trouble replicating
+              // flexbox cross-axis centering for an inline SVG icon next
+              // to text, which showed up as the icon floating noticeably
+              // off the text baseline only in the exported PDF, not
+              // on-screen. An explicit fixed row height with both
+              // children pinned to `alignItems: center` leaves nothing
+              // for html2canvas to recompute differently.
+              <span key={i} style={{ display: "flex", alignItems: "center", gap: 6, height: 12, lineHeight: "12px" }}>
+                <item.icon size={12} style={{ flexShrink: 0, display: "block" }} />
+                <span style={{ display: "block", lineHeight: "12px" }}>{item.label}</span>
               </span>
             ))}
           </div>
         ) : (
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px]" style={{ color: subtleColor }}>
             {contactItems.map((item, i) => (
-              <span key={i} className="flex items-center gap-1 leading-none">
-                <item.icon size={11} className="shrink-0" />
-                <span className="leading-none">{item.label}</span>
+              <span key={i} style={{ display: "flex", alignItems: "center", gap: 4, height: 11, lineHeight: "11px" }}>
+                <item.icon size={11} style={{ flexShrink: 0, display: "block" }} />
+                <span style={{ display: "block", lineHeight: "11px" }}>{item.label}</span>
               </span>
             ))}
           </div>
