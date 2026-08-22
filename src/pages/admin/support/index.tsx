@@ -163,13 +163,13 @@ export default function SupportPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "new":
-        return <AlertCircle size={16} />;
+        return <AlertCircle size={16} className="text-red-600 dark:text-red-400" />;
       case "in-progress":
-        return <Clock size={16} />;
+        return <Clock size={16} className="text-yellow-600 dark:text-yellow-400" />;
       case "resolved":
-        return <CheckCircle size={16} />;
+        return <CheckCircle size={16} className="text-green-600 dark:text-green-400" />;
       default:
-        return <Archive size={16} />;
+        return <Archive size={16} className="text-gray-600 dark:text-gray-400" />;
     }
   };
 
@@ -243,7 +243,7 @@ export default function SupportPage() {
                   placeholder="Search tickets..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-line/50 dark:border-line/10 rounded-lg bg-paper-soft dark:bg-dark text-ink dark:text-white placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full pl-10 pr-4 py-2 border border-line/50 dark:border-line/10 rounded-lg bg-paper-soft dark:bg-dark text-ink dark:text-white placeholder-muted dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
 
@@ -409,7 +409,7 @@ export default function SupportPage() {
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder="Type your response here..."
-                    className="flex-1 px-4 py-2 border border-line/50 dark:border-line/10 rounded-lg bg-paper-soft dark:bg-dark text-ink dark:text-white placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                    className="flex-1 px-4 py-2 border border-line/50 dark:border-line/10 rounded-lg bg-paper-soft dark:bg-dark text-ink dark:text-white placeholder-muted dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                     rows={3}
                   />
                   <button

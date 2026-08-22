@@ -15,6 +15,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useRouter } from "next/router";
+import AdminThemeToggle from "./AdminThemeToggle";
 
 interface AdminShellProps {
   children: ReactNode;
@@ -24,6 +25,7 @@ export default function AdminShell({ children }: AdminShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [adminEmail, setAdminEmail] = useState("Admin User");
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [notifications, setNotifications] = useState([
     {
       id: "1",
@@ -70,7 +72,29 @@ export default function AdminShell({ children }: AdminShellProps) {
     if (email) {
       setAdminEmail(email);
     }
+
+    // Get theme preference from localStorage
+    const savedTheme = localStorage.getItem("adminTheme") as "light" | "dark" | null;
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    const initialTheme = savedTheme || systemTheme;
+    setTheme(initialTheme);
+    applyTheme(initialTheme);
   }, []);
+
+  const applyTheme = (selectedTheme: "light" | "dark") => {
+    if (selectedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem("adminTheme", selectedTheme);
+  };
+
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    applyTheme(newTheme);
+  };
 
   const isActive = (path: string) => router.pathname === path;
 
@@ -189,11 +213,14 @@ export default function AdminShell({ children }: AdminShellProps) {
               <input
                 type="text"
                 placeholder="Search users, cards, transactions..."
-                className="w-full max-w-md px-4 py-2 bg-paper-soft dark:bg-dark border border-line dark:border-line/20 rounded-lg text-ink dark:text-white placeholder-muted dark:placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="w-full max-w-md px-4 py-2 bg-paper-soft dark:bg-dark border border-line dark:border-line/20 rounded-lg text-ink dark:text-white placeholder-muted dark:placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              {/* Theme Toggle */}
+              <AdminThemeToggle theme={theme} onToggle={toggleTheme} />
+
               <div className="relative">
                 <button
                   onClick={() => setNotificationOpen(!notificationOpen)}
@@ -254,10 +281,10 @@ export default function AdminShell({ children }: AdminShellProps) {
                                     <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></span>
                                   )}
                                 </div>
-                                <p className="text-xs text-muted dark:text-white/60 mt-1">
+                                <p className="text-xs text-muted dark:text-white/50 mt-1">
                                   {notif.message}
                                 </p>
-                                <p className="text-xs text-muted dark:text-white/50 mt-2">
+                                <p className="text-xs text-muted dark:text-white/40 mt-2">
                                   {notif.timestamp}
                                 </p>
                               </div>
@@ -285,7 +312,7 @@ export default function AdminShell({ children }: AdminShellProps) {
               <div className="flex items-center gap-3 pl-4 border-l border-line dark:border-line/20">
                 <div className="text-right">
                   <p className="text-sm font-medium text-ink dark:text-white">{adminEmail}</p>
-                  <p className="text-xs text-muted dark:text-white/50">Super Admin</p>
+                  <p className="text-xs text-muted dark:text-white/40">Super Admin</p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
                   {adminEmail.charAt(0).toUpperCase()}
