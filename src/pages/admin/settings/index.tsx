@@ -103,7 +103,7 @@ export default function SettingsPage() {
   const toggleFeature = (key: string) => {
     setSettings((prev) => ({
       ...prev,
-      [key]: !prev[key],
+      [key]: !(prev as any)[key],
     }));
   };
 

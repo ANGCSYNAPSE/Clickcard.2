@@ -16,6 +16,7 @@ export const enableDevAdmin = () => {
     refreshToken: "dev_refresh_token_" + Date.now(),
     email: "admin@clickcard.com",
     username: "admin",
+    userId: 1,
   };
 
   tokenService.setTokens(devTokens.accessToken, devTokens.refreshToken);
@@ -25,6 +26,7 @@ export const enableDevAdmin = () => {
       refreshToken: devTokens.refreshToken,
       email: devTokens.email,
       username: devTokens.username,
+      userId: devTokens.userId,
     })
   );
 

@@ -163,7 +163,7 @@ export default function UsersTable({
 
                 <td className="px-6 py-4">
                   <p className="text-sm text-ink dark:text-white">
-                    {user.createdAt || "N/A"}
+                    {user.signupDate || "N/A"}
                   </p>
                 </td>
 

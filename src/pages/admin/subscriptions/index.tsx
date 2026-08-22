@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Head from "next/head";
 import AdminShell from "@/components/admin/AdminShell";
 import { useRequireAdminAuth } from "@/lib/authGuards";
+import { adminService } from "@/services/adminService";
 import {
   Edit2,
   Trash2,
@@ -44,75 +45,65 @@ export default function SubscriptionsPage() {
     "plans"
   );
   const [showCreatePlan, setShowCreatePlan] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [plans, setPlans] = useState<Plan[]>([
-    {
-      id: "1",
-      name: "Free",
-      price: 0,
-      priceNote: "Forever free",
-      blurb: "Get started with your own personal ClickCard",
-      features: 5,
-      activeUsers: 15420,
-      monthlyRevenue: 0,
-      status: "active",
-    },
-    {
-      id: "2",
-      name: "Pro",
-      price: 99,
-      priceNote: "₹99/month",
-      blurb: "For professionals & creators looking to grow",
-      features: 10,
-      activeUsers: 3240,
-      monthlyRevenue: 320760,
-      status: "active",
-    },
-    {
-      id: "3",
-      name: "Business",
-      price: 499,
-      priceNote: "₹499/month",
-      blurb: "For teams & storefronts that sell",
-      features: 15,
-      activeUsers: 642,
-      monthlyRevenue: 320358,
-      status: "active",
-    },
-  ]);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
 
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([
-    {
-      id: "1",
-      userName: "Gitesh Kumar",
-      email: "giteshkumar633@gmail.com",
-      plan: "Pro",
-      status: "active",
-      startDate: "Aug 15, 2026",
-      endDate: "Sep 15, 2026",
-      amount: 99,
-    },
-    {
-      id: "2",
-      userName: "Aarav Mehta",
-      email: "aarav.mehta@example.com",
-      plan: "Business",
-      status: "active",
-      startDate: "Aug 10, 2026",
-      endDate: "Sep 10, 2026",
-      amount: 499,
-    },
-    {
-      id: "3",
-      userName: "Priya Singh",
-      email: "priya.singh@example.com",
-      plan: "Pro",
-      status: "expired",
-      startDate: "Jul 15, 2026",
-      endDate: "Aug 15, 2026",
-      amount: 99,
-    },
-  ]);
+  useEffect(() => {
+    const fetchSubscriptionData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch subscription plans
+        const plansData = await adminService.getSubscriptionPlans();
+        if (Array.isArray(plansData)) {
+          const formattedPlans = plansData.map((plan: any) => ({
+            id: plan.id || plan._id,
+            name: plan.name || "—",
+            price: plan.price || 0,
+            priceNote: plan.priceNote || `₹${plan.price || 0}/month`,
+            blurb: plan.description || plan.blurb || "—",
+            features: plan.features || 0,
+            activeUsers: plan.activeUsers || 0,
+            monthlyRevenue: plan.monthlyRevenue || 0,
+            status: plan.status || "active",
+          }));
+          setPlans(formattedPlans);
+        }
+
+        // Fetch user subscriptions
+        const subscriptionsData = await adminService.getUserSubscriptions(1, 100);
+        if (subscriptionsData && subscriptionsData.data) {
+          const formattedSubs = subscriptionsData.data.map((sub: any) => ({
+            id: sub.id || sub._id,
+            userName: sub.userName || sub.user?.name || "—",
+            email: sub.email || sub.user?.email || "—",
+            plan: sub.plan || sub.planName || "—",
+            status: sub.status || "active",
+            startDate: sub.startDate
+              ? new Date(sub.startDate).toLocaleDateString()
+              : "—",
+            endDate: sub.endDate
+              ? new Date(sub.endDate).toLocaleDateString()
+              : "—",
+            amount: sub.amount || 0,
+          }));
+          setSubscriptions(formattedSubs);
+        }
+      } catch (err: any) {
+        console.error("Failed to fetch subscription data:", err);
+        setError("Failed to load subscription data");
+        // Continue with empty state
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSubscriptionData();
+  }, []);
 
   const totalRevenue = plans.reduce((sum, plan) => sum + plan.monthlyRevenue, 0);
   const totalSubscribers = plans.reduce(
@@ -154,17 +145,39 @@ export default function SubscriptionsPage() {
         </p>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-lg">
+          <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+        </div>
+      )}
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-dark-hover rounded-xl p-6 border border-line/50 dark:border-line/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-muted dark:text-white/60 mb-1">
-                Monthly Revenue
-              </p>
-              <p className="text-2xl font-bold text-ink dark:text-white">
-                ₹{totalRevenue.toLocaleString()}
-              </p>
+        {loading ? (
+          <>
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="bg-white dark:bg-dark-hover rounded-xl p-6 border border-line/50 dark:border-line/10 animate-pulse"
+              >
+                <div className="h-4 bg-paper-soft dark:bg-dark rounded w-24 mb-3"></div>
+                <div className="h-8 bg-paper-soft dark:bg-dark rounded w-32 mb-3"></div>
+                <div className="h-3 bg-paper-soft dark:bg-dark rounded w-40"></div>
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <div className="bg-white dark:bg-dark-hover rounded-xl p-6 border border-line/50 dark:border-line/10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted dark:text-white/60 mb-1">
+                    Monthly Revenue
+                  </p>
+                  <p className="text-2xl font-bold text-ink dark:text-white">
+                    ₹{totalRevenue.toLocaleString()}
+                  </p>
               <p className="text-xs text-green-600 dark:text-green-400 mt-2">
                 ↑ 12.5% from last month
               </p>
@@ -223,6 +236,8 @@ export default function SubscriptionsPage() {
             <CreditCard className="text-primary" size={32} />
           </div>
         </div>
+          </>
+        )}
       </div>
 
       {/* Tabs */}
@@ -290,8 +305,34 @@ export default function SubscriptionsPage() {
           )}
 
           {/* Plans Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {plans.map((plan) => (
+          {loading ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="bg-white dark:bg-dark-hover rounded-xl p-6 border border-line/50 dark:border-line/10 animate-pulse"
+                >
+                  <div className="h-6 bg-paper-soft dark:bg-dark rounded w-24 mb-4"></div>
+                  <div className="h-4 bg-paper-soft dark:bg-dark rounded w-40 mb-4"></div>
+                  <div className="h-8 bg-paper-soft dark:bg-dark rounded w-20 mb-6"></div>
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((j) => (
+                      <div
+                        key={j}
+                        className="h-4 bg-paper-soft dark:bg-dark rounded"
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : plans.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted dark:text-white/60">No subscription plans available</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {plans.map((plan) => (
               <div
                 key={plan.id}
                 className="bg-white dark:bg-dark-hover rounded-xl p-6 border border-line/50 dark:border-line/10"
@@ -376,7 +417,8 @@ export default function SubscriptionsPage() {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -411,7 +453,20 @@ export default function SubscriptionsPage() {
                 </tr>
               </thead>
               <tbody>
-                {subscriptions.map((sub) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 px-6 text-center">
+                      <p className="text-muted dark:text-white/60">Loading subscriptions...</p>
+                    </td>
+                  </tr>
+                ) : subscriptions.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-12 px-6 text-center">
+                      <p className="text-muted dark:text-white/60">No subscriptions found</p>
+                    </td>
+                  </tr>
+                ) : (
+                  subscriptions.map((sub) => (
                   <tr
                     key={sub.id}
                     className="border-b border-line/20 dark:border-line/10 hover:bg-paper-soft dark:hover:bg-dark transition-colors"
@@ -472,7 +527,8 @@ export default function SubscriptionsPage() {
                       ₹{sub.amount}
                     </td>
                   </tr>
-                ))}
+                ))
+                )}
               </tbody>
             </table>
           </div>

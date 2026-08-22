@@ -138,7 +138,7 @@ export default function UsersPage() {
       user.id,
       user.name,
       user.email,
-      user.createdAt || "N/A",
+      user.signupDate || "N/A",
       user.lastLogin || "N/A",
       user.status,
       user.moderationStatus,

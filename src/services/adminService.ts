@@ -172,6 +172,22 @@ export const adminService = {
     return data.data;
   },
 
+  // Subscriptions
+  getSubscriptionPlans: async (): Promise<any[]> => {
+    const { data } = await apiClient.get("/api/admin/subscriptions/plans");
+    return data.data || [];
+  },
+
+  getUserSubscriptions: async (
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{ data: any[]; total: number }> => {
+    const { data } = await apiClient.get("/api/admin/subscriptions/users", {
+      params: { page, limit },
+    });
+    return data.data || { data: [], total: 0 };
+  },
+
   // Settings
   getSettings: async (): Promise<AdminSettings> => {
     const { data } = await apiClient.get("/api/admin/settings");

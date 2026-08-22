@@ -38,6 +38,13 @@ interface Subscription {
 
 const COLORS = ["#3B82F6", "#8B5CF6", "#EC4899", "#F59E0B", "#10B981"];
 
+const PLAN_PRICING: Record<string, number> = {
+  Basic: 499,
+  Premium: 999,
+  Business: 2499,
+  Free: 0,
+};
+
 export default function RevenuePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -110,12 +117,7 @@ export default function RevenuePage() {
             userEmail: user.email,
             userImage: user.avatar,
             planName: user.subscriptionPlan || "Free",
-            amount: {
-              "Basic": 499,
-              "Premium": 999,
-              "Business": 2499,
-              "Free": 0,
-            }[user.subscriptionPlan] || 0,
+            amount: PLAN_PRICING[user.subscriptionPlan || "Free"] || 0,
             status: user.status === "active" ? "active" : "cancelled",
             billingCycle: "monthly" as const,
             currentPeriodEnd: user.subscriptionEndDate || new Date().toLocaleDateString("en-IN"),
@@ -382,7 +384,7 @@ export default function RevenuePage() {
               <Tooltip
                 contentStyle={{ backgroundColor: "#1F2937", border: "1px solid #374151", borderRadius: "8px" }}
                 labelStyle={{ color: "#F3F4F6" }}
-                formatter={(value) => `₹${value.toLocaleString("en-IN")}`}
+                formatter={(value: any) => value ? `₹${value.toLocaleString("en-IN")}` : "—"}
               />
               <Bar dataKey="revenue" fill="#8B5CF6" />
             </BarChart>
