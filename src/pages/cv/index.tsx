@@ -153,8 +153,8 @@ export default function CvPage() {
     try {
       // Upload to server
       const res = await profileService.uploadCVPhoto(f);
-      if (res.data?.photoUrl) {
-        updatePersonal({ cvProfilePhoto: res.data.photoUrl });
+      if (res.data?.data?.photoUrl) {
+        updatePersonal({ cvProfilePhoto: res.data.data.photoUrl });
         dispatch(pushToast(`Photo uploaded (${(f.size / 1024).toFixed(1)}KB)`, "success"));
       } else {
         dispatch(pushToast("Failed to upload photo", "error"));

@@ -21,7 +21,7 @@ export function toApiProfile(p: FullProfile): Record<string, unknown> {
     delete personal.profilePicture;
   }
 
-  const digitalCard = { ...(p.digitalCard || {}) };
+  const digitalCard = { ...(p.digitalCard || {}) } as any;
   if (digitalCard.cardPhoto && digitalCard.cardPhoto.startsWith("data:")) {
     delete digitalCard.cardPhoto;
   }
