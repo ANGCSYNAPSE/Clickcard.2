@@ -65,6 +65,7 @@ export default function AdminDashboard() {
 
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [topPlans, setTopPlans] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,14 +77,20 @@ export default function AdminDashboard() {
         const timeoutId = setTimeout(() => controller.abort(), 5000);
 
         try {
-          const [usersResponse, plansResponse] = await Promise.all([
+          const [usersResponse, plansResponse, notificationsResponse] = await Promise.all([
             adminService.getUsers(1, 1000),
-            adminService.getSubscriptionPlans()
+            adminService.getSubscriptionPlans(),
+            fetch('/api/notifications/admin/registrations', {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`
+              }
+            }).then(r => r.json()).catch(err => ({ success: false, data: { items: [] } }))
           ]);
           clearTimeout(timeoutId);
 
           const users = usersResponse.data || [];
           const plans = plansResponse || [];
+          const notifs = notificationsResponse.data?.items || [];
 
           // Calculate stats from actual data
           const totalUsers = usersResponse.total || users.length;
@@ -116,6 +123,9 @@ export default function AdminDashboard() {
                 timestamp: "Recently",
               }))
             );
+
+            // Set notifications
+            setNotifications(notifs.slice(0, 10));
           }
 
           // Process and display plans
@@ -542,6 +552,74 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* New User Registrations Notifications */}
+      <div className="bg-white dark:bg-dark-hover rounded-xl p-6 border border-line/50 dark:border-line/10 mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-500/20 rounded-lg">
+              <MessageSquare className="text-blue-600 dark:text-blue-400" size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-ink dark:text-white">
+                New User Registrations
+              </h3>
+              <p className="text-xs text-muted dark:text-white/60 mt-0.5">
+                Latest user signups from the platform
+              </p>
+            </div>
+          </div>
+          <a href="/admin/users" className="text-sm text-primary hover:underline">
+            View All
+          </a>
+        </div>
+
+        {notifications.length === 0 ? (
+          <div className="flex items-center justify-center py-8 text-center">
+            <p className="text-muted dark:text-white/60">No new registrations</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {notifications.map((notif) => {
+              const data = notif.data || {};
+              const timestamp = new Date(notif.created_at).toLocaleString();
+              return (
+                <div
+                  key={notif.id}
+                  className="flex gap-4 pb-3 border-b border-line/20 dark:border-line/10 last:border-0 last:pb-0 hover:bg-paper-soft dark:hover:bg-dark/50 p-2 rounded transition-colors"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center">
+                      <CheckCircle className="text-green-600 dark:text-green-400" size={20} />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-ink dark:text-white">
+                        {notif.title}
+                      </p>
+                      <span className={`text-xs px-2 py-1 rounded ${notif.is_read ? 'bg-gray-100 dark:bg-dark text-gray-600 dark:text-gray-400' : 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-semibold'}`}>
+                        {notif.is_read ? 'Read' : 'Unread'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted dark:text-white/60 mt-1">
+                      {notif.message}
+                    </p>
+                    {data.email && (
+                      <p className="text-xs text-ink dark:text-white mt-1">
+                        Email: <span className="font-mono text-xs">{data.email}</span>
+                      </p>
+                    )}
+                    <span className="text-xs text-muted dark:text-white/50 mt-2 block">
+                      {timestamp}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Top Plans by Revenue */}
