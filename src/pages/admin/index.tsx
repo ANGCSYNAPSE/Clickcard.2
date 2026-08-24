@@ -80,8 +80,16 @@ export default function AdminDashboard() {
         try {
           console.log("📍 Starting admin dashboard data fetch...");
           const [usersResponse, plansResponse, notificationsResponse] = await Promise.all([
-            adminService.getUsers(1, 1000),
-            adminService.getSubscriptionPlans(),
+            adminService.getUsers(1, 1000)
+              .catch((err) => {
+                console.error("❌ Failed to fetch users:", err.message);
+                return { data: [] };
+              }),
+            adminService.getSubscriptionPlans()
+              .catch((err) => {
+                console.error("❌ Failed to fetch plans:", err.message);
+                return [];
+              }),
             notificationService.adminRegistrations()
               .catch((err) => {
                 console.error("❌ Failed to fetch admin notifications:", err.message, err.response?.data);
