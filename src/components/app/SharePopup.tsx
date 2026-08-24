@@ -116,15 +116,15 @@ export default function SharePopup({
 
               {/* QR card */}
               {showQr && (
-                <div className="relative mt-4 w-full max-w-sm rounded-2xl border border-ink/10 p-5 text-center dark:border-white/10">
+                <div className="relative mt-4 w-full max-w-sm rounded-2xl border border-ink/10 p-5 text-center dark:border-white/10 lg:max-w-md lg:p-8">
                   <button
                     onClick={() => setShowQr(false)}
                     aria-label="Hide QR code"
-                    className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full text-ink/40 transition hover:bg-ink/5 dark:text-white/40 dark:hover:bg-white/10"
+                    className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full text-ink/40 transition hover:bg-ink/5 dark:text-white/40 dark:hover:bg-white/10 lg:right-4 lg:top-4"
                   >
                     <CloseIcon size={14} />
                   </button>
-                  <div className="mx-auto grid h-32 w-32 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5">
+                  <div className="mx-auto grid h-32 w-32 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5 lg:h-48 lg:w-48">
                     <QRCodeCanvas id="qr-share-popup" value={profileUrl} size={112} level="M" />
                   </div>
                   <p className="mt-3 text-sm font-bold text-ink dark:text-white">
