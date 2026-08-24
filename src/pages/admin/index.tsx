@@ -85,7 +85,7 @@ export default function AdminDashboard() {
             notificationService.adminRegistrations()
               .catch((err) => {
                 console.error("❌ Failed to fetch admin notifications:", err.message, err.response?.data);
-                return { data: { data: { items: [] } } };
+                return { data: { items: [] } } as any;
               })
           ]);
           clearTimeout(timeoutId);
