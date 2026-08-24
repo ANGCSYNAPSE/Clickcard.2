@@ -21,6 +21,8 @@ import {
   Loader2,
   LayoutTemplate,
   Check,
+  Image,
+  Camera,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import Button from "@/components/ui/Button";
@@ -38,6 +40,7 @@ import { loadGoogleFont } from "@/lib/fonts";
 import { SOCIAL_QUICK_ADD, getSocialIcon } from "@/lib/socialPlatforms";
 import { CV_TEMPLATES } from "@/lib/cvTemplates";
 import { exportPagesToPdf } from "@/lib/exportPdf";
+import { profileService } from "@/services/profileService";
 import type {
   PersonalSection,
   ContactSection,
@@ -95,6 +98,7 @@ export default function CvPage() {
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
+  const cvPhotoFileRef = useRef<HTMLInputElement>(null);
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(draft.digitalCard?.socialLinks || []);
 
@@ -136,6 +140,30 @@ export default function CvPage() {
 
   const updateContact = (patch: Partial<ContactSection>) =>
     dispatch(updateSection({ section: "contact", value: { ...draft.contact, ...patch } }));
+
+  const onPickCVPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) {
+      dispatch(pushToast("Photo must be an image file", "error"));
+      return;
+    }
+
+    try {
+      // Upload to server
+      const res = await profileService.uploadCVPhoto(f);
+      if (res.data?.photoUrl) {
+        updatePersonal({ cvProfilePhoto: res.data.photoUrl });
+        dispatch(pushToast(`Photo uploaded (${(f.size / 1024).toFixed(1)}KB)`, "success"));
+      } else {
+        dispatch(pushToast("Failed to upload photo", "error"));
+      }
+    } catch (err) {
+      console.error('CV photo upload error:', err);
+      dispatch(pushToast("Failed to upload photo", "error"));
+    }
+  };
 
   // CV social links are their own list — kept out of profile.social on purpose,
   // so editing them here doesn't touch the Share page, public profile, etc.
@@ -564,6 +592,54 @@ export default function CvPage() {
                     rows={3}
                     className="w-full resize-none rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
                   />
+                </div>
+
+                {/* CV Photo */}
+                <div className="space-y-2">
+                  <p className="text-xs font-black uppercase tracking-wider text-ink/60 dark:text-white/60">
+                    Photo
+                  </p>
+
+                  <div className="flex items-center gap-3 pb-1">
+                    <div className="relative shrink-0">
+                      <span className="grid h-20 w-20 place-items-center overflow-hidden rounded-full border border-ink/10 bg-white dark:border-white/10 dark:bg-white/[0.04]">
+                        {draft.personal?.cvProfilePhoto ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={draft.personal.cvProfilePhoto} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <Image size={20} className="text-ink/30 dark:text-white/30" />
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => cvPhotoFileRef.current?.click()}
+                        className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#12403c] dark:text-white"
+                        aria-label="Upload CV photo"
+                      >
+                        <Camera size={12} />
+                      </button>
+                      <input
+                        ref={cvPhotoFileRef}
+                        type="file"
+                        accept="image/*"
+                        hidden
+                        onChange={onPickCVPhoto}
+                      />
+                    </div>
+                    <div className="min-w-0 text-xs text-ink/55 dark:text-white/55">
+                      <p className="font-semibold text-ink dark:text-white">CV Photo</p>
+                      <p>Your photo for the CV. PNG, JPG, or any image format.</p>
+                      {draft.personal?.cvProfilePhoto && (
+                        <button
+                          type="button"
+                          onClick={() => updatePersonal({ cvProfilePhoto: "" })}
+                          className="mt-0.5 inline-flex items-center gap-1 font-semibold text-rose-500 hover:text-rose-600"
+                        >
+                          <X size={11} /> Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
