@@ -18,9 +18,11 @@ import { pushToast } from "@/store/slices/uiSlice";
 /** The "Share" popup — profile link + QR + quick share destinations. */
 export default function SharePopup({
   profileUrl,
+  shareType = "profile",
   onClose,
 }: {
   profileUrl: string;
+  shareType?: "profile" | "cv" | "card";
   onClose: () => void;
 }) {
   const dispatch = useAppDispatch();
@@ -30,6 +32,8 @@ export default function SharePopup({
 
   const shortLabel = profileUrl.replace(/^https?:\/\//, "");
   const socialLinks = (profile?.social || []).filter((s) => s.url);
+  const isCvShare = shareType === "cv";
+  const isCardShare = shareType === "card";
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(profileUrl);
@@ -55,15 +59,27 @@ export default function SharePopup({
       >
         {/* header */}
         <div className="flex shrink-0 items-center justify-between px-5 pt-5 lg:px-6 lg:pt-6">
-          <h3 className="font-display text-lg font-black text-ink dark:text-white lg:text-xl">Share</h3>
+          <div>
+            <h3 className="font-display text-lg font-black text-ink dark:text-white lg:text-xl">
+              Share {isCvShare ? "CV" : isCardShare ? "Card" : "Profile"}
+            </h3>
+            {isCvShare && (
+              <p className="text-xs text-ink/60 dark:text-white/60 mt-1">Share your professional resume</p>
+            )}
+            {isCardShare && (
+              <p className="text-xs text-ink/60 dark:text-white/60 mt-1">Share your digital business card</p>
+            )}
+          </div>
           <div className="flex items-center gap-1">
-            <Link
-              href="/settings"
-              aria-label="Share settings"
-              className="grid h-9 w-9 place-items-center rounded-full text-ink/60 transition hover:bg-ink/5 dark:text-white/60 dark:hover:bg-white/10"
-            >
-              <Settings size={17} />
-            </Link>
+            {!isCvShare && !isCardShare && (
+              <Link
+                href="/settings"
+                aria-label="Share settings"
+                className="grid h-9 w-9 place-items-center rounded-full text-ink/60 transition hover:bg-ink/5 dark:text-white/60 dark:hover:bg-white/10"
+              >
+                <Settings size={17} />
+              </Link>
+            )}
             <button
               onClick={onClose}
               aria-label="Close"
@@ -78,19 +94,23 @@ export default function SharePopup({
           <div className="lg:grid lg:grid-cols-[1fr_auto] lg:items-start lg:gap-6">
             <div className="min-w-0">
               {/* link row */}
-              <div className="flex items-center gap-2 rounded-2xl border border-ink/10 bg-mist px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-ink text-white dark:bg-white dark:text-ink">
-                  <span className="text-[10px] font-black">C</span>
-                </span>
-                <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink dark:text-white">
-                  {shortLabel}
-                </span>
+              <div className="flex flex-col gap-2 rounded-2xl border border-ink/10 bg-mist px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                <div className="flex items-center gap-2">
+                  <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-white text-[10px] font-black ${
+                    isCvShare || isCardShare ? "bg-brand-500" : "bg-ink dark:bg-white dark:text-ink"
+                  }`}>
+                    {isCvShare ? "CV" : isCardShare ? "♦" : "C"}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink dark:text-white">
+                    {shortLabel}
+                  </span>
+                </div>
                 <button
                   onClick={copyLink}
-                  className="flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-3.5 py-1.5 text-xs font-bold text-white transition hover:opacity-90 dark:bg-white dark:text-ink"
+                  className="flex items-center justify-center gap-1.5 rounded-lg bg-ink px-3 py-2 text-xs font-bold text-white transition hover:opacity-90 dark:bg-white dark:text-ink"
                 >
                   {copied ? <Check size={13} /> : <Copy size={13} />}
-                  {copied ? "Copied" : "Copy"}
+                  {copied ? "Copied to clipboard" : "Copy link"}
                 </button>
               </div>
 
@@ -107,13 +127,15 @@ export default function SharePopup({
                   <div className="mx-auto grid h-32 w-32 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5">
                     <QRCodeCanvas id="qr-share-popup-mobile" value={profileUrl} size={112} level="M" />
                   </div>
-                  <p className="mt-3 text-sm font-bold text-ink dark:text-white">Scan to open your profile</p>
+                  <p className="mt-3 text-sm font-bold text-ink dark:text-white">
+                    Scan to open your {isCvShare ? "CV" : isCardShare ? "card" : "profile"}
+                  </p>
                   <p className="text-xs text-ink/50 dark:text-white/50">Scan with your phone</p>
                 </div>
               )}
 
               {/* my platforms */}
-              {socialLinks.length > 0 && (
+              {!isCvShare && !isCardShare && socialLinks.length > 0 && (
                 <div className="mt-5">
                   <p className="mb-2 text-xs font-black uppercase tracking-wider text-ink/50 dark:text-white/50">
                     My platforms
@@ -156,7 +178,9 @@ export default function SharePopup({
                 <div className="mx-auto grid h-32 w-32 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5">
                   <QRCodeCanvas id="qr-share-popup-desktop" value={profileUrl} size={112} level="M" />
                 </div>
-                <p className="mt-3 text-sm font-bold text-ink dark:text-white">Scan to open your profile</p>
+                <p className="mt-3 text-sm font-bold text-ink dark:text-white">
+                  Scan to open your {isCvShare ? "CV" : isCardShare ? "card" : "profile"}
+                </p>
                 <p className="text-xs text-ink/50 dark:text-white/50">Scan with your phone</p>
               </div>
             )}
@@ -166,20 +190,26 @@ export default function SharePopup({
         {/* bottom quick-share row */}
         <div className="flex shrink-0 items-center gap-4 overflow-x-auto border-t border-ink/10 px-5 py-4 lg:px-6 dark:border-white/10">
           <a href={profileUrl} target="_blank" rel="noreferrer" className="flex shrink-0 flex-col items-center gap-1">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-ink text-white dark:bg-white dark:text-ink">
-              <span className="text-sm font-black">C</span>
+            <span className={`grid h-11 w-11 place-items-center rounded-full text-white text-sm font-black ${
+              isCvShare || isCardShare ? "bg-brand-500" : "bg-ink dark:bg-white dark:text-ink"
+            }`}>
+              {isCvShare ? "CV" : isCardShare ? "♦" : "C"}
             </span>
-            <span className="text-[10px] font-semibold text-ink/60 dark:text-white/60">My ClickCard</span>
+            <span className="text-[10px] font-semibold text-ink/60 dark:text-white/60">
+              {isCvShare ? "Open CV" : isCardShare ? "Open Card" : "My ClickCard"}
+            </span>
           </a>
-          <Link href="/card" className="relative flex shrink-0 flex-col items-center gap-1">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-mist text-ink/70 dark:bg-white/5 dark:text-white/70">
-              <CreditCard size={18} />
-            </span>
-            <span className="absolute -top-1 right-0 rounded-full bg-candy-pink px-1.5 py-0.5 text-[8px] font-black text-white">
-              NEW
-            </span>
-            <span className="text-[10px] font-semibold text-ink/60 dark:text-white/60">Cards</span>
-          </Link>
+          {!isCvShare && !isCardShare && (
+            <Link href="/card" className="relative flex shrink-0 flex-col items-center gap-1">
+              <span className="grid h-11 w-11 place-items-center rounded-full bg-mist text-ink/70 dark:bg-white/5 dark:text-white/70">
+                <CreditCard size={18} />
+              </span>
+              <span className="absolute -top-1 right-0 rounded-full bg-candy-pink px-1.5 py-0.5 text-[8px] font-black text-white">
+                NEW
+              </span>
+              <span className="text-[10px] font-semibold text-ink/60 dark:text-white/60">Cards</span>
+            </Link>
+          )}
           <button onClick={() => setShowQr((v) => !v)} className="flex shrink-0 flex-col items-center gap-1">
             <span className="grid h-11 w-11 place-items-center rounded-full bg-mist text-ink/70 dark:bg-white/5 dark:text-white/70">
               <QrCodeIcon size={18} />

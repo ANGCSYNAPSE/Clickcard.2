@@ -225,6 +225,11 @@ export default function CardPage() {
       ? `${SITE_URL}/${profileUser?.username || ""}`
       : "";
 
+  const cardUrl =
+    typeof window !== "undefined"
+      ? `${SITE_URL}/${profileUser?.username || ""}/card`
+      : "";
+
   const onShare = () => setShowSharePopup(true);
 
   if (!guard) return null;
@@ -923,8 +928,8 @@ export default function CardPage() {
         />
       )}
 
-      {showSharePopup && publicUrl && (
-        <SharePopup profileUrl={publicUrl} onClose={() => setShowSharePopup(false)} />
+      {showSharePopup && cardUrl && (
+        <SharePopup profileUrl={cardUrl} shareType="card" onClose={() => setShowSharePopup(false)} />
       )}
     </AppShell>
   );

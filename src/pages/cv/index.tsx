@@ -242,6 +242,7 @@ export default function CvPage() {
   };
 
   const publicUrl = typeof window !== "undefined" ? `${SITE_URL}/${profileUser?.username || ""}` : "";
+  const cvUrl = typeof window !== "undefined" ? `${SITE_URL}/${profileUser?.username || ""}/cv` : "";
   const onShare = () => setShowSharePopup(true);
 
   const onDownload = async () => {
@@ -1244,8 +1245,8 @@ export default function CvPage() {
         />
       )}
 
-      {showSharePopup && publicUrl && (
-        <SharePopup profileUrl={publicUrl} onClose={() => setShowSharePopup(false)} />
+      {showSharePopup && cvUrl && (
+        <SharePopup profileUrl={cvUrl} shareType="cv" onClose={() => setShowSharePopup(false)} />
       )}
     </AppShell>
   );
