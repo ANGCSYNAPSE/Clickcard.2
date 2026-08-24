@@ -76,6 +76,20 @@ export const NOTIFICATION_ROUTES = {
   readAll: "/api/notifications/read-all",
 } as const;
 
+export const ADMIN_ROUTES = {
+  stats: "/api/admin/stats",
+  revenue: "/api/admin/revenue",
+  users: "/api/admin/users",
+  userDetails: (userId: string) => `/api/admin/users/${userId}`,
+  userAnalytics: (userId: string) => `/api/admin/users/${userId}/analytics`,
+  userBlock: (userId: string) => `/api/admin/users/${userId}/block`,
+  userModerate: (userId: string) => `/api/admin/users/${userId}/moderate`,
+  leads: "/api/admin/leads",
+  subscriptionPlans: "/api/admin/subscriptions/plans",
+  subscriptionUsers: "/api/admin/subscriptions/users",
+  settings: "/api/admin/settings",
+} as const;
+
 export const API_ROUTES = {
   ...AUTH_ROUTES,
   ...USER_ROUTES,

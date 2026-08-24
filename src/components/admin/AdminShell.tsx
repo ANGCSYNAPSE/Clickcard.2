@@ -13,6 +13,11 @@ import {
   Flag,
   MessageSquare,
   Shield,
+  TrendingUp,
+  Handshake,
+  HelpCircle,
+  Wallet,
+  UserRoundCheck
 } from "lucide-react";
 import { useRouter } from "next/router";
 import AdminThemeToggle from "./AdminThemeToggle";
@@ -26,44 +31,7 @@ export default function AdminShell({ children }: AdminShellProps) {
   const [adminEmail, setAdminEmail] = useState("Admin User");
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [notifications, setNotifications] = useState([
-    {
-      id: "1",
-      type: "user",
-      title: "New User Registered",
-      message: "Gitesh Kumar just signed up",
-      timestamp: "2 minutes ago",
-      read: false,
-      icon: "👤",
-    },
-    {
-      id: "2",
-      type: "subscription",
-      title: "New Subscription",
-      message: "Aarav Mehta upgraded to Pro plan",
-      timestamp: "15 minutes ago",
-      read: false,
-      icon: "💰",
-    },
-    {
-      id: "3",
-      type: "payment",
-      title: "Payment Received",
-      message: "₹499 payment received from Jane Smith",
-      timestamp: "32 minutes ago",
-      read: true,
-      icon: "✅",
-    },
-    {
-      id: "4",
-      type: "user",
-      title: "New User Registered",
-      message: "Priya Singh just signed up",
-      timestamp: "1 hour ago",
-      read: true,
-      icon: "👤",
-    },
-  ]);
+  const [notifications, setNotifications] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -133,13 +101,13 @@ export default function AdminShell({ children }: AdminShellProps) {
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, href: "/admin" },
     { name: "Users", icon: Users, href: "/admin/users" },
-    { name: "Revenue", icon: CreditCard, href: "/admin/revenue" },
+    { name: "Revenue", icon: Wallet, href: "/admin/revenue" },
     { name: "Subscriptions", icon: CreditCard, href: "/admin/subscriptions" },
     { name: "Analytics", icon: BarChart3, href: "/admin/analytics" },
     { name: "Leads", icon: MessageSquare, href: "/admin/leads" },
-    { name: "Moderation", icon: Flag, href: "/admin/moderation" },
-    { name: "Support", icon: MessageSquare, href: "/admin/support" },
-    { name: "Team", icon: Shield, href: "/admin/team" },
+    { name: "Moderation", icon: UserRoundCheck, href: "/admin/moderation" },
+    { name: "Support", icon: HelpCircle, href: "/admin/support" },
+    { name: "Team", icon: Handshake, href: "/admin/team" },
     { name: "Settings", icon: Settings, href: "/admin/settings" },
   ];
 

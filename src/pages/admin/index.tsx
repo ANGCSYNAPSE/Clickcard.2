@@ -71,48 +71,77 @@ export default function AdminDashboard() {
       try {
         setLoading(true);
 
-        // Fetch users data from backend
-        const response = await adminService.getUsers(1, 1000);
-        const users = response.data || [];
+        // Fetch users data from backend with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-        // Calculate stats from actual data
-        const totalUsers = response.total || users.length;
-        const activeSubscriptions = users.filter((u: any) => u.subscriptionPlan).length;
+        try {
+          const [usersResponse, plansResponse] = await Promise.all([
+            adminService.getUsers(1, 1000),
+            adminService.getSubscriptionPlans()
+          ]);
+          clearTimeout(timeoutId);
 
-        setStats({
-          totalUsers: totalUsers,
-          totalRevenue: 0, // Will be calculated from revenue data
-          activeSubscriptions: activeSubscriptions,
-          newSignups: 0, // Will be calculated from recent users
-        });
+          const users = usersResponse.data || [];
+          const plans = plansResponse || [];
 
-        // If no backend data, show empty state
-        if (users.length === 0) {
+          // Calculate stats from actual data
+          const totalUsers = usersResponse.total || users.length;
+          const activeSubscriptions = users.filter((u: any) => u.subscriptionPlan).length;
+
+          setStats({
+            totalUsers: totalUsers,
+            totalRevenue: 0,
+            activeSubscriptions: activeSubscriptions,
+            newSignups: 0,
+          });
+
+          // If no backend data, show empty state
+          if (users.length === 0) {
+            setRevenueData([]);
+            setUserGrowthData([]);
+            setSubscriptionData([]);
+            setRecentActivity([]);
+            setTopPlans([]);
+          } else {
+            // Generate chart data from actual users
+            const recentUsers = users.slice(0, 10);
+            setRecentActivity(
+              recentUsers.map((user: any, idx: number) => ({
+                id: user.id,
+                type: "user" as const,
+                description: "New User Registered",
+                user: user.email || "—",
+                details: `Registered on ${new Date(user.signupDate).toLocaleDateString()}`,
+                timestamp: "Recently",
+              }))
+            );
+          }
+
+          // Process and display plans
+          if (plans.length > 0) {
+            const processedPlans = plans.map((plan: any) => ({
+              name: plan.name || plan.id,
+              revenue: plan.price || 0,
+              percentage: Math.round((plan.price || 0) / (plans.reduce((sum: number, p: any) => sum + (p.price || 0), 0) || 1) * 100)
+            }));
+            setTopPlans(processedPlans);
+          }
+        } catch (fetchErr) {
+          clearTimeout(timeoutId);
+          console.error("Failed to fetch data:", fetchErr);
+          // Show empty state on error
           setRevenueData([]);
           setUserGrowthData([]);
           setSubscriptionData([]);
           setRecentActivity([]);
           setTopPlans([]);
-        } else {
-          // Generate chart data from actual users
-          const recentUsers = users.slice(0, 10);
-          setRecentActivity(
-            recentUsers.map((user: any, idx: number) => ({
-              id: user.id,
-              type: "user" as const,
-              description: "New User Registered",
-              user: user.email || "—",
-              details: `Registered on ${new Date(user.signupDate).toLocaleDateString()}`,
-              timestamp: "Recently",
-            }))
-          );
         }
 
         setLoading(false);
       } catch (err) {
         console.error("Failed to fetch dashboard data:", err);
         setLoading(false);
-        // Continue with empty state
       }
     };
 
@@ -124,7 +153,15 @@ export default function AdminDashboard() {
       <AdminShell>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="animate-spin mb-4">
+            <style>{`
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+              .spinner {
+                animation: spin 1s linear infinite;
+              }
+            `}</style>
+            <div className="spinner mb-4 inline-block">
               <Activity className="text-primary" size={40} />
             </div>
             <p className="text-ink dark:text-white font-medium">
