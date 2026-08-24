@@ -33,8 +33,8 @@ export default function PublicProfile({
       <LiveProfileCard
         interactive
         onShare={() => setShareOpen(true)}
-        primary={d.primary || "#BE5103"}
-        accent={d.accent || "#069494"}
+        primary={d.primary || "#3B82F6"}
+        accent={d.accent || "#10B981"}
         theme={(d.theme as "light" | "dark") || "light"}
         name={name}
         username={profile.username}
@@ -51,30 +51,30 @@ export default function PublicProfile({
         education={profile.education}
         products={profile.products}
         business={profile.business}
-        headerLayout={d.headerLayout || "classic"}
+        headerLayout={d.headerLayout}
         bannerUrl={d.bannerUrl}
         wallpaperType={d.wallpaperType || "fill"}
         backgroundImageUrl={d.backgroundImageUrl}
-        backgroundColor={d.backgroundColor || "#FFFFFF"}
+        backgroundColor={d.backgroundColor || "#F9FAFB"}
         gradientColor={d.gradientColor}
         gradientColorEnd={d.gradientColorEnd}
-        gradientDirection={d.gradientDirection || "up"}
-        noise={d.noise || false}
-        patternIndex={d.patternIndex || 0}
-        buttonColor={d.buttonColor || "#FFFFFF"}
+        gradientDirection={d.gradientDirection}
+        noise={d.noise}
+        patternIndex={d.patternIndex}
+        buttonColor={d.buttonColor}
         buttonTextColor={d.buttonTextColor}
-        buttonStyle={d.buttonStyle || "solid"}
-        buttonRoundness={d.buttonRoundness || "slight"}
-        buttonShadow={d.buttonShadow || "none"}
-        socialLinksStyle={d.socialLinksStyle || "buttons"}
+        buttonStyle={d.buttonStyle}
+        buttonRoundness={d.buttonRoundness}
+        buttonShadow={d.buttonShadow}
+        socialLinksStyle={d.socialLinksStyle}
         pageFont={d.pageFont || "Inter"}
         pageTextColor={d.pageTextColor}
-        matchTitleFont={d.matchTitleFont !== false}
-        titleFont={d.titleFont || "Inter"}
+        matchTitleFont={d.matchTitleFont}
+        titleFont={d.titleFont}
         titleColor={d.titleColor}
-        titleFontSize={d.titleFontSize || 20}
-        bioFontSize={d.bioFontSize || 12}
-        bodyFontSize={d.bodyFontSize || 12}
+        titleFontSize={d.titleFontSize}
+        bioFontSize={d.bioFontSize}
+        bodyFontSize={d.bodyFontSize}
       />
 
       {shareOpen && (
