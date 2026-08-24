@@ -500,7 +500,7 @@ function TwoColumnResume({
       {/* Sidebar + main content */}
       <div
         className="mt-5 flex items-start"
-        style={{ padding: `0 ${pagePadding}px ${pagePadding}px`, gap: columnGap }}
+        style={{ padding: `0 ${pagePadding}px ${pagePadding}px`, gap: columnGap, flexDirection: layout.sidebarPosition === "right" ? "row-reverse" : "row" }}
       >
         <div
           className="shrink-0 space-y-5 rounded-md"

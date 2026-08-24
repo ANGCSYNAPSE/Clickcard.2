@@ -46,6 +46,8 @@ export interface CvTemplateDef {
     /** Percent widths for the two-column layout — should sum to ~100. */
     sidebarWidth?: number;
     contentWidth?: number;
+    /** Position of sidebar in two-column layout (default: left). */
+    sidebarPosition?: "left" | "right";
     /** Which sections render in the sidebar vs. the main column (two-column layouts only). */
     sidebarSections?: CvSectionKey[];
     mainSections?: CvSectionKey[];
@@ -282,8 +284,9 @@ export const CV_TEMPLATES: CvTemplateDef[] = [
 
       mainLayout: "two-column",
 
-      sidebarWidth: 31,
-      contentWidth: 69,
+      sidebarWidth: 35,
+      contentWidth: 65,
+      sidebarPosition: "right",
 
       sidebarSections: [
         "education",
