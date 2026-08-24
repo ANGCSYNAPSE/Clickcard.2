@@ -64,6 +64,39 @@ export interface CvTemplateDef {
 
     gridGap?: number;
     columnGap?: number;
+
+    /** Profile photo styling — position, size, shape, and effects. */
+    profileImage?: {
+      position?: "left" | "right";
+      size?: number;
+      shape?: "circle" | "square";
+      grayscale?: boolean;
+    };
+
+    /** Header styling — layout, capitalization, and dividers. */
+    header?: {
+      layout?: "photo-right" | "photo-left";
+      nameUppercase?: boolean;
+      nameLetterSpacing?: number;
+      designationUppercase?: boolean;
+      contactInline?: boolean;
+      showDivider?: boolean;
+    };
+
+    /** Experience section styling — timeline layout and date positioning. */
+    experience?: {
+      layout?: "standard" | "timeline";
+      showTimeline?: boolean;
+      showTimelineDots?: boolean;
+      timelineWidth?: number;
+      dotSize?: number;
+      datePosition?: "left" | "right";
+    };
+
+    /** References section styling — column count. */
+    references?: {
+      columns?: number;
+    };
   };
 }
 
@@ -214,6 +247,126 @@ export const CV_TEMPLATES: CvTemplateDef[] = [
       },
 
       columnGap: 17,
+    },
+  },
+  {
+    id: "elegant-timeline",
+
+    name: "Elegant Timeline",
+
+    description:
+      "Elegant two-column CV with a right-aligned profile photo, timeline-based experience, and clean monochrome typography.",
+
+    swatch: [
+      "#FFFFFF",
+      "#666666",
+      "#333333",
+    ],
+
+    colors: {
+      background: "#FFFFFF",
+      heading: "#555A60",
+      accentBar: "#555A60",
+      accentBarText: "#FFFFFF",
+      text: "#333333",
+      subtleText: "#777777",
+      sidebarBackground: "#FFFFFF",
+      divider: "#A8A8A8",
+      summaryBackground: "#FFFFFF",
+    },
+
+    layout: {
+      headerStyle: "left-aligned",
+
+      contactBar: false,
+
+      mainLayout: "two-column",
+
+      sidebarWidth: 31,
+      contentWidth: 69,
+
+      sidebarSections: [
+        "education",
+        "skills",
+        "languages",
+      ],
+
+      mainSections: [
+        "summary",
+        "experience",
+        "references",
+      ],
+
+      sectionColumns: {
+        skills: 1,
+        education: 1,
+        experience: 1,
+        awards: 1,
+        languages: 1,
+        references: 2,
+      },
+
+      sectionOrder: [
+        "summary",
+        "experience",
+        "education",
+        "skills",
+        "references",
+        "languages",
+      ],
+
+      spacing: {
+        pagePadding: 24,
+        headerBottom: 12,
+        summaryPadding: 0,
+        sectionGap: 16,
+        sidebarPadding: 16,
+        contentPadding: 16,
+        itemGap: 5,
+      },
+
+      typography: {
+        nameSize: 22,
+        designationSize: 9,
+        contactSize: 6.5,
+        summaryTitleSize: 9,
+        summaryTextSize: 6.5,
+        sectionTitleSize: 9,
+        bodySize: 6.5,
+        metaSize: 6,
+        sidebarTextSize: 6.5,
+      },
+
+      columnGap: 18,
+
+      profileImage: {
+        position: "right",
+        size: 74,
+        shape: "circle",
+        grayscale: true,
+      },
+
+      header: {
+        layout: "photo-right",
+        nameUppercase: true,
+        nameLetterSpacing: 2,
+        designationUppercase: false,
+        contactInline: true,
+        showDivider: true,
+      },
+
+      experience: {
+        layout: "timeline",
+        showTimeline: true,
+        showTimelineDots: true,
+        timelineWidth: 1,
+        dotSize: 5,
+        datePosition: "right",
+      },
+
+      references: {
+        columns: 2,
+      },
     },
   },
 ];
