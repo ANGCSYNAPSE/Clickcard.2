@@ -101,7 +101,7 @@ export default function AdminDashboard() {
 
           const users = usersResponse.data || [];
           const plans = plansResponse || [];
-          const notifs = notificationsResponse.data?.items || [];
+          const notifs = notificationsResponse.data?.data?.items || [];
 
           console.log("📊 Admin Dashboard Data Loaded:");
           console.log("  Users:", users.length);
