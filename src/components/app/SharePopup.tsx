@@ -91,32 +91,32 @@ export default function SharePopup({
         </div>
 
         <div className="mt-4 flex-1 overflow-y-auto px-5 pb-5 lg:px-6 lg:pb-6">
-          <div className="lg:grid lg:grid-cols-[1fr_auto] lg:items-start lg:gap-6">
-            <div className="min-w-0">
+          <div className="flex flex-col items-center lg:gap-6">
+            <div className="w-full max-w-sm">
               {/* link row */}
-              <div className="flex flex-col gap-2 rounded-2xl border border-ink/10 bg-mist px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                <div className="flex items-center gap-2">
+              <div className="w-full flex flex-col gap-2 rounded-2xl border border-ink/10 bg-mist px-4 py-3 text-center dark:border-white/10 dark:bg-white/5">
+                <div className="flex items-center justify-center gap-2">
                   <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-white text-[10px] font-black ${
                     isCvShare || isCardShare ? "bg-brand-500" : "bg-ink dark:bg-white dark:text-ink"
                   }`}>
                     {isCvShare ? "CV" : isCardShare ? "♦" : "C"}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink dark:text-white">
+                  <span className="truncate text-sm font-semibold text-ink dark:text-white">
                     {shortLabel}
                   </span>
                 </div>
                 <button
                   onClick={copyLink}
-                  className="flex items-center justify-center gap-1.5 rounded-lg bg-ink px-3 py-2 text-xs font-bold text-white transition hover:opacity-90 dark:bg-white dark:text-ink"
+                  className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-ink px-3 py-2 text-xs font-bold text-white transition hover:opacity-90 dark:bg-white dark:text-ink"
                 >
                   {copied ? <Check size={13} /> : <Copy size={13} />}
                   {copied ? "Copied to clipboard" : "Copy link"}
                 </button>
               </div>
 
-              {/* QR card (mobile/tablet only — shown beside link on large screens) */}
+              {/* QR card */}
               {showQr && (
-                <div className="relative mt-4 rounded-2xl border border-ink/10 p-5 text-center dark:border-white/10 lg:hidden">
+                <div className="relative mt-4 w-full max-w-sm rounded-2xl border border-ink/10 p-5 text-center dark:border-white/10">
                   <button
                     onClick={() => setShowQr(false)}
                     aria-label="Hide QR code"
@@ -125,7 +125,7 @@ export default function SharePopup({
                     <CloseIcon size={14} />
                   </button>
                   <div className="mx-auto grid h-32 w-32 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5">
-                    <QRCodeCanvas id="qr-share-popup-mobile" value={profileUrl} size={112} level="M" />
+                    <QRCodeCanvas id="qr-share-popup" value={profileUrl} size={112} level="M" />
                   </div>
                   <p className="mt-3 text-sm font-bold text-ink dark:text-white">
                     Scan to open your {isCvShare ? "CV" : isCardShare ? "card" : "profile"}
@@ -136,11 +136,11 @@ export default function SharePopup({
 
               {/* my platforms */}
               {!isCvShare && !isCardShare && socialLinks.length > 0 && (
-                <div className="mt-5">
+                <div className="mt-5 w-full">
                   <p className="mb-2 text-xs font-black uppercase tracking-wider text-ink/50 dark:text-white/50">
                     My platforms
                   </p>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap justify-center gap-3">
                     {socialLinks.map((s, i) => {
                       const Icon = getSocialIcon(s.platform);
                       return (
@@ -165,25 +165,6 @@ export default function SharePopup({
               )}
             </div>
 
-            {/* QR card — large screens: side-by-side with link/platforms so nothing scrolls */}
-            {showQr && (
-              <div className="relative mt-4 hidden shrink-0 rounded-2xl border border-ink/10 p-5 text-center dark:border-white/10 lg:mt-0 lg:block lg:w-48">
-                <button
-                  onClick={() => setShowQr(false)}
-                  aria-label="Hide QR code"
-                  className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full text-ink/40 transition hover:bg-ink/5 dark:text-white/40 dark:hover:bg-white/10"
-                >
-                  <CloseIcon size={14} />
-                </button>
-                <div className="mx-auto grid h-32 w-32 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5">
-                  <QRCodeCanvas id="qr-share-popup-desktop" value={profileUrl} size={112} level="M" />
-                </div>
-                <p className="mt-3 text-sm font-bold text-ink dark:text-white">
-                  Scan to open your {isCvShare ? "CV" : isCardShare ? "card" : "profile"}
-                </p>
-                <p className="text-xs text-ink/50 dark:text-white/50">Scan with your phone</p>
-              </div>
-            )}
           </div>
         </div>
 
