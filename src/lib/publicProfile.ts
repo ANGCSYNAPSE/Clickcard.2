@@ -197,7 +197,27 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
       : undefined,
     views: d.views,
     updatedAt: d.updated_at,
-    design: digitalCard.design || undefined,
+    design: {
+      ...(digitalCard.design || {}),
+      // Include all CV/Card specific settings from digitalCard
+      templateId: digitalCard.templateId,
+      cvTemplateId: digitalCard.cvTemplateId,
+      primaryColor: digitalCard.primaryColor,
+      accentColor: digitalCard.accentColor,
+      theme: digitalCard.theme,
+      fontFamily: digitalCard.fontFamily,
+      cardTextColor: digitalCard.cardTextColor,
+      cvTextColor: digitalCard.cvTextColor,
+      backgroundColor: digitalCard.backgroundColor,
+      headerColor: digitalCard.headerColor,
+      paletteStyle: digitalCard.paletteStyle,
+      skills: digitalCard.skills,
+      projects: digitalCard.projects,
+      awards: digitalCard.awards,
+      languages: digitalCard.languages,
+      references: digitalCard.references,
+      socialLinks: digitalCard.socialLinks,
+    },
   };
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
