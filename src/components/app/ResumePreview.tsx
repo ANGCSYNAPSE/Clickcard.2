@@ -136,15 +136,15 @@ function HeaderBlock({
         </div>
       )}
 
-      {/* Header with name/designation on left, photo on right (for left-aligned headers) */}
+      {/* Header with name/designation on left, photo & contact on right */}
       <div style={{
         display: "flex",
         justifyContent: "space-between",
         alignItems: "flex-start",
         gap: "16px",
-        
       }}>
-        <div>
+        {/* Left: Name & Designation */}
+        <div style={{ flex: 1 }}>
           <h1 className="font-display text-2xl font-black" style={{ color: headingColor }}>
             {fullName}
           </h1>
@@ -155,57 +155,56 @@ function HeaderBlock({
           )}
         </div>
 
-        {/* Profile photo on the right (for left-aligned headers) */}
-        {!photoAbove && cvProfilePhoto && (
-          <div style={{ flexShrink: 0 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={cvProfilePhoto}
-              alt="Profile photo"
-              style={{
-                width: "80px",
-                height: "80px",
-                borderRadius: "50%",
-                objectFit: "cover",
-                display: "block"
-              }}
-              onError={(e) => console.error("Image failed to load:", e)}
-              onLoad={(e) => console.log("Image loaded successfully")}
-            />
-          </div>
-        )}
+        {/* Right: Photo & Contact (stacked vertically) */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px", flexShrink: 0 }}>
+          {/* Profile photo on the right */}
+          {!photoAbove && cvProfilePhoto && (
+            <div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={cvProfilePhoto}
+                alt="Profile photo"
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  display: "block"
+                }}
+                onError={(e) => console.error("Image failed to load:", e)}
+                onLoad={(e) => console.log("Image loaded successfully")}
+              />
+            </div>
+          )}
+
+          {/* Contact info (vertical stack) */}
+          {contactItems.length > 0 && !hasBar && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px", fontSize: "10px" }}>
+              {contactItems.map((item, i) => (
+                <span key={i} style={{ display: "flex", alignItems: "center", gap: 4, color: subtleColor }}>
+                  <item.icon size={10} style={{ flexShrink: 0 }} />
+                  <span>{item.label}</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-      {contactItems.length > 0 &&
-        (hasBar ? (
-          <div
-            className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold"
-            style={{ background: contactBarColor, color: contactBarTextColor }}
-          >
-            {contactItems.map((item, i) => (
-              // Alignment is fully inline (not left to Tailwind classes
-              // alone) — html2canvas has known trouble replicating
-              // flexbox cross-axis centering for an inline SVG icon next
-              // to text, which showed up as the icon floating noticeably
-              // off the text baseline only in the exported PDF, not
-              // on-screen. An explicit fixed row height with both
-              // children pinned to `alignItems: center` leaves nothing
-              // for html2canvas to recompute differently.
-              <span key={i} style={{ display: "flex", alignItems: "center", gap: 6, height: 12, lineHeight: "12px" }}>
-                <item.icon size={12} style={{ flexShrink: 0, display: "block" }} />
-                <span style={{ display: "block", lineHeight: "12px" }}>{item.label}</span>
-              </span>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px]" style={{ color: subtleColor }}>
-            {contactItems.map((item, i) => (
-              <span key={i} style={{ display: "flex", alignItems: "center", gap: 4, height: 11, lineHeight: "11px" }}>
-                <item.icon size={11} style={{ flexShrink: 0, display: "block" }} />
-                <span style={{ display: "block", lineHeight: "11px" }}>{item.label}</span>
-              </span>
-            ))}
-          </div>
-        ))}
+
+      {/* Contact bar (for Classic Orange style) */}
+      {hasBar && contactItems.length > 0 && (
+        <div
+          className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold"
+          style={{ background: contactBarColor, color: contactBarTextColor }}
+        >
+          {contactItems.map((item, i) => (
+            <span key={i} style={{ display: "flex", alignItems: "center", gap: 6, height: 12, lineHeight: "12px" }}>
+              <item.icon size={12} style={{ flexShrink: 0, display: "block" }} />
+              <span style={{ display: "block", lineHeight: "12px" }}>{item.label}</span>
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
