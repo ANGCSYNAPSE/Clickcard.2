@@ -70,9 +70,11 @@ export default function CvPage({ profile, slug, shareUrl }: Props) {
             education: profile.education || [],
             digitalCard: {},
           } as any}
-          primary={profile.design?.primary || "#BE5103"}
-          accent={profile.design?.accent || "#069494"}
-          templateId="classic"
+          primary={(profile.design as any)?.primaryColor || "#BE5103"}
+          accent={(profile.design as any)?.accentColor || "#069494"}
+          fontFamily={(profile.design as any)?.fontFamily}
+          textColor={(profile.design as any)?.cvTextColor}
+          templateId={(profile.design as any)?.cvTemplateId}
         />
       </div>
     </>
