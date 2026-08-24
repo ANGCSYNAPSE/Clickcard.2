@@ -124,8 +124,10 @@ export default function SharePopup({
                   >
                     <CloseIcon size={14} />
                   </button>
-                  <div className="mx-auto grid h-32 w-32 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5 lg:h-48 lg:w-48">
-                    <QRCodeCanvas id="qr-share-popup" value={profileUrl} size={112} level="M" />
+                  <div className="mx-auto grid h-32 w-32 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5 lg:h-48 lg:w-48 lg:p-4">
+                    <div className="scale-100 lg:scale-150 origin-center">
+                      <QRCodeCanvas id="qr-share-popup" value={profileUrl} size={112} level="M" />
+                    </div>
                   </div>
                   <p className="mt-3 text-sm font-bold text-ink dark:text-white">
                     Scan to open your {isCvShare ? "CV" : isCardShare ? "card" : "profile"}
