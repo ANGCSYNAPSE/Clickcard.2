@@ -391,7 +391,7 @@ export default function CvPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="max-w-[110px] truncate text-xs font-semibold text-ink/60 dark:text-white/60">
-                      {CV_TEMPLATES.find((t) => t.id === templateId)?.name || "None selected"}
+                      {templateId ? (CV_TEMPLATES.find((t) => t.id === templateId)?.name || "Custom") : "Default"}
                     </span>
                     <ChevronRight size={16} className="text-ink/40 dark:text-white/40" />
                   </div>
