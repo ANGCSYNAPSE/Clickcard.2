@@ -78,19 +78,27 @@ export default function AdminDashboard() {
         const timeoutId = setTimeout(() => controller.abort(), 5000);
 
         try {
+          console.log("📍 Starting admin dashboard data fetch...");
           const [usersResponse, plansResponse, notificationsResponse] = await Promise.all([
             adminService.getUsers(1, 1000),
             adminService.getSubscriptionPlans(),
-            notificationService.adminRegistrations().catch((err) => {
-              console.error("Failed to fetch admin notifications:", err);
-              return { data: { items: [] } };
-            })
+            notificationService.adminRegistrations()
+              .catch((err) => {
+                console.error("❌ Failed to fetch admin notifications:", err.message, err.response?.data);
+                return { data: { items: [] } };
+              })
           ]);
           clearTimeout(timeoutId);
+          console.log("✅ Notification response:", notificationsResponse);
 
           const users = usersResponse.data || [];
           const plans = plansResponse || [];
           const notifs = notificationsResponse.data?.items || [];
+
+          console.log("📊 Admin Dashboard Data Loaded:");
+          console.log("  Users:", users.length);
+          console.log("  Plans:", plans.length);
+          console.log("  Notifications:", notifs.length, notifs);
 
           // Calculate stats from actual data
           const totalUsers = usersResponse.total || users.length;
@@ -124,7 +132,8 @@ export default function AdminDashboard() {
               }))
             );
 
-            // Set notifications
+            // Set notifications - log to verify
+            console.log("✅ Setting notifications:", notifs.length, "items");
             setNotifications(notifs.slice(0, 10));
           }
 
