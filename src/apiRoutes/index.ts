@@ -31,6 +31,8 @@ export const PROFILE_ROUTES = {
   makePrivate: "/api/users/profile/make-private",
   visibility: "/api/users/profile/visibility",
   uploadPicture: "/api/users/profile/upload-picture",
+  uploadCVPhoto: "/api/users/profile/upload-cv-photo",
+  uploadCardPhoto: "/api/users/profile/upload-card-photo",
   pdfUrl: "/api/users/profile/pdf-url",
   myResumePdf: "/api/users/profile/my-resume.pdf",
   cardTemplates: "/api/users/profile/card/templates",

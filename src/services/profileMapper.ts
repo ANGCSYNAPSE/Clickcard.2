@@ -11,8 +11,23 @@ import type { FullProfile, SocialLink } from "@/types";
  */
 
 export function toApiProfile(p: FullProfile): Record<string, unknown> {
+  // Strip out data URLs (base64 images) — they're too large for the database.
+  // These are stored locally only for preview purposes.
+  const personal = { ...(p.personal || {}) };
+  if (personal.cvProfilePhoto && personal.cvProfilePhoto.startsWith("data:")) {
+    delete personal.cvProfilePhoto;
+  }
+  if (personal.profilePicture && personal.profilePicture.startsWith("data:")) {
+    delete personal.profilePicture;
+  }
+
+  const digitalCard = { ...(p.digitalCard || {}) };
+  if (digitalCard.cardPhoto && digitalCard.cardPhoto.startsWith("data:")) {
+    delete digitalCard.cardPhoto;
+  }
+
   return {
-    personalIdentity: p.personal || {},
+    personalIdentity: personal,
     contactInformation: p.contact || {},
     education: p.education || [],
     workExperience: p.experience || [],
@@ -20,7 +35,7 @@ export function toApiProfile(p: FullProfile): Record<string, unknown> {
     productsServices: p.products || [],
     // backend maps `socialMediaLinks` → social_links column
     socialMediaLinks: p.social || [],
-    digitalCard: p.digitalCard || {},
+    digitalCard: digitalCard,
   };
 }
 
@@ -42,6 +57,11 @@ export function fromApiProfile(d: any): FullProfile {
   const personal = { ...(d.personal_identity ?? d.personalIdentity ?? {}) };
   const profilePicture = d.profile_picture ?? d.profilePicture ?? personal.profilePicture;
   if (profilePicture) personal.profilePicture = profilePicture;
+
+  // cvProfilePhoto (CV photo) is stored in personalIdentity/personal_identity
+  // but we ensure it's available when mapping
+  const cvProfilePhoto = d.cv_profile_photo ?? d.cvProfilePhoto ?? personal.cvProfilePhoto;
+  if (cvProfilePhoto) personal.cvProfilePhoto = cvProfilePhoto;
 
   return {
     personal,

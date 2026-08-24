@@ -13,7 +13,32 @@ export interface StylePreset {
  * entire card at once, instead of tuning every panel by hand.
  */
 export const STYLE_PRESETS: StylePreset[] = [
-  
+  {
+    key: "clean",
+    label: "Clean",
+    values: {
+      primary: "#1F2937",
+      accent: "#3B82F6",
+      theme: "light",
+      wallpaperType: "fill",
+      backgroundColor: "#FFFFFF",
+      headerLayout: "classic",
+      buttonColor: "#1F2937",
+      buttonTextColor: "#FFFFFF",
+      buttonStyle: "solid",
+      buttonRoundness: "full",
+      buttonShadow: "none",
+      socialLinksStyle: "buttons",
+      pageFont: "Inter",
+      pageTextColor: "#1F2937",
+      matchTitleFont: true,
+      titleFont: "Inter",
+      titleColor: "#1F2937",
+      titleFontSize: 24,
+      bioFontSize: 13,
+      bodyFontSize: 12,
+    },
+  },
   {
     key: "aura",
     label: "Aura",

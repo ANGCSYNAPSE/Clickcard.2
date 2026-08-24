@@ -41,6 +41,7 @@ export interface PersonalSection {
   dateOfBirth?: string;
   gender?: string;
   profilePicture?: string;
+  cvProfilePhoto?: string;
 }
 
 export interface ContactSection {

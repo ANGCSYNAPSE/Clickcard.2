@@ -120,6 +120,31 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
 
     elements: [
       // -----------------------------------------
+      // PROFILE PHOTO — top right corner
+      // -----------------------------------------
+      {
+        id: "profilePhoto",
+        type: "icon",
+        field: "profilePicture",
+        label: "Profile Photo",
+        required: false,
+
+        position: {
+          x: 88,
+          y: 2,
+        },
+
+        size: {
+          width: 10,
+          height: 10,
+        },
+
+        style: {
+          iconName: "brandLogo",
+        },
+      },
+
+      // -----------------------------------------
       // LOGO — sits directly above the company name
       // -----------------------------------------
       {

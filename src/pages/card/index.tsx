@@ -71,7 +71,7 @@ export default function CardPage() {
   const saving = useAppSelector((s) => s.profile.saving);
 
   const [templateId, setTemplateId] = useState<string>(
-    draft.digitalCard?.templateId !== undefined ? draft.digitalCard.templateId : "wave-bold",
+    draft.digitalCard?.templateId !== undefined ? draft.digitalCard.templateId : "",
   );
   const [primary, setPrimary] = useState<string>(
     draft.digitalCard?.primaryColor || PALETTES[0].primary,
@@ -174,6 +174,7 @@ export default function CardPage() {
     reader.onload = () => updateBusiness({ logo: reader.result as string });
     reader.readAsDataURL(f);
   };
+
 
   /** Phone/WhatsApp fields are exactly a 10-digit number — no country code, spaces, or symbols. */
   const onlyPhoneChars = (v: string) => v.replace(/\D/g, "").slice(0, 10);
@@ -513,6 +514,7 @@ export default function CardPage() {
                     className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm font-medium text-ink placeholder:text-ink/35 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/35"
                   />
                 </div>
+
 
                 {/* Business */}
                 <div className="space-y-2">

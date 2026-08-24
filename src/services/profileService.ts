@@ -39,6 +39,22 @@ export const profileService = {
     });
   },
 
+  uploadCVPhoto: (file: File) => {
+    const form = new FormData();
+    form.append("cvPhoto", file);
+    return apiClient.post<ApiResponse<{ photoUrl: string }>>(PROFILE_ROUTES.uploadCVPhoto, form, {
+      headers: { "Content-Type": undefined },
+    });
+  },
+
+  uploadCardPhoto: (file: File) => {
+    const form = new FormData();
+    form.append("cardPhoto", file);
+    return apiClient.post<ApiResponse<{ photoUrl: string }>>(PROFILE_ROUTES.uploadCardPhoto, form, {
+      headers: { "Content-Type": undefined },
+    });
+  },
+
   makePublic: () =>
     apiClient.post<ApiResponse>(PROFILE_ROUTES.makePublic),
   makePrivate: () =>

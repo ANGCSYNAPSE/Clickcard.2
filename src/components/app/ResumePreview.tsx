@@ -97,6 +97,7 @@ function HeaderBlock({
   centered,
   contactBarColor,
   contactBarTextColor,
+  cvProfilePhoto,
 }: {
   fullName: string;
   tagline?: string;
@@ -107,18 +108,73 @@ function HeaderBlock({
   /** When set, contact info renders as a solid strip instead of a plain inline row (Classic Orange). */
   contactBarColor?: string;
   contactBarTextColor?: string;
+  cvProfilePhoto?: string;
 }) {
   const hasBar = Boolean(contactBarColor);
+
+  // For centered headers, place photo above the name. For left-aligned, place on the right.
+  const photoAbove = centered;
+
   return (
-    <div className={hasBar ? (centered ? "text-center" : "") : "border-b pb-4"} style={hasBar ? undefined : { borderColor: `${headingColor}33` }}>
-      <h1 className="font-display text-2xl font-black" style={{ color: headingColor }}>
-        {fullName}
-      </h1>
-      {tagline && (
-        <p className="mt-1 text-sm font-semibold uppercase tracking-wide" style={{ color: subtleColor }}>
-          {tagline}
-        </p>
+    <div className={hasBar ? (centered ? "text-bottom" : "") : "border-b pb-4"} style={hasBar ? undefined : { borderColor: `${headingColor}33` }}>
+      {photoAbove && cvProfilePhoto && (
+        <div style={{ marginBottom: "12px", display: "flex", justifyContent: "center" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={cvProfilePhoto}
+            alt="Profile photo"
+            style={{
+              width: "80px",
+              height: "80px",
+              borderRadius: "50%",
+              objectFit: "cover",
+              display: "block"
+            }}
+            onError={(e) => console.error("Image failed to load:", e)}
+            onLoad={(e) => console.log("Image loaded successfully")}
+          />
+        </div>
       )}
+
+      {/* Header with name/designation on left, photo on right (for left-aligned headers) */}
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        gap: "16px",
+        
+      }}>
+        <div>
+          <h1 className="font-display text-2xl font-black" style={{ color: headingColor }}>
+            {fullName}
+          </h1>
+          {tagline && (
+            <p className="mt-1 text-sm font-semibold uppercase tracking-wide" style={{ color: subtleColor }}>
+              {tagline}
+            </p>
+          )}
+        </div>
+
+        {/* Profile photo on the right (for left-aligned headers) */}
+        {!photoAbove && cvProfilePhoto && (
+          <div style={{ flexShrink: 0 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={cvProfilePhoto}
+              alt="Profile photo"
+              style={{
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                objectFit: "cover",
+                display: "block"
+              }}
+              onError={(e) => console.error("Image failed to load:", e)}
+              onLoad={(e) => console.log("Image loaded successfully")}
+            />
+          </div>
+        )}
+      </div>
       {contactItems.length > 0 &&
         (hasBar ? (
           <div
@@ -540,6 +596,7 @@ export default function ResumePreview({
           centered={tpl?.layout.headerStyle === "centered"}
           contactBarColor={tpl?.layout.contactBar ? tpl.colors.accentBar : undefined}
           contactBarTextColor={tpl?.colors.accentBarText}
+          cvProfilePhoto={p.cvProfilePhoto}
         />
       ),
     };
@@ -822,6 +879,7 @@ export default function ResumePreview({
     fullName,
     p.tagline,
     p.bio,
+    p.cvProfilePhoto,
     JSON.stringify(c),
     JSON.stringify(experience),
     JSON.stringify(education),
