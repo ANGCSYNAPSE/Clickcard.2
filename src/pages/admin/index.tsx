@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
 import { adminService } from "@/services/adminService";
+import { notificationService } from "@/services/notificationService";
 import { useRequireAdminAuth } from "@/lib/authGuards";
 import {
   LineChart,
@@ -80,11 +81,10 @@ export default function AdminDashboard() {
           const [usersResponse, plansResponse, notificationsResponse] = await Promise.all([
             adminService.getUsers(1, 1000),
             adminService.getSubscriptionPlans(),
-            fetch('/api/notifications/admin/registrations', {
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('accessToken') || ''}`
-              }
-            }).then(r => r.json()).catch(err => ({ success: false, data: { items: [] } }))
+            notificationService.adminRegistrations().catch((err) => {
+              console.error("Failed to fetch admin notifications:", err);
+              return { data: { items: [] } };
+            })
           ]);
           clearTimeout(timeoutId);
 

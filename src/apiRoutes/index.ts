@@ -76,6 +76,7 @@ export const NOTIFICATION_ROUTES = {
   unreadCount: "/api/notifications/unread-count",
   read: (id: number | string) => `/api/notifications/${id}/read`,
   readAll: "/api/notifications/read-all",
+  adminRegistrations: "/api/notifications/admin/registrations",
 } as const;
 
 export const ADMIN_ROUTES = {
