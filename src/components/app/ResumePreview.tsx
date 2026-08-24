@@ -98,6 +98,7 @@ function HeaderBlock({
   contactBarColor,
   contactBarTextColor,
   cvProfilePhoto,
+  profileImageConfig,
 }: {
   fullName: string;
   tagline?: string;
@@ -109,6 +110,13 @@ function HeaderBlock({
   contactBarColor?: string;
   contactBarTextColor?: string;
   cvProfilePhoto?: string;
+  /** Profile image configuration from template */
+  profileImageConfig?: {
+    position?: "left" | "right";
+    size?: number;
+    shape?: "circle" | "square";
+    grayscale?: boolean;
+  };
 }) {
   const hasBar = Boolean(contactBarColor);
 
@@ -156,51 +164,56 @@ function HeaderBlock({
           )}
         </div>
 
-        {/* Right: Profile photo */}
-        {!photoAbove && cvProfilePhoto && (
-          <div style={{ flexShrink: 0 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={cvProfilePhoto}
-              alt="Profile photo"
-              style={{
-                width: "80px",
-                height: "80px",
-                borderRadius: "50%",
-                objectFit: "cover",
-                display: "block"
-              }}
-              onError={(e) => console.error("Image failed to load:", e)}
-              onLoad={(e) => console.log("Image loaded successfully")}
-            />
-          </div>
-        )}
+        {/* Right: Photo & Contact (stacked vertically) */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px", flexShrink: 0 }}>
+          {/* Profile photo on the right */}
+          {!photoAbove && cvProfilePhoto && (
+            <div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={cvProfilePhoto}
+                alt="Profile photo"
+                style={{
+                  width: `${profileImageConfig?.size || 80}px`,
+                  height: `${profileImageConfig?.size || 80}px`,
+                  borderRadius: profileImageConfig?.shape === "square" ? "4px" : "50%",
+                  objectFit: "cover",
+                  display: "block",
+                  filter: profileImageConfig?.grayscale ? "grayscale(100%)" : "none"
+                }}
+                onError={(e) => console.error("CV photo loaded successfully")}
+                onLoad={(e) => console.log("CV photo loaded")}
+              />
+            </div>
+          )}
+
+          {/* Contact info (vertical stack on right) */}
+          {contactItems.length > 0 && !hasBar && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px", fontSize: "10px" }}>
+              {contactItems.map((item, i) => (
+                <span key={i} style={{ display: "flex", alignItems: "center", gap: 4, color: subtleColor }}>
+                  <item.icon size={10} style={{ flexShrink: 0 }} />
+                  <span>{item.label}</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Contact info (horizontal, below name/designation) */}
-      {contactItems.length > 0 && (
-        hasBar ? (
-          <div
-            className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold"
-            style={{ background: contactBarColor, color: contactBarTextColor }}
-          >
-            {contactItems.map((item, i) => (
-              <span key={i} style={{ display: "flex", alignItems: "center", gap: 6, height: 12, lineHeight: "12px" }}>
-                <item.icon size={12} style={{ flexShrink: 0, display: "block" }} />
-                <span style={{ display: "block", lineHeight: "12px" }}>{item.label}</span>
-              </span>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px]" style={{ color: subtleColor }}>
-            {contactItems.map((item, i) => (
-              <span key={i} style={{ display: "flex", alignItems: "center", gap: 3, height: 11, lineHeight: "11px" }}>
-                <item.icon size={10} style={{ flexShrink: 0, display: "block" }} />
-                <span style={{ display: "block", lineHeight: "11px" }}>{item.label}</span>
-              </span>
-            ))}
-          </div>
-        )
+      {/* Contact bar (for Classic Orange style) */}
+      {hasBar && contactItems.length > 0 && (
+        <div
+          className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 rounded-md px-4 py-2.5 text-[11px] font-bold"
+          style={{ background: contactBarColor, color: contactBarTextColor }}
+        >
+          {contactItems.map((item, i) => (
+            <span key={i} style={{ display: "flex", alignItems: "center", gap: 6, height: 12, lineHeight: "12px" }}>
+              <item.icon size={12} style={{ flexShrink: 0, display: "block" }} />
+              <span style={{ display: "block", lineHeight: "12px" }}>{item.label}</span>
+            </span>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -593,6 +606,7 @@ export default function ResumePreview({
           contactBarColor={tpl?.layout.contactBar ? tpl.colors.accentBar : undefined}
           contactBarTextColor={tpl?.colors.accentBarText}
           cvProfilePhoto={p.cvProfilePhoto}
+          profileImageConfig={tpl?.layout.profileImage}
         />
       ),
     };
