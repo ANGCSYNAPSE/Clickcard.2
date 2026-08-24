@@ -75,6 +75,11 @@ export default function CvPage({ profile, slug, shareUrl }: Props) {
           fontFamily={(profile.design as any)?.fontFamily}
           textColor={(profile.design as any)?.cvTextColor}
           templateId={(profile.design as any)?.cvTemplateId}
+          skills={(profile.design as any)?.skills}
+          projects={(profile.design as any)?.projects}
+          awards={(profile.design as any)?.awards}
+          languages={(profile.design as any)?.languages}
+          references={(profile.design as any)?.references}
         />
       </div>
     </>

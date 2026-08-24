@@ -73,7 +73,14 @@ export default function CardPage({ profile, slug, shareUrl }: Props) {
             business: profile.business,
             experience: profile.experience || [],
             education: profile.education || [],
-            digitalCard: {},
+            digitalCard: {
+              skills: (profile.design as any)?.skills,
+              projects: (profile.design as any)?.projects,
+              awards: (profile.design as any)?.awards,
+              languages: (profile.design as any)?.languages,
+              references: (profile.design as any)?.references,
+              socialLinks: (profile.design as any)?.socialLinks,
+            },
           } as any}
           username={profile.username}
           fontFamily={(profile.design as any)?.fontFamily}
