@@ -35,6 +35,10 @@ export interface CvTemplateDef {
     divider?: string;
     /** Background behind the Summary block, when it's rendered as its own panel. */
     summaryBackground?: string;
+    /** Timeline line colour for experience sections. */
+    timeline?: string;
+    /** Timeline dot colour for experience sections. */
+    timelineDot?: string;
   };
 
   layout: {
@@ -275,6 +279,8 @@ export const CV_TEMPLATES: CvTemplateDef[] = [
       sidebarBackground: "#FFFFFF",
       divider: "#A8A8A8",
       summaryBackground: "#FFFFFF",
+      timeline: "#B8B8B8",
+      timelineDot: "#555555",
     },
 
     layout: {
@@ -284,8 +290,8 @@ export const CV_TEMPLATES: CvTemplateDef[] = [
 
       mainLayout: "two-column",
 
-      sidebarWidth: 35,
-      contentWidth: 65,
+      sidebarWidth: 31,
+      contentWidth: 69,
       sidebarPosition: "right",
 
       sidebarSections: [
