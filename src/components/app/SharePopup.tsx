@@ -55,7 +55,7 @@ export default function SharePopup({
       <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative flex max-h-[95vh] w-full max-w-sm flex-col rounded-t-3xl bg-white shadow-soft-lg sm:max-w-md sm:rounded-3xl lg:max-w-2xl dark:bg-[#12403c]"
+        className="relative flex max-h-[95vh] w-full max-w-sm flex-col rounded-t-3xl bg-white shadow-soft-lg sm:max-w-md sm:rounded-3xl lg:max-w-lg dark:bg-[#12403c]"
       >
         {/* header */}
         <div className="flex shrink-0 items-center justify-between px-5 pt-5 lg:px-6 lg:pt-6">
@@ -90,8 +90,8 @@ export default function SharePopup({
           </div>
         </div>
 
-        <div className="mt-4 flex-1 overflow-y-auto px-5 pb-5 lg:px-6 lg:pb-6">
-          <div className="flex flex-col items-center lg:gap-6">
+        <div className="mt-4 flex-1 overflow-y-auto px-5 pb-5 lg:px-5 lg:pb-5">
+          <div className="flex flex-col items-center lg:gap-4">
             <div className="w-full max-w-sm">
               {/* link row */}
               <div className="w-full flex flex-col gap-2 rounded-2xl border border-ink/10 bg-mist px-4 py-3 text-center dark:border-white/10 dark:bg-white/5">
@@ -116,20 +116,20 @@ export default function SharePopup({
 
               {/* QR card */}
               {showQr && (
-                <div className="relative mt-4 w-full max-w-sm rounded-2xl border border-ink/10 p-5 text-center dark:border-white/10 lg:max-w-md lg:p-8">
+                <div className="relative mt-3 w-full max-w-sm rounded-2xl border border-ink/10 p-4 text-center dark:border-white/10 lg:max-w-sm lg:p-5">
                   <button
                     onClick={() => setShowQr(false)}
                     aria-label="Hide QR code"
-                    className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full text-ink/40 transition hover:bg-ink/5 dark:text-white/40 dark:hover:bg-white/10 lg:right-4 lg:top-4"
+                    className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full text-ink/40 transition hover:bg-ink/5 dark:text-white/40 dark:hover:bg-white/10"
                   >
                     <CloseIcon size={14} />
                   </button>
-                  <div className="mx-auto grid h-32 w-32 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5 lg:h-48 lg:w-48 lg:p-4">
-                    <div className="scale-100 lg:scale-150 origin-center">
+                  <div className="mx-auto grid h-32 w-32 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5 lg:h-40 lg:w-40 lg:p-3">
+                    <div className="scale-100 lg:scale-125 origin-center">
                       <QRCodeCanvas id="qr-share-popup" value={profileUrl} size={112} level="M" />
                     </div>
                   </div>
-                  <p className="mt-3 text-sm font-bold text-ink dark:text-white">
+                  <p className="mt-2 text-sm font-bold text-ink dark:text-white">
                     Scan to open your {isCvShare ? "CV" : isCardShare ? "card" : "profile"}
                   </p>
                   <p className="text-xs text-ink/50 dark:text-white/50">Scan with your phone</p>
