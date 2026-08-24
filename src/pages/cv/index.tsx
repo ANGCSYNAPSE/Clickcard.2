@@ -145,13 +145,54 @@ export default function CvPage() {
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
-    if (!f.type.startsWith("image/")) {
-      dispatch(pushToast("Photo must be an image file", "error"));
+
+    // Validate format: JPG, PNG, WebP
+    const allowedFormats = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedFormats.includes(f.type)) {
+      dispatch(pushToast("Format must be JPG, PNG, or WebP", "error"));
       return;
     }
 
+    // Validate size: Max 5 MB
+    const maxSize = 5 * 1024 * 1024; // 5 MB
+    if (f.size > maxSize) {
+      dispatch(pushToast(`File size exceeds 5 MB (${(f.size / 1024 / 1024).toFixed(1)}MB)`, "error"));
+      return;
+    }
+
+    // Validate dimensions: 300×300 minimum, 1:1 ratio
     try {
-      // Upload to server
+      const img = new Image();
+      const reader = new FileReader();
+
+      await new Promise<void>((resolve, reject) => {
+        reader.onload = (e) => {
+          img.onload = () => {
+            const { width, height } = img;
+
+            // Check minimum dimensions
+            if (width < 300 || height < 300) {
+              reject(new Error(`Image too small (${width}×${height}px). Minimum: 300×300 px`));
+              return;
+            }
+
+            // Check aspect ratio (1:1)
+            const ratio = width / height;
+            if (Math.abs(ratio - 1) > 0.01) {
+              reject(new Error(`Invalid aspect ratio (${ratio.toFixed(2)}:1). Must be 1:1`));
+              return;
+            }
+
+            resolve();
+          };
+          img.onerror = () => reject(new Error("Failed to load image"));
+          img.src = e.target?.result as string;
+        };
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(f);
+      });
+
+      // All validations passed, upload to server
       const res = await profileService.uploadCVPhoto(f);
       if (res.data?.data?.photoUrl) {
         updatePersonal({ cvProfilePhoto: res.data.data.photoUrl });
@@ -160,8 +201,9 @@ export default function CvPage() {
         dispatch(pushToast("Failed to upload photo", "error"));
       }
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to upload photo";
       console.error('CV photo upload error:', err);
-      dispatch(pushToast("Failed to upload photo", "error"));
+      dispatch(pushToast(errorMsg, "error"));
     }
   };
 
@@ -628,7 +670,13 @@ export default function CvPage() {
                     </div>
                     <div className="min-w-0 text-xs text-ink/55 dark:text-white/55">
                       <p className="font-semibold text-ink dark:text-white">CV Photo</p>
-                      <p>Your photo for the CV. PNG, JPG, or any image format.</p>
+                      <div className="space-y-0.5">
+                        <p>Format: JPG, PNG, WebP</p>
+                        <p>Max Size: 5 MB</p>
+                        <p>Recommended: 600 × 600 px</p>
+                        <p>Minimum: 300 × 300 px</p>
+                        <p>Ratio: 1:1</p>
+                      </div>
                       {draft.personal?.cvProfilePhoto && (
                         <button
                           type="button"
