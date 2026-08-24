@@ -111,6 +111,10 @@ export default function AdminDashboard() {
             newSignups: 0,
           });
 
+          // Set notifications first - this should always happen
+          console.log("✅ Setting notifications:", notifs.length, "items");
+          setNotifications(notifs.slice(0, 10));
+
           // If no backend data, show empty state
           if (users.length === 0) {
             setRevenueData([]);
@@ -131,10 +135,6 @@ export default function AdminDashboard() {
                 timestamp: "Recently",
               }))
             );
-
-            // Set notifications - log to verify
-            console.log("✅ Setting notifications:", notifs.length, "items");
-            setNotifications(notifs.slice(0, 10));
           }
 
           // Process and display plans
