@@ -63,6 +63,10 @@ export default function CardPage({ profile, slug, shareUrl }: Props) {
       </Head>
       <div className="flex justify-center items-center min-h-screen overflow-auto p-4">
         <CardPreview
+          templateId="wave-bold"
+          primary={profile.design?.primary || "#BE5103"}
+          accent={profile.design?.accent || "#069494"}
+          theme={(profile.design?.theme as "light" | "dark") || "light"}
           profile={{
             personal: { fullName: profile.fullName, tagline: profile.tagline, bio: profile.bio },
             contact: { email: profile.email, phone: profile.phone, website: profile.website, city: profile.city },

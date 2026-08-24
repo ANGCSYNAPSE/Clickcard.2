@@ -22,6 +22,15 @@ import {
 import { useRouter } from "next/router";
 import AdminThemeToggle from "./AdminThemeToggle";
 
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  icon: string;
+  read: boolean;
+  timestamp?: string;
+}
+
 interface AdminShellProps {
   children: ReactNode;
 }
@@ -31,7 +40,7 @@ export default function AdminShell({ children }: AdminShellProps) {
   const [adminEmail, setAdminEmail] = useState("Admin User");
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const router = useRouter();
 
   useEffect(() => {
