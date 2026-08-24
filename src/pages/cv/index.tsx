@@ -74,7 +74,9 @@ export default function CvPage() {
   const profileUser = useAppSelector((s) => s.auth.user);
   const saving = useAppSelector((s) => s.profile.saving);
 
-  const [templateId, setTemplateId] = useState<string>(draft.digitalCard?.cvTemplateId || CV_TEMPLATES[0]?.id || "");
+  const [templateId, setTemplateId] = useState<string>(
+    draft.digitalCard?.cvTemplateId !== undefined ? draft.digitalCard.cvTemplateId : (CV_TEMPLATES[0]?.id || "")
+  );
   const [primary, setPrimary] = useState<string>(draft.digitalCard?.primaryColor || PALETTES[0].primary);
   const [accent, setAccent] = useState<string>(draft.digitalCard?.accentColor || PALETTES[0].accent);
   const [theme, setTheme] = useState<"light" | "dark">((draft.digitalCard?.theme as "light" | "dark") || "light");
@@ -102,8 +104,8 @@ export default function CvPage() {
 
   useEffect(() => {
     // `!== undefined`, not truthy — an explicitly saved "" (user unselected
-    // the template) must stick after a refresh instead of falling back to
-    // the first template, which a plain truthy check would do.
+    // the template) must stick after a refresh, showing the default classic design
+    // instead of falling back to the first template, which a plain truthy check would do.
     if (draft.digitalCard?.cvTemplateId !== undefined) setTemplateId(draft.digitalCard.cvTemplateId);
     if (draft.digitalCard?.primaryColor) setPrimary(draft.digitalCard.primaryColor);
     if (draft.digitalCard?.accentColor) setAccent(draft.digitalCard.accentColor);

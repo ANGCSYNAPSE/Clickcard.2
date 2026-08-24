@@ -71,7 +71,7 @@ export default function CardPage() {
   const saving = useAppSelector((s) => s.profile.saving);
 
   const [templateId, setTemplateId] = useState<string>(
-    draft.digitalCard?.templateId || "wave-bold",
+    draft.digitalCard?.templateId !== undefined ? draft.digitalCard.templateId : "wave-bold",
   );
   const [primary, setPrimary] = useState<string>(
     draft.digitalCard?.primaryColor || PALETTES[0].primary,
@@ -121,7 +121,10 @@ export default function CardPage() {
 
   // Sync editor controls with whatever profile finishes loading
   useEffect(() => {
-    if (draft.digitalCard?.templateId) setTemplateId(draft.digitalCard.templateId);
+    // `!== undefined`, not truthy — an explicitly saved "" (user unselected
+    // the template) must stick after a refresh instead of falling back to
+    // the default template, which a plain truthy check would do.
+    if (draft.digitalCard?.templateId !== undefined) setTemplateId(draft.digitalCard.templateId);
     if (draft.digitalCard?.primaryColor) setPrimary(draft.digitalCard.primaryColor);
     if (draft.digitalCard?.accentColor) setAccent(draft.digitalCard.accentColor);
     if (draft.digitalCard?.theme) setTheme(draft.digitalCard.theme as "light" | "dark");
