@@ -301,7 +301,6 @@ export const CV_TEMPLATES: CvTemplateDef[] = [
       ],
 
       mainSections: [
-        "summary",
         "experience",
         "references",
       ],
