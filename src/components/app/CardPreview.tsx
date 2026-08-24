@@ -355,6 +355,10 @@ export default function CardPreview({
   const rows = contact.map((r, i) => <Row key={i} t={t} icon={r.icon} label={r.label} />);
 
   // --- template variants ---
+  // When templateId is empty (user unselected a template), the component
+  // falls through to the default "minimal-mono" design (shown at the end).
+  // That default uses the primary, accent, and backgroundColor colors the
+  // user selected, creating a clean, customizable card design.
 
   if (templateId === "chevron-pattern") {
     return (
