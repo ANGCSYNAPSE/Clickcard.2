@@ -21,7 +21,7 @@ import {
   Loader2,
   LayoutTemplate,
   Check,
-  Image,
+  Image as ImageIcon,
   Camera,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
@@ -649,7 +649,7 @@ export default function CvPage() {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={draft.personal.cvProfilePhoto} alt="" className="h-full w-full object-cover" />
                         ) : (
-                          <Image size={20} className="text-ink/30 dark:text-white/30" />
+                          <ImageIcon size={20} className="text-ink/30 dark:text-white/30" />
                         )}
                       </span>
                       <button
