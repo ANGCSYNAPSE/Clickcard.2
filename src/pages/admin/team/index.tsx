@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Head from "next/head";
 import AdminShell from "@/components/admin/AdminShell";
 import { useRequireAdminAuth } from "@/lib/authGuards";
+import { apiClient } from "@/lib/axiosClient";
 import {
   Plus,
   Trash2,
@@ -50,21 +51,7 @@ export default function TeamPage() {
         setMessage(null);
 
         // Call backend API to create admin
-        const response = await fetch("/api/users/admin/create", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-          },
-          body: JSON.stringify(values),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || "Failed to create admin");
-        }
-
-        const data = await response.json();
+        const { data } = await apiClient.post("/api/users/admin/create", values);
 
         // Add new admin to list
         setAdmins([
@@ -83,7 +70,7 @@ export default function TeamPage() {
         form.resetForm();
         setShowCreateForm(false);
       } catch (err: any) {
-        setMessage({ type: "error", text: err.message || "Failed to create admin" });
+        setMessage({ type: "error", text: err.response?.data?.message || err.message || "Failed to create admin" });
       } finally {
         setLoading(false);
       }
@@ -95,19 +82,12 @@ export default function TeamPage() {
 
     try {
       setMessage(null);
-      const response = await fetch(`/api/users/admin/${adminId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-        },
-      });
-
-      if (!response.ok) throw new Error("Failed to delete admin");
+      await apiClient.delete(`/api/users/admin/${adminId}`);
 
       setAdmins(admins.filter((a) => a.id !== adminId));
       setMessage({ type: "success", text: "Admin deleted successfully!" });
     } catch (err: any) {
-      setMessage({ type: "error", text: err.message });
+      setMessage({ type: "error", text: err.response?.data?.message || err.message || "Failed to delete admin" });
     }
   };
 

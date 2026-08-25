@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/router";
 import AdminThemeToggle from "./AdminThemeToggle";
+import { tokenService } from "@/lib/tokenService";
 
 interface Notification {
   id: string;
@@ -80,8 +81,10 @@ export default function AdminShell({ children }: AdminShellProps) {
     if (!confirm("Are you sure you want to logout?")) return;
 
     try {
-      // Clear localStorage
-      localStorage.removeItem("adminToken");
+      // Clear tokens from cookies
+      tokenService.clear();
+
+      // Clear admin flags from localStorage
       localStorage.removeItem("isAdmin");
       localStorage.removeItem("adminEmail");
 

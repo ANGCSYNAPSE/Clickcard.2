@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import { useFormik } from "formik";
 import { Mail, Lock, ArrowRight, Shield, BarChart3, Users, Moon, Sun } from "lucide-react";
 import { adminService } from "@/services/adminService";
+import { tokenService } from "@/lib/tokenService";
 import { SITE_URL } from "@/lib/config";
 import * as Yup from "yup";
 
@@ -76,7 +77,7 @@ export default function AdminLoginPage() {
           values.password
         );
 
-        localStorage.setItem("adminToken", response.token || "admin-token");
+        tokenService.setTokens(response.token || response.accessToken || "admin-token", response.refreshToken);
         localStorage.setItem("isAdmin", "true");
         localStorage.setItem("adminEmail", values.email.trim());
 

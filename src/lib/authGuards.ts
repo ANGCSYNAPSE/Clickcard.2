@@ -41,13 +41,13 @@ export function useRequireAdminAuth() {
   useEffect(() => {
     if (!router.isReady || !mounted) return;
 
-    const adminToken = localStorage.getItem("adminToken");
+    const hasToken = tokenService.isAuthenticated();
     const isAdmin = localStorage.getItem("isAdmin") === "true";
 
-    if (!adminToken || !isAdmin) {
+    if (!hasToken || !isAdmin) {
       router.replace(`/admin/login?redirect=${encodeURIComponent(router.asPath)}`);
     }
   }, [router, mounted]);
 
-  return { ready: mounted && localStorage.getItem("adminToken") && localStorage.getItem("isAdmin") === "true" };
+  return { ready: mounted && tokenService.isAuthenticated() && localStorage.getItem("isAdmin") === "true" };
 }
