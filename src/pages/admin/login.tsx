@@ -101,9 +101,9 @@ export default function AdminLoginPage() {
         <meta name="robots" content="noindex" />
       </Head>
 
-      <div className="flex min-h-screen bg-[#fefaf3] dark:bg-[#0b2e2b]">
+      <div className="flex min-h-screen bg-[#fefaf3] dark:bg-[#1a1a1a]">
         {/* Left Panel - Brand/Admin Info */}
-        <div className="relative hidden w-1/2 overflow-hidden bg-gradient-to-br from-[#fefaf3] via-[#fbf1e1] to-[#f4e2c4] dark:from-[#0b2e2b] dark:via-[#12403c] dark:to-[#0e3a36] lg:block">
+        <div className="relative hidden w-1/2 overflow-hidden bg-gradient-to-br from-[#fefaf3] via-[#fbf1e1] to-[#f4e2c4] dark:from-[#1a1a1a] dark:via-[#262626] dark:to-[#0e3a36] lg:block">
           {/* Decorative shapes */}
           <div className="pointer-events-none absolute -bottom-12 -right-12 h-48 w-48 rounded-full bg-[#be5103]/20 dark:bg-[#be5103]/10" />
           <div className="pointer-events-none absolute -top-20 -left-20 h-64 w-64 rounded-full bg-[#069494]/10 dark:bg-[#069494]/5" />

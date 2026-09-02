@@ -48,7 +48,7 @@ export default function AnalyticsPage() {
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-3xl border border-ink/[0.06] bg-white p-5 dark:border-white/[0.06] dark:bg-[#12403c]">
+          <div key={s.label} className="rounded-3xl border border-ink/[0.06] bg-white p-5 dark:border-white/[0.06] dark:bg-[#262626]">
             <span className={`grid h-11 w-11 place-items-center rounded-2xl ${s.tint} text-white`}>
               <s.icon size={20} />
             </span>
@@ -61,7 +61,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* trend chart */}
-      <div className="mt-6 rounded-3xl border border-ink/[0.06] bg-white p-6 dark:border-white/[0.06] dark:bg-[#12403c]">
+      <div className="mt-6 rounded-3xl border border-ink/[0.06] bg-white p-6 dark:border-white/[0.06] dark:bg-[#262626]">
         <h2 className="font-display text-lg font-bold text-ink dark:text-white">
           Visits over time
         </h2>
@@ -87,7 +87,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* per-link breakdown */}
-      <div className="mt-6 rounded-3xl border border-ink/[0.06] bg-white p-6 dark:border-white/[0.06] dark:bg-[#12403c]">
+      <div className="mt-6 rounded-3xl border border-ink/[0.06] bg-white p-6 dark:border-white/[0.06] dark:bg-[#262626]">
         <h2 className="font-display text-lg font-bold text-ink dark:text-white">
           Top links
         </h2>

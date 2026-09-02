@@ -31,7 +31,7 @@ export function toApiProfile(p: FullProfile): Record<string, unknown> {
     contactInformation: p.contact || {},
     education: p.education || [],
     workExperience: p.experience || [],
-    businessDetails: p.business || {},
+    businessDetails: p.business || [],
     productsServices: p.products || [],
     // backend maps `socialMediaLinks` → social_links column
     socialMediaLinks: p.social || [],
@@ -63,12 +63,21 @@ export function fromApiProfile(d: any): FullProfile {
   const cvProfilePhoto = d.cv_profile_photo ?? d.cvProfilePhoto ?? personal.cvProfilePhoto;
   if (cvProfilePhoto) personal.cvProfilePhoto = cvProfilePhoto;
 
+  // Older saves stored a single business object in this column; newer saves
+  // store an array so a profile can list several businesses.
+  const bizRaw = d.business_details ?? d.businessDetails;
+  const business = Array.isArray(bizRaw)
+    ? bizRaw
+    : bizRaw && Object.keys(bizRaw).length
+      ? [bizRaw]
+      : [];
+
   return {
     personal,
     contact: d.contact_information ?? d.contactInformation ?? {},
     education: d.education ?? [],
     experience: d.work_experience ?? d.workExperience ?? [],
-    business: d.business_details ?? d.businessDetails ?? { hours: [] },
+    business,
     products: d.products_services ?? d.productsServices ?? [],
     social,
     digitalCard: d.digital_card ?? d.digitalCard ?? {},

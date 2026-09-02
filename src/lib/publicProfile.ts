@@ -99,7 +99,7 @@ export interface PublicProfile {
     description?: string;
     mapUrl?: string;
     hours?: PublicHours[];
-  };
+  }[];
   views?: number;
   updatedAt?: string;
   design?: PublicCardDesign;
@@ -148,7 +148,14 @@ export function trackEvent(payload: {
 function mapApiProfile(slug: string, d: any): PublicProfile {
   const personal = d.personal_identity || {};
   const contact = d.contact_information || {};
-  const biz = d.business_details || {};
+  // Older saves stored a single business object in this column; newer saves
+  // store an array so a profile can list several businesses.
+  const bizRaw = d.business_details;
+  const bizList: any[] = Array.isArray(bizRaw)
+    ? bizRaw
+    : bizRaw && Object.keys(bizRaw).length
+      ? [bizRaw]
+      : [];
   const digitalCard = d.digital_card ?? d.digitalCard ?? {};
 
   // social_links may be an array [{platform,url}] or an object { platform: url }.
@@ -192,9 +199,9 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
     products: (d.products_services || []).map((p: any) => ({
       name: p.name, price: p.price, description: p.description, link: p.link,
     })),
-    business: biz.name
-      ? { name: biz.name, category: biz.category, description: biz.description, mapUrl: biz.mapUrl, hours: biz.hours }
-      : undefined,
+    business: bizList
+      .filter((b) => b?.name)
+      .map((b) => ({ name: b.name, category: b.category, description: b.description, mapUrl: b.mapUrl, hours: b.hours })),
     views: d.views,
     updatedAt: d.updated_at,
     design: {
@@ -256,20 +263,22 @@ export const DEMO_PROFILES: Record<string, PublicProfile> = {
       { name: "Portfolio Review (1:1)", price: "₹2,499", description: "45-min live session", link: "https://aarav.design/book" },
       { name: "Design System Kit", price: "₹999", description: "Figma file + docs", link: "https://aarav.design/kit" },
     ],
-    business: {
-      name: "Aarav Design Studio",
-      category: "Design Studio",
-      description: "Brand & product design for ambitious teams.",
-      hours: [
-        { day: "Mon", open: "09:00", close: "18:00" },
-        { day: "Tue", open: "09:00", close: "18:00" },
-        { day: "Wed", open: "09:00", close: "18:00" },
-        { day: "Thu", open: "09:00", close: "18:00" },
-        { day: "Fri", open: "09:00", close: "18:00" },
-        { day: "Sat", closed: true },
-        { day: "Sun", closed: true },
-      ],
-    },
+    business: [
+      {
+        name: "Aarav Design Studio",
+        category: "Design Studio",
+        description: "Brand & product design for ambitious teams.",
+        hours: [
+          { day: "Mon", open: "09:00", close: "18:00" },
+          { day: "Tue", open: "09:00", close: "18:00" },
+          { day: "Wed", open: "09:00", close: "18:00" },
+          { day: "Thu", open: "09:00", close: "18:00" },
+          { day: "Fri", open: "09:00", close: "18:00" },
+          { day: "Sat", closed: true },
+          { day: "Sun", closed: true },
+        ],
+      },
+    ],
   },
 };
 
@@ -358,7 +367,7 @@ export function buildVCard(p: PublicProfile): string {
     "BEGIN:VCARD",
     "VERSION:3.0",
     `FN:${p.fullName || p.username}`,
-    p.business?.name && `ORG:${p.business.name}`,
+    p.business?.[0]?.name && `ORG:${p.business[0].name}`,
     p.tagline && `TITLE:${p.tagline}`,
     p.phone && `TEL;TYPE=CELL:${p.phone}`,
     p.email && `EMAIL:${p.email}`,

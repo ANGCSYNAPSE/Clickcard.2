@@ -50,7 +50,7 @@ export default function SettingsPage() {
       </p>
 
       {/* account */}
-      <section className="mt-6 rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#12403c]">
+      <section className="mt-6 rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#262626]">
         <h2 className="font-display text-lg font-bold text-ink dark:text-white">
           Account
         </h2>
@@ -61,7 +61,7 @@ export default function SettingsPage() {
       </section>
 
       {/* privacy */}
-      <section className="mt-5 rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#12403c]">
+      <section className="mt-5 rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#262626]">
         <h2 className="font-display text-lg font-bold text-ink dark:text-white">
           Profile visibility
         </h2>
@@ -103,7 +103,7 @@ export default function SettingsPage() {
       </section>
 
       {/* security note */}
-      <section className="mt-5 flex items-start gap-3 rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#12403c]">
+      <section className="mt-5 flex items-start gap-3 rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#262626]">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-white/5">
           <ShieldCheck size={20} />
         </span>

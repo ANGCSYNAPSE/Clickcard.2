@@ -22,7 +22,7 @@ export default function ProfilePreviewPage() {
 
   if (!ready) {
     return (
-      <div className="grid min-h-screen place-items-center bg-mist dark:bg-[#0b2e2b]">
+      <div className="grid min-h-screen place-items-center bg-mist dark:bg-[#1a1a1a]">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-200 border-t-brand-500" />
       </div>
     );
@@ -33,7 +33,7 @@ export default function ProfilePreviewPage() {
       <Head>
         <title>View as · ClickCard</title>
       </Head>
-      <div className="min-h-screen bg-mist dark:bg-[#0b2e2b] px-6 py-8">
+      <div className="min-h-screen bg-mist dark:bg-[#1a1a1a] px-6 py-8">
         <div className="mx-auto flex max-w-md flex-col items-center">
           <div className="mb-6 flex w-full items-center justify-between">
             <button

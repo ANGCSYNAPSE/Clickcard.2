@@ -81,7 +81,7 @@ export default function BillingPage() {
       </Head>
 
       {/* current plan */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-ink/[0.06] bg-white p-6 dark:border-white/[0.06] dark:bg-[#12403c]">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-ink/[0.06] bg-white p-6 dark:border-white/[0.06] dark:bg-[#262626]">
         <div className="flex items-center gap-3">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-500 text-white">
             <Crown size={22} />
@@ -118,7 +118,7 @@ export default function BillingPage() {
           return (
             <div
               key={v.id}
-              className={`rounded-3xl border bg-white p-5 dark:bg-[#12403c] ${
+              className={`rounded-3xl border bg-white p-5 dark:bg-[#262626] ${
                 active
                   ? "border-transparent ring-2 ring-brand-400"
                   : "border-ink/[0.06] dark:border-white/[0.06]"
@@ -170,7 +170,7 @@ export default function BillingPage() {
             return (
               <div
                 key={p.id}
-                className={`relative flex flex-col rounded-3xl border bg-white p-6 dark:bg-[#12403c] ${
+                className={`relative flex flex-col rounded-3xl border bg-white p-6 dark:bg-[#262626] ${
                   p.popular
                     ? "border-transparent shadow-soft ring-2 ring-brand-400"
                     : "border-ink/[0.06] dark:border-white/[0.06]"

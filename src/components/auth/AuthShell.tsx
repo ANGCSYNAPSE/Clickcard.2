@@ -54,7 +54,7 @@ export default function AuthShell({
   pageLabel?: string;
 }) {
   return (
-    <div className="flex min-h-screen bg-white dark:bg-[#0b2e2b]">
+    <div className="flex min-h-screen bg-white dark:bg-[#1a1a1a]">
       {/* brand panel */}
       <div className="relative hidden w-1/2 overflow-hidden bg-mist dark:bg-[#0e3a36] lg:block">
         {/* Decorative corner shapes. Anchored bottom-right: the panel's copy

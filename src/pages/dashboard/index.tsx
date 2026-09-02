@@ -176,7 +176,7 @@ export default function DashboardPage() {
         {stats.map((s) => (
           <div
             key={s.label}
-            className="rounded-3xl border border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#12403c]"
+            className="rounded-3xl border border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#262626]"
           >
             <span
               className={`grid h-11 w-11 place-items-center rounded-2xl ${s.tint} text-white`}
@@ -237,7 +237,7 @@ function greeting() {
 /** Its own card, independent of the live preview beside it — sized to its own content, not stretched to match. */
 function ProfileCompletionCard({ completion }: { completion: number }) {
   return (
-    <div className="rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#12403c]">
+    <div className="rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#262626]">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-lg font-bold text-ink dark:text-white">
           Profile completion
@@ -280,7 +280,7 @@ function AnalyticsTrendCard({ trend, className = "" }: { trend?: DashboardTrendP
   }, [trend]);
 
   return (
-    <div className={`flex flex-col rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#12403c] ${className}`}>
+    <div className={`flex flex-col rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#262626] ${className}`}>
       <h2 className="font-display text-lg font-bold text-ink dark:text-white">
         Activity, last 14 days
       </h2>

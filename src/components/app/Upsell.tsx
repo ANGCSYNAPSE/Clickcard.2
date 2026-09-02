@@ -56,7 +56,7 @@ export function Locked({
   return (
     <div className="relative overflow-hidden rounded-3xl">
       <div className="pointer-events-none select-none opacity-40 blur-[2px]">{children}</div>
-      <div className="absolute inset-0 grid place-items-center bg-white/40 backdrop-blur-[1px] dark:bg-[#0b2e2b]/40">
+      <div className="absolute inset-0 grid place-items-center bg-white/40 backdrop-blur-[1px] dark:bg-[#1a1a1a]/40">
         <Link
           href="/billing"
           className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-5 py-3 text-sm font-bold text-white shadow-soft transition hover:scale-105"

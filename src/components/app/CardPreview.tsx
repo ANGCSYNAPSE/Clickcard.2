@@ -293,7 +293,7 @@ export default function CardPreview({
   const patternId = useId();
   const p = profile.personal || {};
   const c = profile.contact || {};
-  const biz = profile.business || {};
+  const biz = profile.business?.[0] || {};
   const fullName = p.fullName || "Your name";
   const initials =
     fullName.trim().split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase() || "Y";

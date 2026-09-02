@@ -397,7 +397,7 @@ export default function CvPage() {
 
             {view === "mobile" && (
               <div className="w-full max-w-[300px] rounded-[2.2rem] bg-ink p-2.5">
-                <div className="flex h-[600px] flex-col overflow-hidden rounded-[1.8rem] bg-white dark:bg-[#12403c]">
+                <div className="flex h-[600px] flex-col overflow-hidden rounded-[1.8rem] bg-white dark:bg-[#262626]">
                   <div className="flex shrink-0 items-center justify-between px-4 pb-1.5 pt-2 text-[10px] font-bold text-ink/70 dark:text-white/70">
                     <span>9:41</span>
                     <span className="rounded-full bg-ink/10 px-2 py-0.5 dark:bg-white/10">LIVE</span>
@@ -408,7 +408,7 @@ export default function CvPage() {
             )}
 
             {view === "preview" && (
-              <div className="flex h-[560px] w-full max-w-[480px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#12403c]">
+              <div className="flex h-[560px] w-full max-w-[480px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#262626]">
                 <div className="flex shrink-0 items-center gap-2 border-b border-ink/[0.06] px-3 py-2 dark:border-white/[0.06]">
                   <span className="h-2.5 w-2.5 rounded-full bg-brand-500" />
                   <span className="h-2.5 w-2.5 rounded-full bg-candy-yellow" />
@@ -441,7 +441,7 @@ export default function CvPage() {
           </div>
         </section>
 
-        <aside className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#12403c] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px]">
+        <aside className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#262626] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px]">
           <div className="px-5 py-4">
             <h3 className="font-display text-lg font-black text-ink dark:text-white">Edit CV</h3>
           </div>
@@ -655,7 +655,7 @@ export default function CvPage() {
                       <button
                         type="button"
                         onClick={() => cvPhotoFileRef.current?.click()}
-                        className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#12403c] dark:text-white"
+                        className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#262626] dark:text-white"
                         aria-label="Upload CV photo"
                       >
                         <Camera size={12} />

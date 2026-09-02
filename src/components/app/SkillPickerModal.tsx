@@ -43,7 +43,7 @@ export default function SkillPickerModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative flex w-full max-w-md flex-col rounded-2xl bg-white shadow-soft-lg dark:bg-[#12403c] border border-ink/5 dark:border-white/5"
+        className="relative flex w-full max-w-md flex-col rounded-2xl bg-white shadow-soft-lg dark:bg-[#262626] border border-ink/5 dark:border-white/5"
       >
         <div className="flex items-center justify-between border-b border-ink/5 px-6 py-4 dark:border-white/5">
           <h3 className="font-display text-base font-black text-ink dark:text-white">Add skill</h3>

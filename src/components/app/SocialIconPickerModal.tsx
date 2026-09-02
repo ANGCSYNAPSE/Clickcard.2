@@ -22,7 +22,7 @@ export default function SocialIconPickerModal({
       <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative flex w-full max-w-sm flex-col rounded-t-3xl bg-white shadow-soft-lg sm:max-h-[80vh] sm:rounded-3xl dark:bg-[#12403c]"
+        className="relative flex w-full max-w-sm flex-col rounded-t-3xl bg-white shadow-soft-lg sm:max-h-[80vh] sm:rounded-3xl dark:bg-[#262626]"
       >
         {/* header */}
         <div className="flex items-center justify-between px-5 pt-5">

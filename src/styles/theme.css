@@ -12,10 +12,10 @@
 }
 
 .dark {
-  --background: #0b2e2b;
+  --background: #1a1a1a91;
   --foreground: #fefaf3;
-  --surface: #12403c;
-  --muted: #164943;
+  --surface: #262626;
+  --muted: #2e2e2e;
 }
 
 html {
@@ -54,7 +54,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.6);
   }
   .dark .glass {
-    background: rgba(11, 46, 43, 0.6);
+    background: rgba(26, 26, 26, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
   .ring-gradient {
@@ -65,7 +65,7 @@ body {
   }
   .dark .ring-gradient {
     background:
-      linear-gradient(#12403c, #12403c) padding-box,
+      linear-gradient(#262626, #262626) padding-box,
       linear-gradient(120deg, #be5103, #ffce1b, #069494) border-box;
   }
   .shimmer-text {

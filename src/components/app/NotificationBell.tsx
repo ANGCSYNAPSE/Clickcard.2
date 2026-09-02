@@ -70,14 +70,14 @@ export default function NotificationBell() {
       >
         <Bell size={18} />
         {unread > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-candy-pink px-1 text-[10px] font-black text-white ring-2 ring-white dark:ring-[#0b2e2b]">
+          <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-candy-pink px-1 text-[10px] font-black text-white ring-2 ring-white dark:ring-[#1a1a1a]">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="fixed inset-x-3 top-16 z-50 overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-soft-lg dark:border-white/[0.06] dark:bg-[#12403c] sm:absolute sm:inset-auto sm:right-0 sm:top-12 sm:w-80 lg:w-96">
+        <div className="fixed inset-x-3 top-16 z-50 overflow-hidden rounded-2xl border border-ink/[0.06] bg-white shadow-soft-lg dark:border-white/[0.06] dark:bg-[#262626] sm:absolute sm:inset-auto sm:right-0 sm:top-12 sm:w-80 lg:w-96">
           <div className="flex items-center justify-between border-b border-ink/[0.06] px-4 py-3 dark:border-white/[0.06]">
             <p className="font-display text-sm font-black text-ink dark:text-white">
               Notifications

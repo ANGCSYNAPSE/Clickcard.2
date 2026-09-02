@@ -18,7 +18,7 @@ const emptyProfile: FullProfile = {
   contact: {},
   education: [],
   experience: [],
-  business: { hours: [] },
+  business: [],
   products: [],
   social: [],
   digitalCard: {},

@@ -108,7 +108,7 @@ export default function AppShell({
 
   if (!ready) {
     return (
-      <div className="grid min-h-screen place-items-center bg-mist dark:bg-[#0b2e2b]">
+      <div className="grid min-h-screen place-items-center bg-mist dark:bg-[#1a1a1a]">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-200 border-t-brand-500" />
       </div>
     );
@@ -125,7 +125,7 @@ export default function AppShell({
   const initial = (user?.username || user?.email || "U")[0].toUpperCase();
 
   return (
-    <div className="min-h-screen bg-mist dark:bg-[#0b2e2b]">
+    <div className="min-h-screen bg-mist dark:bg-[#1a1a1a]">
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden"
@@ -135,7 +135,7 @@ export default function AppShell({
 
       {/* ───────── sidebar ───────── */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-[min(270px,calc(100vw-3rem))] flex-col overflow-y-auto border-r border-ink/[0.06] bg-white px-4 py-5 transition-transform dark:border-white/[0.06] dark:bg-[#12403c] lg:w-[270px] lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-[min(270px,calc(100vw-3rem))] flex-col overflow-y-auto border-r border-ink/[0.06] bg-white px-4 py-5 transition-transform dark:border-white/[0.06] dark:bg-[#262626] lg:w-[270px] lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -234,7 +234,7 @@ export default function AppShell({
 
       {/* ───────── main ───────── */}
       <div className="lg:pl-[270px]">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-ink/[0.06] bg-white/75 px-4 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0b2e2b]/75 sm:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-ink/[0.06] bg-white/75 px-4 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#1a1a1a]/75 sm:px-6">
           <button
             className="text-ink dark:text-white transition hover:opacity-80 lg:hidden"
             onClick={() => dispatch(setSidebar(true))}
@@ -284,7 +284,7 @@ export default function AppShell({
                 <ChevronDown size={14} className="text-ink/50 dark:text-white/50" />
               </button>
               {menuOpen && (
-                <div className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-2xl border border-ink/[0.06] bg-white py-1.5 shadow-card dark:border-white/[0.06] dark:bg-[#12403c]">
+                <div className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-2xl border border-ink/[0.06] bg-white py-1.5 shadow-card dark:border-white/[0.06] dark:bg-[#262626]">
                   <div className="border-b border-ink/[0.06] px-4 py-3 dark:border-white/[0.06]">
                     <p className="truncate text-sm font-bold text-ink dark:text-white">
                       {user?.username ? `@${user.username}` : "Account"}

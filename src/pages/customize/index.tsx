@@ -327,7 +327,7 @@ export default function StudioPage() {
         </div>
 
         {/* controls */}
-        <div className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#12403c] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px] 2xl:w-[520px]">
+        <div className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#262626] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px] 2xl:w-[520px]">
           {/* Design Heading */}
           <div className="px-5 py-4">
             <h3 className="font-display text-lg font-black text-ink dark:text-white">Design</h3>
@@ -896,7 +896,7 @@ export default function StudioPage() {
                     </span>
                     <button
                       onClick={() => fileRef.current?.click()}
-                      className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#12403c] dark:text-white"
+                      className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#262626] dark:text-white"
                       aria-label="Upload photo"
                     >
                       <Camera size={12} />
@@ -920,7 +920,7 @@ export default function StudioPage() {
                       ) : (
                         <ImageIcon size={18} />
                       )}
-                      <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#12403c] dark:text-white">
+                      <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#262626] dark:text-white">
                         <Plus size={12} />
                       </span>
                     </button>

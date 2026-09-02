@@ -271,7 +271,9 @@ export default function UserDetailsPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-muted dark:text-white/60">Business / Company</p>
-                      <p className="text-sm font-semibold text-ink dark:text-white">{profile.business_details?.name || "N/A"}</p>
+                      <p className="text-sm font-semibold text-ink dark:text-white">
+                        {(Array.isArray(profile.business_details) ? profile.business_details[0] : profile.business_details)?.name || "N/A"}
+                      </p>
                     </div>
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-muted dark:text-white/60">Products / Services</p>
@@ -549,26 +551,30 @@ export default function UserDetailsPage() {
               </div>
 
               {/* Business Details */}
-              {profile.business_details && (
+              {profile.business_details && (Array.isArray(profile.business_details) ? profile.business_details.length > 0 : true) && (
                 <div className="bg-white dark:bg-dark-hover rounded-xl p-6 border border-line/50 dark:border-line/10">
                   <h3 className="font-bold text-ink dark:text-white mb-4">Business Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-muted dark:text-white/60 mb-1">Business Name</p>
-                      <p className="text-sm font-semibold text-ink dark:text-white">{profile.business_details.name || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted dark:text-white/60 mb-1">Category</p>
-                      <p className="text-sm font-semibold text-ink dark:text-white">{profile.business_details.category || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted dark:text-white/60 mb-1">Description</p>
-                      <p className="text-sm font-semibold text-ink dark:text-white">{profile.business_details.description || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted dark:text-white/60 mb-1">Map URL</p>
-                      <p className="text-sm font-semibold text-ink dark:text-white break-all">{profile.business_details.mapUrl || "N/A"}</p>
-                    </div>
+                  <div className="space-y-4">
+                    {(Array.isArray(profile.business_details) ? profile.business_details : [profile.business_details]).map((biz: any, idx: number) => (
+                      <div key={idx} className="p-4 bg-paper-soft dark:bg-dark rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-muted dark:text-white/60 mb-1">Business Name</p>
+                          <p className="text-sm font-semibold text-ink dark:text-white">{biz.name || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted dark:text-white/60 mb-1">Category</p>
+                          <p className="text-sm font-semibold text-ink dark:text-white">{biz.category || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted dark:text-white/60 mb-1">Description</p>
+                          <p className="text-sm font-semibold text-ink dark:text-white">{biz.description || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted dark:text-white/60 mb-1">Map URL</p>
+                          <p className="text-sm font-semibold text-ink dark:text-white break-all">{biz.mapUrl || "N/A"}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

@@ -55,7 +55,7 @@ export default function SharePopup({
       <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative flex max-h-[95vh] w-full max-w-sm flex-col rounded-t-3xl bg-white shadow-soft-lg sm:max-w-md sm:rounded-3xl lg:max-w-lg dark:bg-[#12403c]"
+        className="relative flex max-h-[95vh] w-full max-w-sm flex-col rounded-t-3xl bg-white shadow-soft-lg sm:max-w-md sm:rounded-3xl lg:max-w-lg dark:bg-[#262626]"
       >
         {/* header */}
         <div className="flex shrink-0 items-center justify-between px-5 pt-5 lg:px-6 lg:pt-6">

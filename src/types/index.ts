@@ -114,6 +114,7 @@ export interface BusinessHours {
 }
 
 export interface BusinessSection {
+  id?: string;
   name?: string;
   category?: string;
   description?: string;
@@ -202,7 +203,7 @@ export interface FullProfile {
   contact?: ContactSection;
   education?: EducationItem[];
   experience?: ExperienceItem[];
-  business?: BusinessSection;
+  business?: BusinessSection[];
   products?: ProductItem[];
   social?: SocialLink[];
   digitalCard?: DigitalCardSection;

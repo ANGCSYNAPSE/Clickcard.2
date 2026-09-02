@@ -167,7 +167,7 @@ export default function SharePage() {
 
       {/* Your profile QR — always available, independent of custom share links */}
       {profileUrl && (
-        <div className="mt-5 flex flex-col items-center gap-4 rounded-3xl border border-ink/5 bg-white p-5 text-center dark:border-white/5 dark:bg-[#12403c] sm:flex-row sm:items-center sm:text-left">
+        <div className="mt-5 flex flex-col items-center gap-4 rounded-3xl border border-ink/5 bg-white p-5 text-center dark:border-white/5 dark:bg-[#262626] sm:flex-row sm:items-center sm:text-left">
           <div className="grid h-36 w-36 shrink-0 place-items-center rounded-2xl bg-white p-2 ring-1 ring-ink/5 dark:bg-white sm:h-28 sm:w-28">
             <QRCodeCanvas
               id="qr-profile"
@@ -198,7 +198,7 @@ export default function SharePage() {
       {showForm && (
         <form
           onSubmit={form.handleSubmit}
-          className="mt-5 grid gap-4 rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#12403c] sm:grid-cols-2"
+          className="mt-5 grid gap-4 rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#262626] sm:grid-cols-2"
         >
           <Input
             name="custom_slug"
@@ -274,7 +274,7 @@ export default function SharePage() {
           return (
             <div
               key={l.id}
-              className="flex flex-col items-center gap-4 rounded-3xl border border-ink/5 bg-white p-5 text-center dark:border-white/5 dark:bg-[#12403c] sm:flex-row sm:items-center sm:text-left"
+              className="flex flex-col items-center gap-4 rounded-3xl border border-ink/5 bg-white p-5 text-center dark:border-white/5 dark:bg-[#262626] sm:flex-row sm:items-center sm:text-left"
             >
               <div className="grid h-36 w-36 shrink-0 place-items-center rounded-2xl bg-white p-2 ring-1 ring-ink/5 dark:bg-white sm:h-28 sm:w-28">
                 <QRCodeCanvas
@@ -358,7 +358,7 @@ function SkeletonRows() {
       {[0, 1].map((i) => (
         <div
           key={i}
-          className="flex animate-pulse items-center gap-4 rounded-3xl border border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#12403c]"
+          className="flex animate-pulse items-center gap-4 rounded-3xl border border-ink/5 bg-white p-5 dark:border-white/5 dark:bg-[#262626]"
         >
           <div className="h-24 w-24 rounded-2xl bg-ink/5 dark:bg-white/5" />
           <div className="flex-1 space-y-2">

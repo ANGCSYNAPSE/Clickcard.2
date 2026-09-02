@@ -136,7 +136,7 @@ export default function LiveProfileCard({
   experience?: LiveProfileExperience[];
   education?: LiveProfileEducation[];
   products?: LiveProfileProduct[];
-  business?: LiveProfileBusiness;
+  business?: LiveProfileBusiness[];
   headerLayout?: HeaderLayout;
   wallpaperType?: WallpaperType;
   backgroundImageUrl?: string;
@@ -612,70 +612,71 @@ export default function LiveProfileCard({
         )}
 
         {/* Business */}
-        {business?.name && (
-          <div className="mt-4 w-full shrink-0 text-left">
+        {business && business.filter((b) => b.name).length > 0 && (
+          <div className="mt-4 w-full shrink-0 space-y-2 text-left">
             <p className="text-[10px] font-black uppercase tracking-wider opacity-60" style={{ color: pageColor }}>
               Business
             </p>
-            <div
-              className="mt-2 flex items-start gap-2.5 px-3 py-2.5 backdrop-blur-sm"
-              style={cardStyle}
-            >
-              <Building2 size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-bold" style={{ color: cardText, ...bodySizeStyle }}>
-                  {business.name}
-                </p>
-                {(business.category || business.description) && (
-                  <p className="truncate opacity-70" style={{ color: cardText, ...bodySubSizeStyle }}>
-                    {business.category || business.description}
+            {business.filter((b) => b.name).map((b, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-2.5 px-3 py-2.5 backdrop-blur-sm"
+                style={cardStyle}
+              >
+                <Building2 size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-bold" style={{ color: cardText, ...bodySizeStyle }}>
+                    {b.name}
                   </p>
-                )}
-                {interactive && business.mapUrl && (
-                  <a
-                    href={business.mapUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-1.5 inline-flex items-center gap-1 font-bold underline-offset-2 hover:underline"
-                    style={{ color: cardText, ...bodySubSizeStyle }}
-                  >
-                    <MapPin size={11} /> View on map
-                  </a>
-                )}
+                  {(b.category || b.description) && (
+                    <p className="truncate opacity-70" style={{ color: cardText, ...bodySubSizeStyle }}>
+                      {b.category || b.description}
+                    </p>
+                  )}
+                  {interactive && b.mapUrl && (
+                    <a
+                      href={b.mapUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1.5 inline-flex items-center gap-1 font-bold underline-offset-2 hover:underline"
+                      style={{ color: cardText, ...bodySubSizeStyle }}
+                    >
+                      <MapPin size={11} /> View on map
+                    </a>
+                  )}
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         )}
 
           {/* Footer — pinned to the bottom when content is short, scrolls with content when it overflows */}
-          <div className="mt-auto shrink-0 pt-6 pb-2 text-center text-[10px] opacity-60" style={{ color: pageColor }}>
-            <p>Report • Privacy</p>
-            <p>More from ClickCard</p>
+          <div className="mt-auto shrink-0 pt-6 pb-2 flex flex-col items-center gap-4">
+            {interactive ? (
+              <a
+                href="/signup"
+                className="shrink-0 px-8 py-2.5 rounded-full font-bold text-sm shadow-lg transition hover:opacity-90"
+                style={{ background: textColor, color: bg }}
+              >
+                Join on ClickCard
+              </a>
+            ) : (
+              <button
+                className="shrink-0 px-8 py-2.5 rounded-full font-bold text-sm shadow-lg transition hover:opacity-90"
+                style={{
+                  background: textColor,
+                  color: bg,
+                }}
+              >
+                Join on ClickCard
+              </button>
+            )}
+            <div className="text-center text-[10px] opacity-60" style={{ color: pageColor }}>
+              <p>Report • Privacy</p>
+              <p>More from ClickCard</p>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Action Button only — fixed to the bottom of the card, not scrolling */}
-      <div className="absolute inset-x-0 bottom-4 z-20 flex justify-center">
-        {interactive ? (
-          <a
-            href="/signup"
-            className="shrink-0 px-8 py-2.5 rounded-full font-bold text-sm shadow-lg transition hover:opacity-90"
-            style={{ background: textColor, color: bg }}
-          >
-            Join on ClickCard
-          </a>
-        ) : (
-          <button
-            className="shrink-0 px-8 py-2.5 rounded-full font-bold text-sm shadow-lg transition hover:opacity-90"
-            style={{
-              background: textColor,
-              color: bg,
-            }}
-          >
-            Join on ClickCard
-          </button>
-        )}
       </div>
     </div>
   );

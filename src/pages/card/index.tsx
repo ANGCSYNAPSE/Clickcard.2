@@ -102,7 +102,7 @@ export default function CardPage() {
     draft.digitalCard?.cardPersonal || draft.personal || {},
   );
   const [cardBusiness, setCardBusiness] = useState<BusinessSection>(
-    draft.digitalCard?.cardBusiness || draft.business || {},
+    draft.digitalCard?.cardBusiness || draft.business?.[0] || {},
   );
   const [cardContact, setCardContact] = useState<ContactSection>(
     draft.digitalCard?.cardContact || draft.contact || {},
@@ -244,7 +244,7 @@ export default function CardPage() {
   const cardProfile = {
     ...draft,
     personal: { ...draft.personal, ...cardPersonal },
-    business: { ...draft.business, ...cardBusiness },
+    business: [{ ...draft.business?.[0], ...cardBusiness }],
     contact: { ...draft.contact, ...cardContact },
   };
 
@@ -328,7 +328,7 @@ export default function CardPage() {
 
             {view === "mobile" && (
               <div className="w-full max-w-[300px] rounded-[2.2rem] bg-ink p-2.5">
-                <div className="flex h-[600px] flex-col overflow-hidden rounded-[1.8rem] bg-white dark:bg-[#12403c]">
+                <div className="flex h-[600px] flex-col overflow-hidden rounded-[1.8rem] bg-white dark:bg-[#262626]">
                   <div className="flex shrink-0 items-center justify-between px-4 pb-1.5 pt-2 text-[10px] font-bold text-ink/70 dark:text-white/70">
                     <span>9:41</span>
                     <span className="rounded-full bg-ink/10 px-2 py-0.5 dark:bg-white/10">
@@ -342,7 +342,7 @@ export default function CardPage() {
 
             {view === "preview" && (
               <div
-                className={`flex h-[680px] w-full flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#12403c] ${
+                className={`flex h-[680px] w-full flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#262626] ${
                   isPortraitTemplate ? "max-w-[720px]" : "max-w-[480px]"
                 }`}
               >
@@ -380,7 +380,7 @@ export default function CardPage() {
         </section>
 
         {/* control rail — same shell/list/detail-view pattern as the Customize page */}
-        <aside className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#12403c] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px]">
+        <aside className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#262626] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px]">
           <div className="px-5 py-4">
             <h3 className="font-display text-lg font-black text-ink dark:text-white">Edit Card</h3>
           </div>
@@ -536,7 +536,7 @@ export default function CardPage() {
                       <button
                         type="button"
                         onClick={() => logoFileRef.current?.click()}
-                        className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#12403c] dark:text-white"
+                        className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#262626] dark:text-white"
                         aria-label="Upload business logo"
                       >
                         <Camera size={12} />

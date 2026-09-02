@@ -44,7 +44,7 @@ export default function ImageCropModal({
       <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative flex w-full max-w-sm flex-col rounded-t-3xl bg-white shadow-soft-lg sm:rounded-3xl dark:bg-[#12403c]"
+        className="relative flex w-full max-w-sm flex-col rounded-t-3xl bg-white shadow-soft-lg sm:rounded-3xl dark:bg-[#262626]"
       >
         <div className="flex items-center justify-between px-5 pt-5">
           <h3 className="font-display text-base font-black text-ink dark:text-white">{title}</h3>
