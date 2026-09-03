@@ -38,6 +38,13 @@ import type {
   FullProfile,
 } from "@/types";
 
+/** Discord has no public profile URL, so we store a `discord.com/users/<id>`
+ * deep link in `url` and let the editor show/edit just the numeric ID. */
+const discordIdFromUrl = (url?: string) => url?.match(/(\d{5,})/)?.[1] || "";
+
+/** Purely optional — the "None" option is always first so nobody is forced to pick one. */
+const TITLE_OPTIONS = ["Mr.", "Mrs.", "Ms.", "Miss", "Dr.", "Er.", "Prof.", "Adv.", "CA"];
+
 type SectionKey =
   | "personal"
   | "contact"
@@ -310,20 +317,44 @@ export default function ProfileEditorPage() {
                           <Trash2 size={14} /> Remove
                         </button>
                       </div>
-                      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-                        <Input
-                          label="Username"
-                          placeholder="@yourhandle"
-                          value={findSocial(editingSocial)?.username || ""}
-                          onChange={(e) => updateSocial(editingSocial, { username: e.target.value })}
-                        />
-                        <Input
-                          label="URL"
-                          placeholder="https://…"
-                          value={findSocial(editingSocial)?.url || ""}
-                          onChange={(e) => updateSocial(editingSocial, { url: e.target.value })}
-                        />
-                      </div>
+                      {editingSocial.toLowerCase() === "discord" ? (
+                        <>
+                          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+                            <Input
+                              label="Username"
+                              placeholder="yourusername"
+                              value={findSocial(editingSocial)?.username || ""}
+                              onChange={(e) => updateSocial(editingSocial, { username: e.target.value })}
+                            />
+                            <Input
+                              label="User ID"
+                              placeholder="1234760987654321"
+                              inputMode="numeric"
+                              value={discordIdFromUrl(findSocial(editingSocial)?.url)}
+                              onChange={(e) => {
+                                const id = e.target.value.replace(/\D/g, "");
+                                updateSocial(editingSocial, { url: id ? `https://discord.com/users/${id}` : "" });
+                              }}
+                            />
+                          </div>
+                          
+                        </>
+                      ) : (
+                        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+                          <Input
+                            label="Username"
+                            placeholder="@yourhandle"
+                            value={findSocial(editingSocial)?.username || ""}
+                            onChange={(e) => updateSocial(editingSocial, { username: e.target.value })}
+                          />
+                          <Input
+                            label="URL"
+                            placeholder="https://…"
+                            value={findSocial(editingSocial)?.url || ""}
+                            onChange={(e) => updateSocial(editingSocial, { url: e.target.value })}
+                          />
+                        </div>
+                      )}
                       <button
                         type="button"
                         onClick={() => setEditingSocial(null)}
@@ -335,12 +366,32 @@ export default function ProfileEditorPage() {
                   )}
                 </div>
 
-                <Input
-                  label="Full name"
-                  placeholder="Aarav Mehta"
-                  value={draft.personal?.fullName || ""}
-                  onChange={(e) => patch("personal", { ...draft.personal, fullName: e.target.value })}
-                />
+                <div className="grid grid-cols-[110px_1fr] gap-3">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-semibold text-ink/80 dark:text-white/80">
+                      Title
+                    </label>
+                    <select
+                      value={draft.personal?.title || ""}
+                      onChange={(e) => patch("personal", { ...draft.personal, title: e.target.value })}
+                      className="h-12 w-full rounded-2xl border-2 border-brand-100 bg-white px-3 text-sm font-medium text-ink outline-none transition-all focus:border-brand-400 focus:ring-4 focus:ring-brand-100 dark:border-white/10 dark:bg-[#262626] dark:text-white"
+                    >
+                      {/* Native <option> popups ignore the page's dark-mode CSS vars and
+                          Tailwind's translucent dark: backgrounds, so each option needs an
+                          explicit opaque background/text color or it renders white-on-white. */}
+                      <option value="" className="bg-white text-ink dark:bg-[#262626] dark:text-white">None</option>
+                      {TITLE_OPTIONS.map((t) => (
+                        <option key={t} value={t} className="bg-white text-ink dark:bg-[#262626] dark:text-white">{t}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <Input
+                    label="Full name"
+                    placeholder="Aarav Mehta"
+                    value={draft.personal?.fullName || ""}
+                    onChange={(e) => patch("personal", { ...draft.personal, fullName: e.target.value })}
+                  />
+                </div>
                 <div>
                   <label className="mb-1.5 block text-sm font-semibold text-ink/80 dark:text-white/80">
                     Bio

@@ -1,6 +1,7 @@
 import type { FullProfile } from "@/types";
 import LiveProfileCard from "@/components/app/LiveProfileCard";
 import { useAppSelector } from "@/store/hooks";
+import { displayName } from "@/lib/personal";
 
 /** The same Linktree-style live preview card used in the Studio design tool. */
 export default function ProfilePreview({
@@ -13,9 +14,11 @@ export default function ProfilePreview({
   username?: string | null;
 }) {
   const design = useAppSelector((s) => s.design);
-  const name = profile.personal?.fullName || "Your name";
+  const name = displayName(profile.personal);
   const bio = profile.personal?.bio;
-  const socialLinks = (profile.social || []).filter((s) => s.url);
+  // Discord has no profile URL, so an entry with only a username (no numeric
+  // User ID yet) still shows as a non-clickable badge instead of vanishing.
+  const socialLinks = (profile.social || []).filter((s) => s.url || s.username);
 
   return (
     <LiveProfileCard

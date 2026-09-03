@@ -42,6 +42,7 @@ import {
 } from "@/store/slices/designSlice";
 import { useRequireAuth } from "@/lib/authGuards";
 import { STYLE_PRESETS, type StylePreset } from "@/lib/stylePresets";
+import { displayName } from "@/lib/personal";
 import { FONT_ITEMS, loadGoogleFont } from "@/lib/fonts";
 import { getContrastText } from "@/lib/color";
 
@@ -287,12 +288,12 @@ export default function StudioPage() {
               primary={primary}
               accent={accent}
               theme={theme}
-              name={draft.personal?.fullName || "Your name"}
+              name={displayName(draft.personal)}
               username={user?.username}
               avatarUrl={displayAvatar}
               bannerUrl={bannerImageUrl || undefined}
               bio={draft.personal?.bio}
-              socialLinks={(draft.social || []).filter((s) => s.url)}
+              socialLinks={(draft.social || []).filter((s) => s.url || s.username)}
               contact={draft.contact}
               experience={draft.experience}
               education={draft.education}

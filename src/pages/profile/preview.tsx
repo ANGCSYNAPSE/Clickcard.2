@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProfile } from "@/store/slices/profileSlice";
 import { useRequireAuth } from "@/lib/authGuards";
 import LiveProfileCard from "@/components/app/LiveProfileCard";
+import { displayName } from "@/lib/personal";
 
 /** Standalone "View as" preview — the live profile card on its own page. */
 export default function ProfilePreviewPage() {
@@ -50,11 +51,11 @@ export default function ProfilePreviewPage() {
 
           <LiveProfileCard
             {...design}
-            name={draft.personal?.fullName || "Your name"}
+            name={displayName(draft.personal)}
             username={user?.username}
             avatarUrl={draft.personal?.profilePicture}
             bio={draft.personal?.bio}
-            socialLinks={(draft.social || []).filter((s) => s.url)}
+            socialLinks={(draft.social || []).filter((s) => s.url || s.username)}
             contact={draft.contact}
             experience={draft.experience}
             education={draft.education}

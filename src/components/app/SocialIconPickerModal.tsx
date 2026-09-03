@@ -58,7 +58,7 @@ export default function SocialIconPickerModal({
         </div>
 
         {/* list */}
-        <div className="mt-2 flex-1 overflow-y-auto px-2 pb-4">
+        <div className="no-scrollbar mt-2 flex-1 overflow-y-auto px-2 pb-4">
           {filtered.length === 0 ? (
             <p className="px-3 py-8 text-center text-sm text-ink/45 dark:text-white/45">
               No platforms match &ldquo;{query}&rdquo;

@@ -10,7 +10,9 @@
 
 export interface PublicSocial {
   platform: string;
-  url: string;
+  // Optional — Discord has no public profile URL, so an entry can carry only
+  // a `username` to display as a non-clickable badge.
+  url?: string;
   username?: string;
   label?: string;
 }
@@ -163,7 +165,7 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
   const sl = d.social_links;
   if (Array.isArray(sl)) {
     social = sl
-      .filter((s: any) => s?.url)
+      .filter((s: any) => s?.url || s?.username)
       .map((s: any) => ({
         platform: s.platform || s.label || "Link",
         url: s.url,
@@ -179,7 +181,9 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
   return {
     username: d.username || slug,
     isPublic: d.is_public ?? d.isPublic ?? true,
-    fullName: personal.fullName || d.name || undefined,
+    fullName: personal.title && personal.fullName
+      ? `${personal.title} ${personal.fullName}`
+      : personal.fullName || d.name || undefined,
     tagline: personal.tagline,
     bio: personal.bio || d.profile_bio || undefined,
     profilePicture: d.profile_picture || personal.profilePicture || undefined,

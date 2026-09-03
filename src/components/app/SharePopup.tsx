@@ -31,7 +31,7 @@ export default function SharePopup({
   const [showQr, setShowQr] = useState(true);
 
   const shortLabel = profileUrl.replace(/^https?:\/\//, "");
-  const socialLinks = (profile?.social || []).filter((s) => s.url);
+  const socialLinks = (profile?.social || []).filter((s) => s.url || s.username);
   const isCvShare = shareType === "cv";
   const isCardShare = shareType === "card";
 

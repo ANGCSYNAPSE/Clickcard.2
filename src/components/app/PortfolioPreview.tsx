@@ -36,7 +36,7 @@ export default function PortfolioPreview({
   const c = profile.contact || {};
   const experience = profile.experience || [];
   const education = profile.education || [];
-  const social = (socialLinks || []).filter((s) => s.url);
+  const social = (socialLinks || []).filter((s) => s.url || s.username);
   const linkedin = social.find((s) => s.platform.toLowerCase() === "linkedin");
   const github = social.find((s) => s.platform.toLowerCase() === "github");
   const otherSocial = social.filter((s) => s !== linkedin && s !== github);
@@ -199,7 +199,7 @@ export default function PortfolioPreview({
             {(linkedin || c.website) && (
               <p className="flex items-center gap-2">
                 <ExternalLink size={14} style={{ color: primary }} />
-                {linkedin ? linkedin.url : c.website}
+                {linkedin ? linkedin.url || (linkedin.username ? `@${linkedin.username}` : "LinkedIn") : c.website}
               </p>
             )}
             {github && (
@@ -208,7 +208,7 @@ export default function PortfolioPreview({
                   const GithubIcon = getSocialIcon("GitHub");
                   return <GithubIcon size={14} style={{ color: primary }} />;
                 })()}
-                {github.url}
+                {github.url || (github.username ? `@${github.username}` : "GitHub")}
               </p>
             )}
             {otherSocial.map((s, i) => {
@@ -216,7 +216,7 @@ export default function PortfolioPreview({
               return (
                 <p key={i} className="flex items-center gap-2">
                   <SIcon size={14} style={{ color: primary }} />
-                  {s.url}
+                  {s.url || (s.username ? `@${s.username}` : s.platform)}
                 </p>
               );
             })}

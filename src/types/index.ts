@@ -35,6 +35,8 @@ export interface SocialSigninPayload {
 /* ---------------- Profile (8 sections) ---------------- */
 
 export interface PersonalSection {
+  /** Optional honorific shown before the name (Mr., Dr., …). Never required. */
+  title?: string;
   fullName?: string;
   tagline?: string;
   bio?: string;
