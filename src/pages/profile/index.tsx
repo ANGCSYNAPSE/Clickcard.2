@@ -1,6 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import Head from "next/head";
 import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   User as UserIcon,
   Phone,
   GraduationCap,
@@ -13,11 +28,14 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Eye,
+  X,
 } from "lucide-react";
 import { SOCIAL_QUICK_ADD, ALL_SOCIAL_PLATFORMS, getSocialIcon } from "@/lib/socialPlatforms";
 import AppShell from "@/components/app/AppShell";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import ProfilePreview from "@/components/app/ProfilePreview";
 import ImageCropModal from "@/components/app/ImageCropModal";
 import SocialIconPickerModal from "@/components/app/SocialIconPickerModal";
@@ -67,6 +85,55 @@ const SECTIONS: { key: SectionKey; label: string; icon: typeof UserIcon }[] = [
   { key: "products", label: "Products", icon: Package },
 ];
 
+/** One draggable icon in the "Link your socials" quick-add row. Only
+ * already-added platforms are sortable — the catalog of not-yet-added
+ * platforms and the "+" button stay fixed at the end. */
+function SortableSocialIcon({
+  platform,
+  Icon,
+  added,
+  isEditing,
+  onClick,
+}: {
+  platform: string;
+  Icon: React.ComponentType<{ size?: number }>;
+  added: boolean;
+  isEditing: boolean;
+  onClick: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: platform,
+  });
+
+  return (
+    <button
+      ref={setNodeRef}
+      type="button"
+      onClick={onClick}
+      title={added ? `Edit ${platform}` : `Add ${platform}`}
+      aria-label={added ? `Edit ${platform}` : `Add ${platform}`}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        touchAction: "none",
+      }}
+      className={`grid h-9 w-9 cursor-grab place-items-center rounded-full transition active:cursor-grabbing ${
+        isDragging ? "z-10 opacity-70 shadow-lift" : ""
+      } ${
+        isEditing
+          ? "bg-brand-500 text-white ring-2 ring-brand-500/30"
+          : added
+          ? "bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-white"
+          : "bg-ink/5 text-ink/60 hover:bg-brand-50 hover:text-brand-600 dark:bg-white/10 dark:text-white/60 dark:hover:bg-white/20"
+      }`}
+      {...attributes}
+      {...listeners}
+    >
+      <Icon size={15} />
+    </button>
+  );
+}
+
 export default function ProfileEditorPage() {
   const dispatch = useAppDispatch();
   const { draft, saving, status, dirty } = useAppSelector((s) => s.profile);
@@ -78,6 +145,7 @@ export default function ProfileEditorPage() {
   const [cropSource, setCropSource] = useState<string | null>(null);
   const [socialPickerOpen, setSocialPickerOpen] = useState(false);
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -125,6 +193,26 @@ export default function ProfileEditorPage() {
     setEditingSocial(null);
   };
 
+  /** Drag-reorder the quick-add icon row — the underlying `social` array's
+   * order is what the live card actually renders in, so dragging an icon
+   * really does move that link on the public page. */
+  const reorderSocial = (fromPlatform: string, toPlatform: string) => {
+    const fromIndex = social.findIndex((s) => s.platform?.toLowerCase() === fromPlatform.toLowerCase());
+    const toIndex = social.findIndex((s) => s.platform?.toLowerCase() === toPlatform.toLowerCase());
+    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return;
+    patch("social", arrayMove(social, fromIndex, toIndex));
+  };
+
+  const dragSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+  );
+
+  const onSocialDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    reorderSocial(String(active.id), String(over.id));
+  };
+
   /** Fixed quick-add icons plus any extra platforms already added via the picker. */
   const socialIconCatalog = [
     ...SOCIAL_QUICK_ADD,
@@ -142,7 +230,6 @@ export default function ProfileEditorPage() {
     .map((s) => socialIconCatalog.find((p) => p.platform.toLowerCase() === s.platform?.toLowerCase()))
     .filter((p): p is (typeof socialIconCatalog)[number] => Boolean(p));
   const notYetAddedIcons = socialIconCatalog.filter((p) => !findSocial(p.platform));
-  const socialIconRow = [...addedIconsInOrder, ...notYetAddedIcons];
 
   const onPickPicture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -207,13 +294,19 @@ export default function ProfileEditorPage() {
             Build your public page. Changes preview live on the right.
           </p>
         </div>
-        {(dirty || picture) && (
-          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+        <div className="flex w-full flex-wrap items-center gap-2 self-start sm:w-auto sm:self-auto">
+          <button
+            onClick={() => setPreviewOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs sm:text-sm font-bold text-ink shadow-soft ring-1 ring-ink/[0.06] transition hover:bg-ink/5 dark:bg-white/10 dark:text-white dark:ring-white/[0.06] xl:hidden"
+          >
+            <Eye size={16} /> Preview
+          </button>
+          {(dirty || picture) && (
             <Button onClick={onSave} loading={saving} className="text-xs sm:text-sm">
               <Save size={17} /> Save changes
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="mt-6 flex flex-col gap-6 xl:flex-row xl:items-start">
@@ -271,28 +364,39 @@ export default function ProfileEditorPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    {socialIconRow.map(({ platform, icon: Icon }) => {
-                      const added = Boolean(findSocial(platform));
-                      const isEditing = editingSocial === platform;
-                      return (
-                        <button
-                          key={platform}
-                          type="button"
-                          onClick={() => openSocialEditor(platform)}
-                          title={added ? `Edit ${platform}` : `Add ${platform}`}
-                          aria-label={added ? `Edit ${platform}` : `Add ${platform}`}
-                          className={`grid h-9 w-9 place-items-center rounded-full transition ${
-                            isEditing
-                              ? "bg-brand-500 text-white ring-2 ring-brand-500/30"
-                              : added
-                              ? "bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-white"
-                              : "bg-ink/5 text-ink/60 hover:bg-brand-50 hover:text-brand-600 dark:bg-white/10 dark:text-white/60 dark:hover:bg-white/20"
-                          }`}
-                        >
-                          <Icon size={15} />
-                        </button>
-                      );
-                    })}
+                    <DndContext
+                      sensors={dragSensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={onSocialDragEnd}
+                    >
+                      <SortableContext
+                        items={addedIconsInOrder.map((p) => p.platform)}
+                        strategy={horizontalListSortingStrategy}
+                      >
+                        {addedIconsInOrder.map(({ platform, icon: Icon }) => (
+                          <SortableSocialIcon
+                            key={platform}
+                            platform={platform}
+                            Icon={Icon}
+                            added
+                            isEditing={editingSocial === platform}
+                            onClick={() => openSocialEditor(platform)}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
+                    {notYetAddedIcons.map(({ platform, icon: Icon }) => (
+                      <button
+                        key={platform}
+                        type="button"
+                        onClick={() => openSocialEditor(platform)}
+                        title={`Add ${platform}`}
+                        aria-label={`Add ${platform}`}
+                        className="grid h-9 w-9 place-items-center rounded-full bg-ink/5 text-ink/60 transition hover:bg-brand-50 hover:text-brand-600 dark:bg-white/10 dark:text-white/60 dark:hover:bg-white/20"
+                      >
+                        <Icon size={15} />
+                      </button>
+                    ))}
                     <button
                       type="button"
                       onClick={() => setSocialPickerOpen(true)}
@@ -303,6 +407,11 @@ export default function ProfileEditorPage() {
                       <Plus size={15} />
                     </button>
                   </div>
+                  {addedIconsInOrder.length > 1 && (
+                    <p className="mt-1.5 text-[11px] text-ink/40 dark:text-white/40">
+                      Drag an icon to reorder how your links appear on your card.
+                    </p>
+                  )}
 
                   {/* edit panel for the clicked icon */}
                   {editingSocial && findSocial(editingSocial) && (
@@ -377,25 +486,13 @@ export default function ProfileEditorPage() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-[110px_1fr] gap-3">
-                  <div>
-                    <label className="mb-1.5 block text-sm font-semibold text-ink/80 dark:text-white/80">
-                      Title
-                    </label>
-                    <select
-                      value={draft.personal?.title || ""}
-                      onChange={(e) => patch("personal", { ...draft.personal, title: e.target.value })}
-                      className="h-12 w-full rounded-2xl border-2 border-brand-100 bg-white px-3 text-sm font-medium text-ink outline-none transition-all focus:border-brand-400 focus:ring-4 focus:ring-brand-100 dark:border-white/10 dark:bg-[#262626] dark:text-white"
-                    >
-                      {/* Native <option> popups ignore the page's dark-mode CSS vars and
-                          Tailwind's translucent dark: backgrounds, so each option needs an
-                          explicit opaque background/text color or it renders white-on-white. */}
-                      <option value="" className="bg-white text-ink dark:bg-[#262626] dark:text-white">None</option>
-                      {TITLE_OPTIONS.map((t) => (
-                        <option key={t} value={t} className="bg-white text-ink dark:bg-[#262626] dark:text-white">{t}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div className="grid grid-cols-[70px_1fr] gap-1.5">
+                  <Select
+                    label="Title"
+                    value={draft.personal?.title || ""}
+                    onChange={(title) => patch("personal", { ...draft.personal, title })}
+                    options={[{ value: "", label: "None" }, ...TITLE_OPTIONS.map((t) => ({ value: t, label: t }))]}
+                  />
                   <Input
                     label="Full name"
                     placeholder="Aarav Mehta"
@@ -620,13 +717,35 @@ export default function ProfileEditorPage() {
           </div>
         </div>
 
-        {/* live preview — centered + scrollable on mobile, sticky sidebar on xl+ */}
-        <div id="live-preview" className="xl:sticky xl:top-24 xl:self-start xl:w-[340px] xl:shrink-0 2xl:w-[360px]">
-          <div className="flex justify-center overflow-x-auto xl:block xl:overflow-visible">
-            <ProfilePreview profile={draft} avatarUrl={previewAvatar} username={authUser?.username} />
-          </div>
+        {/* live preview — hidden below xl (opened via the "Preview" button
+            instead), sticky sidebar on xl+ */}
+        <div
+          id="live-preview"
+          className="hidden xl:sticky xl:top-24 xl:block xl:w-[340px] xl:shrink-0 2xl:w-[360px]"
+        >
+          <ProfilePreview profile={draft} avatarUrl={previewAvatar} username={authUser?.username} />
         </div>
       </div>
+
+      {previewOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm xl:hidden"
+          onClick={() => setPreviewOpen(false)}
+        >
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setPreviewOpen(false)}
+              aria-label="Close preview"
+              className="absolute -top-11 right-0 z-30 grid h-9 w-9 place-items-center rounded-full bg-white text-ink shadow-soft transition hover:opacity-90 dark:bg-[#262626] dark:text-white"
+            >
+              <X size={16} />
+            </button>
+            <div className="max-h-[90vh] overflow-y-auto">
+              <ProfilePreview profile={draft} avatarUrl={previewAvatar} username={authUser?.username} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {socialPickerOpen && (
         <SocialIconPickerModal

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import {
@@ -21,6 +21,7 @@ import {
   Pencil,
   ArrowRight,
   Plus,
+  X,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import ProfilePreview from "@/components/app/ProfilePreview";
@@ -68,6 +69,7 @@ export default function DashboardPage() {
   const { draft, isPublic } = useAppSelector((s) => s.profile);
   const { links } = useAppSelector((s) => s.share);
   const { dashboard } = useAppSelector((s) => s.analytics);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -150,26 +152,54 @@ export default function DashboardPage() {
               clickcard.app/{user?.username ?? "you"}
             </p>
           </div>
-          <Link
-            href="/profile"
-            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-bold text-brand-600 shadow-soft transition hover:scale-105"
-          >
-            <Plus size={18} /> Build my profile
-          </Link>
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            <button
+              onClick={() => setPreviewOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-4 py-3.5 text-sm font-bold text-white shadow-soft ring-1 ring-white/20 transition hover:bg-white/25 lg:hidden"
+            >
+              <Eye size={17} /> Preview
+            </button>
+            <Link
+              href="/profile"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-bold text-brand-600 shadow-soft transition hover:scale-105"
+            >
+              <Plus size={18} /> Build my profile
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* completion + analytics stacked on the left, live phone preview on the right — the chart grows to fill the remaining height so both columns end up flush */}
+      {/* completion + analytics stacked on the left, live phone preview on the right (lg+ only — opened via the "Preview" button below lg) — the chart grows to fill the remaining height so both columns end up flush */}
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="flex flex-col gap-6">
           <ProfileCompletionCard completion={completion} />
           <AnalyticsTrendCard trend={dashboard?.trend} className="flex-1" />
         </div>
 
-        <div className="flex justify-center lg:block">
+        <div className="hidden lg:block">
           <ProfilePreview profile={draft} avatarUrl={draft.personal?.profilePicture} username={user?.username} />
         </div>
       </div>
+
+      {previewOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm lg:hidden"
+          onClick={() => setPreviewOpen(false)}
+        >
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setPreviewOpen(false)}
+              aria-label="Close preview"
+              className="absolute -top-11 right-0 z-30 grid h-9 w-9 place-items-center rounded-full bg-white text-ink shadow-soft transition hover:opacity-90 dark:bg-[#262626] dark:text-white"
+            >
+              <X size={16} />
+            </button>
+            <div className="max-h-[90vh] overflow-y-auto">
+              <ProfilePreview profile={draft} avatarUrl={draft.personal?.profilePicture} username={user?.username} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* stats */}
       <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">

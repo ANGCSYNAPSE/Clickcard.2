@@ -78,6 +78,22 @@ export const NOTIFICATION_ROUTES = {
   readAll: "/api/notifications/read-all",
 } as const;
 
+export const BUSINESS_PROFILE_ROUTES = {
+  list: "/api/business-profiles",
+  create: "/api/business-profiles",
+  get: (id: number | string) => `/api/business-profiles/${id}`,
+  update: (id: number | string) => `/api/business-profiles/${id}`,
+  remove: (id: number | string) => `/api/business-profiles/${id}`,
+  uploadDocument: (id: number | string) => `/api/business-profiles/${id}/documents`,
+  removeDocument: (id: number | string, docId: string) =>
+    `/api/business-profiles/${id}/documents/${docId}`,
+  uploadLogo: (id: number | string) => `/api/business-profiles/${id}/logo`,
+  removeLogo: (id: number | string) => `/api/business-profiles/${id}/logo`,
+  uploadCover: (id: number | string) => `/api/business-profiles/${id}/cover`,
+  removeCover: (id: number | string) => `/api/business-profiles/${id}/cover`,
+  public: (id: number | string) => `/api/public/business-profiles/${id}`,
+} as const;
+
 export const API_ROUTES = {
   ...AUTH_ROUTES,
   ...USER_ROUTES,

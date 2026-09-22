@@ -22,7 +22,7 @@ export default function SharePopup({
   onClose,
 }: {
   profileUrl: string;
-  shareType?: "profile" | "cv" | "card";
+  shareType?: "profile" | "cv" | "card" | "business";
   onClose: () => void;
 }) {
   const dispatch = useAppDispatch();
@@ -34,6 +34,10 @@ export default function SharePopup({
   const socialLinks = (profile?.social || []).filter((s) => s.url || s.username);
   const isCvShare = shareType === "cv";
   const isCardShare = shareType === "card";
+  const isBusinessShare = shareType === "business";
+  const isSimpleShare = isCvShare || isCardShare || isBusinessShare;
+  const typeLabel = isCvShare ? "CV" : isCardShare ? "Card" : isBusinessShare ? "Business" : "Profile";
+  const badgeSymbol = isCvShare ? "CV" : isCardShare ? "♦" : isBusinessShare ? "B" : "C";
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(profileUrl);
@@ -61,7 +65,7 @@ export default function SharePopup({
         <div className="flex shrink-0 items-center justify-between px-5 pt-5 lg:px-6 lg:pt-6">
           <div>
             <h3 className="font-display text-lg font-black text-ink dark:text-white lg:text-xl">
-              Share {isCvShare ? "CV" : isCardShare ? "Card" : "Profile"}
+              Share {typeLabel}
             </h3>
             {isCvShare && (
               <p className="text-xs text-ink/60 dark:text-white/60 mt-1">Share your professional resume</p>
@@ -69,9 +73,12 @@ export default function SharePopup({
             {isCardShare && (
               <p className="text-xs text-ink/60 dark:text-white/60 mt-1">Share your digital business card</p>
             )}
+            {isBusinessShare && (
+              <p className="text-xs text-ink/60 dark:text-white/60 mt-1">Share your company's public page</p>
+            )}
           </div>
           <div className="flex items-center gap-1">
-            {!isCvShare && !isCardShare && (
+            {!isSimpleShare && (
               <Link
                 href="/settings"
                 aria-label="Share settings"
@@ -97,9 +104,9 @@ export default function SharePopup({
               <div className="w-full flex flex-col gap-2 rounded-2xl border border-ink/10 bg-mist px-4 py-3 text-center dark:border-white/10 dark:bg-white/5">
                 <div className="flex items-center justify-center gap-2">
                   <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-white text-[10px] font-black ${
-                    isCvShare || isCardShare ? "bg-brand-500" : "bg-ink dark:bg-white dark:text-ink"
+                    isSimpleShare ? "bg-brand-500" : "bg-ink dark:bg-white dark:text-ink"
                   }`}>
-                    {isCvShare ? "CV" : isCardShare ? "♦" : "C"}
+                    {badgeSymbol}
                   </span>
                   <span className="truncate text-sm font-semibold text-ink dark:text-white">
                     {shortLabel}
@@ -130,14 +137,14 @@ export default function SharePopup({
                     </div>
                   </div>
                   <p className="mt-2 text-sm font-bold text-ink dark:text-white">
-                    Scan to open your {isCvShare ? "CV" : isCardShare ? "card" : "profile"}
+                    Scan to open your {isCvShare ? "CV" : isCardShare ? "card" : isBusinessShare ? "business page" : "profile"}
                   </p>
                   <p className="text-xs text-ink/50 dark:text-white/50">Scan with your phone</p>
                 </div>
               )}
 
               {/* my platforms */}
-              {!isCvShare && !isCardShare && socialLinks.length > 0 && (
+              {!isSimpleShare && socialLinks.length > 0 && (
                 <div className="mt-5 w-full">
                   <p className="mb-2 text-xs font-black uppercase tracking-wider text-ink/50 dark:text-white/50">
                     My platforms
@@ -174,15 +181,15 @@ export default function SharePopup({
         <div className="flex shrink-0 items-center gap-4 overflow-x-auto border-t border-ink/10 px-5 py-4 lg:px-6 dark:border-white/10">
           <a href={profileUrl} target="_blank" rel="noreferrer" className="flex shrink-0 flex-col items-center gap-1">
             <span className={`grid h-11 w-11 place-items-center rounded-full text-white text-sm font-black ${
-              isCvShare || isCardShare ? "bg-brand-500" : "bg-ink dark:bg-white dark:text-ink"
+              isSimpleShare ? "bg-brand-500" : "bg-ink dark:bg-white dark:text-ink"
             }`}>
-              {isCvShare ? "CV" : isCardShare ? "♦" : "C"}
+              {badgeSymbol}
             </span>
             <span className="text-[10px] font-semibold text-ink/60 dark:text-white/60">
-              {isCvShare ? "Open CV" : isCardShare ? "Open Card" : "My ClickCard"}
+              {isBusinessShare ? "Open page" : isSimpleShare ? `Open ${typeLabel}` : "My ClickCard"}
             </span>
           </a>
-          {!isCvShare && !isCardShare && (
+          {!isSimpleShare && (
             <Link href="/card" className="relative flex shrink-0 flex-col items-center gap-1">
               <span className="grid h-11 w-11 place-items-center rounded-full bg-mist text-ink/70 dark:bg-white/5 dark:text-white/70">
                 <CreditCard size={18} />

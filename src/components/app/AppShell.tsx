@@ -20,6 +20,7 @@ import {
   Zap,
   FileText,
   LayoutGrid,
+  Building2,
 } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 import ThemeToggle from "@/components/ui/ThemeToggle";
@@ -41,6 +42,7 @@ const NAV_GROUPS = [
       { label: "Customize", href: "/customize", icon: SlidersHorizontal },
       { label: "Card", href: "/card", icon: CreditCard },
       { label: "CV", href: "/cv", icon: FileText },
+      { label: "Business Profile", href: "/business-profiles", icon: Building2 },
       // { label: "Portfolio", href: "/portfolio", icon: LayoutGrid },
     ],
   },

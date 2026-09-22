@@ -22,6 +22,8 @@ import {
   User as UserIcon,
   Plus,
   Minus,
+  Eye,
+  X,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import Button from "@/components/ui/Button";
@@ -142,6 +144,7 @@ export default function StudioPage() {
   const savingProfile = useAppSelector((s) => s.profile.saving);
 
   const [expandedSection, setExpandedSection] = useState<string | null>("palette");
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [detailView, setDetailView] = useState<string | null>(null);
   const [gradientStyle, setGradientStyle] = useState<"custom" | "premade">("custom");
   const [picture, setPicture] = useState<File | null>(null);
@@ -262,6 +265,48 @@ export default function StudioPage() {
 
   if (!guard) return null;
 
+  const livePreview = (
+    <LiveProfileCard
+      primary={primary}
+      accent={accent}
+      theme={theme}
+      name={displayName(draft.personal)}
+      username={user?.username}
+      avatarUrl={displayAvatar}
+      bannerUrl={bannerImageUrl || undefined}
+      bio={draft.personal?.bio}
+      socialLinks={(draft.social || []).filter((s) => s.url || s.username)}
+      contact={draft.contact}
+      experience={draft.experience}
+      education={draft.education}
+      products={draft.products}
+      business={draft.business}
+      headerLayout={headerLayout}
+      wallpaperType={wallpaperType}
+      backgroundImageUrl={backgroundImageUrl}
+      backgroundColor={backgroundColor}
+      gradientColor={gradientColor}
+      gradientColorEnd={gradientColorEnd}
+      gradientDirection={gradientDirection}
+      noise={noise}
+      patternIndex={patternIndex}
+      buttonColor={buttonColor}
+      buttonTextColor={buttonTextColor}
+      buttonStyle={buttonStyle}
+      buttonRoundness={buttonRoundness}
+      buttonShadow={buttonShadow}
+      socialLinksStyle={socialLinksStyle}
+      pageFont={pageFont}
+      pageTextColor={pageTextColor}
+      matchTitleFont={matchTitleFont}
+      titleFont={titleFont}
+      titleColor={titleColor}
+      titleFontSize={titleFontSize}
+      bioFontSize={bioFontSize}
+      bodyFontSize={bodyFontSize}
+    />
+  );
+
   return (
     <AppShell fullHeight>
       <Head>
@@ -270,59 +315,29 @@ export default function StudioPage() {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </Head>
 
-      <div className="mb-4 flex items-center justify-between gap-3 lg:shrink-0">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 lg:shrink-0">
         <h1 className="font-display text-2xl font-black text-ink dark:text-white">Customize</h1>
-        {(dirty || profileDirty || !!picture) && (
-          <Button onClick={saveAll} loading={savingProfile} className="text-xs sm:text-sm">
-            <Save size={16} /> Save changes
-          </Button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setPreviewOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs sm:text-sm font-bold text-ink shadow-soft ring-1 ring-ink/[0.06] transition hover:bg-ink/5 dark:bg-white/10 dark:text-white dark:ring-white/[0.06] lg:hidden"
+          >
+            <Eye size={16} /> Preview
+          </button>
+          {(dirty || profileDirty || !!picture) && (
+            <Button onClick={saveAll} loading={savingProfile} className="text-xs sm:text-sm">
+              <Save size={16} /> Save changes
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-6 lg:min-h-0 lg:flex-1 lg:flex-row">
         {/* preview + gallery */}
-        <div className="flex flex-col min-h-0 lg:flex-1">
+        <div className="hidden min-h-0 lg:flex lg:flex-1 lg:flex-col">
           {/* live preview */}
           <div className="grid place-items-center rounded-3xl  bg-mist p-4 sm:p-6 dark:bg-white/[0.02] min-h-[340px] sm:min-h-[410px] lg:flex-1 lg:overflow-hidden">
-            <LiveProfileCard
-              primary={primary}
-              accent={accent}
-              theme={theme}
-              name={displayName(draft.personal)}
-              username={user?.username}
-              avatarUrl={displayAvatar}
-              bannerUrl={bannerImageUrl || undefined}
-              bio={draft.personal?.bio}
-              socialLinks={(draft.social || []).filter((s) => s.url || s.username)}
-              contact={draft.contact}
-              experience={draft.experience}
-              education={draft.education}
-              products={draft.products}
-              business={draft.business}
-              headerLayout={headerLayout}
-              wallpaperType={wallpaperType}
-              backgroundImageUrl={backgroundImageUrl}
-              backgroundColor={backgroundColor}
-              gradientColor={gradientColor}
-              gradientColorEnd={gradientColorEnd}
-              gradientDirection={gradientDirection}
-              noise={noise}
-              patternIndex={patternIndex}
-              buttonColor={buttonColor}
-              buttonTextColor={buttonTextColor}
-              buttonStyle={buttonStyle}
-              buttonRoundness={buttonRoundness}
-              buttonShadow={buttonShadow}
-              socialLinksStyle={socialLinksStyle}
-              pageFont={pageFont}
-              pageTextColor={pageTextColor}
-              matchTitleFont={matchTitleFont}
-              titleFont={titleFont}
-              titleColor={titleColor}
-              titleFontSize={titleFontSize}
-              bioFontSize={bioFontSize}
-              bodyFontSize={bodyFontSize}
-            />
+            {livePreview}
           </div>
 
         </div>
@@ -1327,6 +1342,24 @@ export default function StudioPage() {
 
         </div>
       </div>
+
+      {previewOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm lg:hidden"
+          onClick={() => setPreviewOpen(false)}
+        >
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setPreviewOpen(false)}
+              aria-label="Close preview"
+              className="absolute -top-11 right-0 z-30 grid h-9 w-9 place-items-center rounded-full bg-white text-ink shadow-soft transition hover:opacity-90 dark:bg-[#262626] dark:text-white"
+            >
+              <X size={16} />
+            </button>
+            <div className="max-h-[90vh] overflow-y-auto">{livePreview}</div>
+          </div>
+        </div>
+      )}
 
       {cropSource && (
         <ImageCropModal

@@ -109,6 +109,7 @@ export default function CardPage() {
   );
   const [downloading, setDownloading] = useState(false);
   const [view, setView] = useState<ViewMode>("card");
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [detailView, setDetailView] = useState<string | null>(null);
   const [fontPickerOpen, setFontPickerOpen] = useState(false);
   const [showSharePopup, setShowSharePopup] = useState(false);
@@ -268,6 +269,75 @@ export default function CardPage() {
     />
   );
 
+  // The view-switching stage body — shared between the inline lg+ stage
+  // section and the below-lg "Preview" modal so both stay in sync.
+  const stageViewer = (
+    <>
+      <div className="flex min-h-[420px] min-w-0 flex-1 items-center justify-center overflow-x-auto py-2 no-scrollbar lg:min-h-0 lg:overflow-y-auto">
+        {view === "card" && (
+          <div
+            className={`w-full rounded-2xl bg-white p-6 shadow-sm dark:bg-white/[0.04] ${
+              isPortraitTemplate ? "max-w-[760px]" : "max-w-[460px]"
+            }`}
+          >
+            {stage}
+          </div>
+        )}
+
+        {view === "mobile" && (
+          <div className="w-full max-w-[300px] rounded-[2.2rem] bg-ink p-2.5">
+            <div className="flex h-[600px] flex-col overflow-hidden rounded-[1.8rem] bg-white dark:bg-[#262626]">
+              <div className="flex shrink-0 items-center justify-between px-4 pb-1.5 pt-2 text-[10px] font-bold text-ink/70 dark:text-white/70">
+                <span>9:41</span>
+                <span className="rounded-full bg-ink/10 px-2 py-0.5 dark:bg-white/10">
+                  LIVE
+                </span>
+              </div>
+              <div className="no-scrollbar flex-1 overflow-auto p-3">{stage}</div>
+            </div>
+          </div>
+        )}
+
+        {view === "preview" && (
+          <div
+            className={`flex h-[680px] w-full flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#262626] ${
+              isPortraitTemplate ? "max-w-[720px]" : "max-w-[480px]"
+            }`}
+          >
+            <div className="flex shrink-0 items-center gap-2 border-b border-ink/[0.06] px-3 py-2 dark:border-white/[0.06]">
+              <span className="h-2.5 w-2.5 rounded-full bg-brand-500" />
+              <span className="h-2.5 w-2.5 rounded-full bg-candy-yellow" />
+              <span className="h-2.5 w-2.5 rounded-full bg-candy-pink" />
+              <span className="ml-2 truncate rounded-md bg-mist px-2 py-1 text-[10px] font-semibold text-ink/50 dark:bg-white/5 dark:text-white/50">
+                {publicUrl || "clickcard.app"}
+              </span>
+            </div>
+            <div className="no-scrollbar flex-1 overflow-auto p-4">{stage}</div>
+          </div>
+        )}
+      </div>
+
+      {/* view switcher */}
+      <div className="mt-3 flex justify-center lg:shrink-0">
+        <div className="inline-flex items-center gap-1 rounded-xl bg-white p-1 dark:bg-white/5">
+          {VIEW_MODES.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => setView(m.id)}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                view === m.id
+                  ? "bg-brand-50 text-brand-600 dark:bg-white/10 dark:text-white"
+                  : "text-ink/50 hover:text-brand-600 dark:text-white/50"
+              }`}
+            >
+              <m.icon size={14} /> {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <AppShell fullHeight>
       <Head>
@@ -292,7 +362,13 @@ export default function CardPage() {
             Pick a template, customise colours, then share or download as PDF.
           </p>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+          <button
+            onClick={() => setPreviewOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs sm:text-sm font-bold text-ink shadow-soft ring-1 ring-ink/[0.06] transition hover:bg-ink/5 dark:bg-white/10 dark:text-white dark:ring-white/[0.06] lg:hidden"
+          >
+            <Eye size={16} /> Preview
+          </button>
           <Button variant="outline" onClick={onShare}>
             <Share2 size={18} /> Share
           </Button>
@@ -313,70 +389,9 @@ export default function CardPage() {
 
       {/* ── body ───────────────────────────────────────────── */}
       <div className="flex min-w-0 flex-col gap-5 lg:min-h-0 lg:flex-1 lg:flex-row">
-        {/* stage */}
-        <section className="flex min-w-0 flex-col rounded-3xl border border-ink/[0.06] bg-mist p-4 dark:border-white/[0.06] dark:bg-white/[0.02] lg:min-h-0 lg:flex-1">
-          <div className="flex min-h-[420px] min-w-0 flex-1 items-center justify-center overflow-x-auto py-2 no-scrollbar lg:min-h-0 lg:overflow-y-auto">
-            {view === "card" && (
-              <div
-                className={`w-full rounded-2xl bg-white p-6 shadow-sm dark:bg-white/[0.04] ${
-                  isPortraitTemplate ? "max-w-[760px]" : "max-w-[460px]"
-                }`}
-              >
-                {stage}
-              </div>
-            )}
-
-            {view === "mobile" && (
-              <div className="w-full max-w-[300px] rounded-[2.2rem] bg-ink p-2.5">
-                <div className="flex h-[600px] flex-col overflow-hidden rounded-[1.8rem] bg-white dark:bg-[#262626]">
-                  <div className="flex shrink-0 items-center justify-between px-4 pb-1.5 pt-2 text-[10px] font-bold text-ink/70 dark:text-white/70">
-                    <span>9:41</span>
-                    <span className="rounded-full bg-ink/10 px-2 py-0.5 dark:bg-white/10">
-                      LIVE
-                    </span>
-                  </div>
-                  <div className="no-scrollbar flex-1 overflow-auto p-3">{stage}</div>
-                </div>
-              </div>
-            )}
-
-            {view === "preview" && (
-              <div
-                className={`flex h-[680px] w-full flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#262626] ${
-                  isPortraitTemplate ? "max-w-[720px]" : "max-w-[480px]"
-                }`}
-              >
-                <div className="flex shrink-0 items-center gap-2 border-b border-ink/[0.06] px-3 py-2 dark:border-white/[0.06]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-brand-500" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-candy-yellow" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-candy-pink" />
-                  <span className="ml-2 truncate rounded-md bg-mist px-2 py-1 text-[10px] font-semibold text-ink/50 dark:bg-white/5 dark:text-white/50">
-                    {publicUrl || "clickcard.app"}
-                  </span>
-                </div>
-                <div className="no-scrollbar flex-1 overflow-auto p-4">{stage}</div>
-              </div>
-            )}
-          </div>
-
-          {/* view switcher */}
-          <div className="mt-3 flex justify-center lg:shrink-0">
-            <div className="inline-flex items-center gap-1 rounded-xl bg-white p-1 dark:bg-white/5">
-              {VIEW_MODES.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => setView(m.id)}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                    view === m.id
-                      ? "bg-brand-50 text-brand-600 dark:bg-white/10 dark:text-white"
-                      : "text-ink/50 hover:text-brand-600 dark:text-white/50"
-                  }`}
-                >
-                  <m.icon size={14} /> {m.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* stage — hidden below lg (opened via the "Preview" button instead) */}
+        <section className="hidden min-w-0 flex-col rounded-3xl border border-ink/[0.06] bg-mist p-4 dark:border-white/[0.06] dark:bg-white/[0.02] lg:flex lg:min-h-0 lg:flex-1">
+          {stageViewer}
         </section>
 
         {/* control rail — same shell/list/detail-view pattern as the Customize page */}
@@ -923,6 +938,26 @@ export default function CardPage() {
           )}
         </aside>
       </div>
+
+      {previewOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm lg:hidden"
+          onClick={() => setPreviewOpen(false)}
+        >
+          <div className="relative w-full max-w-[480px]" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setPreviewOpen(false)}
+              aria-label="Close preview"
+              className="absolute -top-11 right-0 z-30 grid h-9 w-9 place-items-center rounded-full bg-white text-ink shadow-soft transition hover:opacity-90 dark:bg-[#262626] dark:text-white"
+            >
+              <X size={16} />
+            </button>
+            <div className="flex max-h-[90vh] flex-col overflow-y-auto rounded-3xl border border-ink/[0.06] bg-mist p-4 dark:border-white/[0.06] dark:bg-[#1a1a1a]">
+              {stageViewer}
+            </div>
+          </div>
+        </div>
+      )}
 
       {fontPickerOpen && (
         <FontPickerModal

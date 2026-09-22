@@ -8,6 +8,7 @@ import notificationReducer from "./slices/notificationSlice";
 import analyticsReducer from "./slices/analyticsSlice";
 import uiReducer from "./slices/uiSlice";
 import designReducer from "./slices/designSlice";
+import businessProfileReducer from "./slices/businessProfileSlice";
 
 export const makeStore = () =>
   configureStore({
@@ -21,12 +22,13 @@ export const makeStore = () =>
       analytics: analyticsReducer,
       ui: uiReducer,
       design: designReducer,
+      businessProfiles: businessProfileReducer,
     },
     middleware: (getDefault) =>
       getDefault({
         serializableCheck: {
-          // FormData / File payloads in profile save thunk are non-serializable by design
-          ignoredActionPaths: ["meta.arg.picture"],
+          // FormData / File payloads in profile save / doc upload thunks are non-serializable by design
+          ignoredActionPaths: ["meta.arg.picture", "meta.arg.file"],
         },
       }),
   });
