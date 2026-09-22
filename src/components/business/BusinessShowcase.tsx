@@ -10,7 +10,7 @@ import {
   Pencil,
   Trash2,
   Share2,
-  DollarSign,
+  IndianRupee,
   Users,
   Star,
   MessageSquare,
@@ -219,7 +219,7 @@ export default function BusinessShowcase({
                 {hasStats && (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {profile.revenue && (
-                      <StatCard icon={DollarSign} label="Revenue" value={profile.revenue} tone="amber" />
+                      <StatCard icon={IndianRupee} label="Revenue" value={profile.revenue} tone="amber" />
                     )}
                     {profile.employee_count && (
                       <StatCard icon={Users} label="Employees" value={profile.employee_count} tone="blue" />
