@@ -11,7 +11,7 @@ import Img1 from "../../images/Untitled design (1).png";
 const ITEMS: StaggeredMenuItem[] = [
   { label: "Features", ariaLabel: "Jump to features", link: "/#features" },
   { label: "Showcase", ariaLabel: "Jump to showcase", link: "/#showcase" },
-  { label: "Wall of love", ariaLabel: "Read what people say", link: "/#love" },
+  { label: "Testimonials", ariaLabel: "Read what people say", link: "/#love" },
   { label: "Pricing", ariaLabel: "See pricing", link: "/pricing" },
 ];
 

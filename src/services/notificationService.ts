@@ -21,8 +21,4 @@ export const notificationService = {
     apiClient.patch<ApiResponse>(NOTIFICATION_ROUTES.read(id)),
   markAllRead: () =>
     apiClient.patch<ApiResponse>(NOTIFICATION_ROUTES.readAll),
-  adminRegistrations: () =>
-    apiClient.get<ApiResponse<{ items: AppNotification[] }>>(
-      NOTIFICATION_ROUTES.adminRegistrations,
-    ),
 };

@@ -28,7 +28,7 @@ export default function Wall() {
     <section id="love" className="overflow-hidden bg-paper px-4 py-24">
       <div className="mx-auto max-w-3xl text-center">
         <span className="inline-block rounded-full bg-paper-tint px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-dark">
-          Wall of love
+          Testimonials
         </span>
 
         <div className="relative mt-10 min-h-[28rem] sm:min-h-[24rem]">

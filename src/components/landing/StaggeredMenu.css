@@ -223,7 +223,7 @@
   color: #0b2e2b; /* dark */
   font-family: inherit;
   font-weight: 800;
-  /* Clamped so the longest label ("Wall of love") doesn't overflow the panel
+  /* Clamped so the longest label ("Testimonials") doesn't overflow the panel
      on a narrow phone, where the panel goes full-width. */
   font-size: clamp(2rem, 7.5vw, 3.25rem);
   cursor: pointer;

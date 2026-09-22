@@ -39,8 +39,13 @@ import type {
 } from "@/types";
 
 /** Discord has no public profile URL, so we store a `discord.com/users/<id>`
- * deep link in `url` and let the editor show/edit just the numeric ID. */
-const discordIdFromUrl = (url?: string) => url?.match(/(\d{5,})/)?.[1] || "";
+ * deep link in `url` and let the editor show/edit just the ID part — which
+ * may be the numeric snowflake ID or, since most people don't have Developer
+ * Mode enabled to find that, their @username instead. */
+const discordIdFromUrl = (url?: string) => {
+  const m = url?.match(/discord\.com\/users\/([^/?#]+)/i);
+  return m ? decodeURIComponent(m[1]) : "";
+};
 
 /** Purely optional — the "None" option is always first so nobody is forced to pick one. */
 const TITLE_OPTIONS = ["Mr.", "Mrs.", "Ms.", "Miss", "Dr.", "Er.", "Prof.", "Adv.", "CA"];
@@ -329,11 +334,17 @@ export default function ProfileEditorPage() {
                             <Input
                               label="User ID"
                               placeholder="1234760987654321"
-                              inputMode="numeric"
                               value={discordIdFromUrl(findSocial(editingSocial)?.url)}
                               onChange={(e) => {
-                                const id = e.target.value.replace(/\D/g, "");
-                                updateSocial(editingSocial, { url: id ? `https://discord.com/users/${id}` : "" });
+                                // Was stripping every non-digit character as the user typed,
+                                // which silently ate the input for anyone entering their
+                                // @username instead of the numeric snowflake ID (most people,
+                                // since that ID requires enabling Developer Mode) — the field
+                                // looked broken because keystrokes never showed up.
+                                const id = e.target.value.trim();
+                                updateSocial(editingSocial, {
+                                  url: id ? `https://discord.com/users/${encodeURIComponent(id)}` : "",
+                                });
                               }}
                             />
                           </div>
