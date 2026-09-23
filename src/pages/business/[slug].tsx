@@ -1,10 +1,12 @@
 import type { GetServerSideProps } from "next";
 import Head from "next/head";
+import dynamic from "next/dynamic";
 import { Ghost } from "lucide-react";
 import { fetchPublicBusinessProfile, type PublicBusinessProfile } from "@/lib/publicBusiness";
 import { SITE_URL } from "@/lib/config";
 import BusinessShowcase from "@/components/business/BusinessShowcase";
-import DocumentGrid from "@/components/business/DocumentGrid";
+
+const DocumentGrid = dynamic(() => import("@/components/business/DocumentGrid"), { ssr: false });
 
 interface Props {
   profile: PublicBusinessProfile | null;
@@ -75,13 +77,19 @@ export default function PublicBusinessProfilePage({ profile, shareUrl }: Props) 
 }
 
 export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
-  const slug = String(ctx.params?.slug || "");
-  const profile = await fetchPublicBusinessProfile(slug);
-  const shareUrl = `${SITE_URL}/business/${slug}`;
+  try {
+    const slug = String(ctx.params?.slug || "");
+    const profile = await fetchPublicBusinessProfile(slug);
+    const shareUrl = `${SITE_URL}/business/${slug}`;
 
-  if (!profile) {
+    if (!profile) {
+      ctx.res.statusCode = 404;
+    }
+
+    return { props: { profile, shareUrl } };
+  } catch (err) {
+    console.error("Error in getServerSideProps for /business/[slug]:", err);
     ctx.res.statusCode = 404;
+    return { props: { profile: null, shareUrl: `${SITE_URL}/business` } };
   }
-
-  return { props: { profile, shareUrl } };
 };

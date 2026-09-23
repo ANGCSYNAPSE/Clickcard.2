@@ -9,7 +9,12 @@ const nextConfig = {
       // server-side — the call sites are dynamic imports inside a
       // useEffect — but webpack still tries to bundle it for the server
       // target during `next build`. Marking it external skips that.
-      config.externals = [...(config.externals || []), "onnxruntime-web", "@imgly/background-removal"];
+      config.externals = [
+        ...(config.externals || []),
+        "onnxruntime-web",
+        "@imgly/background-removal",
+        "pdfjs-dist",
+      ];
     }
     // We only ever run background removal on the "cpu" (wasm) device — see
     // the `removeBackground()` call in src/pages/customize/index.tsx, which
