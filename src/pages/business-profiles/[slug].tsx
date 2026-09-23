@@ -36,6 +36,7 @@ export default function BusinessProfileDetailPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [savingAbout, setSavingAbout] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -79,6 +80,18 @@ export default function BusinessProfileDetailPage() {
 
     dispatch(pushToast("Business profile updated", "success"));
     setModalOpen(false);
+  };
+
+  const saveAbout = async (about: string) => {
+    if (!profile) return;
+    setSavingAbout(true);
+    const res = await dispatch(updateBusinessProfile({ id: profile.id, input: { about } }));
+    setSavingAbout(false);
+    if (updateBusinessProfile.fulfilled.match(res)) {
+      dispatch(pushToast("About section updated", "success"));
+    } else {
+      dispatch(pushToast((res.payload as string) || "Could not save the About section", "error"));
+    }
   };
 
   const remove = async () => {
@@ -170,7 +183,7 @@ export default function BusinessProfileDetailPage() {
 
       {profile.documents && profile.documents.length > 0 ? (
         <div className="mt-3">
-          <DocumentGrid documents={profile.documents} onRemove={removeDoc} />
+          <DocumentGrid documents={profile.documents} onRemove={removeDoc} businessProfileId={profile.id} />
         </div>
       ) : (
         <p className="mt-3 text-xs text-ink/40 dark:text-white/40">No documents uploaded yet.</p>
@@ -181,7 +194,7 @@ export default function BusinessProfileDetailPage() {
   return (
     <AppShell>
       <Head>
-        <title>{profile.company_name} · ClickCard</title>
+        <title>{`${profile.company_name} · ClickCard`}</title>
       </Head>
 
       {/* Cancels AppShell main's own px-4/sm:px-6 so BusinessShowcase's cover
@@ -201,6 +214,8 @@ export default function BusinessProfileDetailPage() {
           }}
           onDelete={remove}
           documentsSlot={documentsSlot}
+          onSaveAbout={saveAbout}
+          savingAbout={savingAbout}
         />
       </div>
 

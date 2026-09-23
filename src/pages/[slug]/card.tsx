@@ -17,7 +17,7 @@ export default function CardPage({ profile, slug, shareUrl }: Props) {
     return (
       <>
         <Head>
-          <title>{isPrivate ? "Private profile" : "Card not found"} · ClickCard</title>
+          <title>{`${isPrivate ? "Private profile" : "Card not found"} · ClickCard`}</title>
           <meta name="robots" content="noindex" />
         </Head>
         <div className="grid min-h-screen place-items-center bg-paper-soft px-6 text-center">

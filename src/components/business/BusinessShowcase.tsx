@@ -1,5 +1,7 @@
 import { useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import DOMPurify from "isomorphic-dompurify";
 import {
   ArrowLeft,
   Building2,
@@ -19,11 +21,17 @@ import {
   User as UserIcon,
   Wallet,
   ExternalLink,
+  X as CloseIcon,
 } from "lucide-react";
 import { SiX, SiFacebook, SiInstagram } from "react-icons/si";
 import { FaLinkedin } from "react-icons/fa";
 import type { IconType } from "react-icons";
 import type { BusinessDocument, BusinessLocation } from "@/types";
+import Button from "@/components/ui/Button";
+
+// Tiptap touches the DOM at module scope — keep it out of the server bundle
+// and out of the initial client bundle for visitors who never open the editor.
+const RichTextEditor = dynamic(() => import("@/components/app/RichTextEditor"), { ssr: false });
 
 export interface ShowcaseProfile {
   company_name: string;
@@ -72,6 +80,8 @@ export default function BusinessShowcase({
   onDelete,
   ctaHref,
   documentsSlot,
+  onSaveAbout,
+  savingAbout,
 }: {
   profile: ShowcaseProfile;
   backHref?: string;
@@ -79,6 +89,10 @@ export default function BusinessShowcase({
   onShare?: () => void;
   onDelete?: () => void;
   ctaHref?: string;
+  /** Owner-only — lets the About card be edited in place instead of through
+   * the big edit form. Omitted entirely on the public share page. */
+  onSaveAbout?: (html: string) => Promise<void> | void;
+  savingAbout?: boolean;
   documentsSlot?: React.ReactNode;
 }) {
   const hasLocations = (profile.locations?.length || 0) > 0;
@@ -183,7 +197,7 @@ export default function BusinessShowcase({
             </p>
           )}
           {profile.description && (
-            <p className="mt-3 max-w-4xl text-sm text-balance leading-relaxed text-ink/65 dark:text-white/65">
+            <p className="mt-3 max-w-4xl text-sm leading-relaxed text-ink/65 dark:text-white/65">
               {profile.description}
             </p>
           )}
@@ -237,12 +251,13 @@ export default function BusinessShowcase({
                     )}
                   </div>
                 )}
-                {profile.about && (
-                  <Card title={`About ${profile.company_name}`}>
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink/60 dark:text-white/60">
-                      {profile.about}
-                    </p>
-                  </Card>
+                {(profile.about || onSaveAbout) && (
+                  <AboutCard
+                    companyName={profile.company_name}
+                    about={profile.about}
+                    onSave={onSaveAbout}
+                    saving={savingAbout}
+                  />
                 )}
               </>
             )}
@@ -337,6 +352,83 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
     <div className="rounded-3xl border border-ink/5 bg-white p-6 shadow-soft dark:border-white/5 dark:bg-[#262626]">
       <h2 className="font-display text-lg font-black text-ink dark:text-white">{title}</h2>
       <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
+/** The About card — read-only HTML render for everyone, with an inline
+ * rich-text editor for the owner (only when `onSave` is supplied). */
+function AboutCard({
+  companyName,
+  about,
+  onSave,
+  saving,
+}: {
+  companyName: string;
+  about?: string | null;
+  onSave?: (html: string) => Promise<void> | void;
+  saving?: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(about || "");
+
+  const startEditing = () => {
+    setDraft(about || "");
+    setEditing(true);
+  };
+
+  const save = async () => {
+    if (onSave) await onSave(draft);
+    setEditing(false);
+  };
+
+  return (
+    <div className="rounded-3xl border border-ink/5 bg-white p-6 shadow-soft dark:border-white/5 dark:bg-[#262626]">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-display text-lg font-black text-ink dark:text-white">About {companyName}</h2>
+        {onSave && !editing && (
+          <button
+            onClick={startEditing}
+            aria-label="Edit about"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink/50 transition hover:bg-ink/5 dark:text-white/50 dark:hover:bg-white/10"
+          >
+            <Pencil size={14} />
+          </button>
+        )}
+      </div>
+
+      <div className="mt-3">
+        {editing ? (
+          <div className="space-y-3">
+            <RichTextEditor value={draft} onChange={setDraft} placeholder={`Tell people about ${companyName}…`} autoFocus />
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                aria-label="Cancel"
+                className="grid h-9 w-9 place-items-center rounded-full text-ink/50 transition hover:bg-ink/5 dark:text-white/50 dark:hover:bg-white/10"
+              >
+                <CloseIcon size={16} />
+              </button>
+              <Button size="sm" loading={saving} onClick={save}>
+                Save
+              </Button>
+            </div>
+          </div>
+        ) : about ? (
+          <div
+            className="tiptap-content max-w-none text-sm leading-relaxed text-ink/60 dark:text-white [&_a]:text-brand-600 [&_a]:underline [&_img]:my-2 [&_img]:max-w-full [&_img]:rounded-xl [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5"
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(about) }}
+          />
+        ) : (
+          <button
+            onClick={startEditing}
+            className="text-sm font-semibold text-ink/40 transition hover:text-brand-600 dark:text-white/40"
+          >
+            Add an About section…
+          </button>
+        )}
+      </div>
     </div>
   );
 }

@@ -175,3 +175,39 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Tiptap placeholder text (RichTextEditor) */
+/* Tiptap v2 attaches data-placeholder & is-editor-empty to the first <p>
+   inside the .ProseMirror root (which is also our .tiptap-content element). */
+.tiptap-content p.is-editor-empty:first-child::before,
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: rgba(11, 46, 43, 0.35);
+}
+.dark .tiptap-content p.is-editor-empty:first-child::before,
+.dark .ProseMirror p.is-editor-empty:first-child::before {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* In dark mode, force all inline-colour spans/text inside tiptap content to
+   render as white so editor-set colours (e.g. #0b2e2b) don't stay dark. */
+.dark .tiptap-content [style*="color"],
+.dark .tiptap-content span[style],
+.dark .tiptap-content p,
+.dark .tiptap-content h2,
+.dark .tiptap-content h3,
+.dark .tiptap-content li {
+  color: #ffffff !important;
+}
+
+/* Preserve blank-line spacing in saved/displayed tiptap content.
+   Tiptap outputs <p></p> or <p><br></p> for empty lines — browsers
+   collapse these to zero height, making spacing disappear after saving. */
+.tiptap-content p:empty,
+.tiptap-content p > br:only-child {
+  min-height: 1.4em;
+  display: block;
+}

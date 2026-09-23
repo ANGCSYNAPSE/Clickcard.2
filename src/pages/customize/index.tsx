@@ -64,6 +64,15 @@ const HEADER_LAYOUTS: { key: HeaderLayout; label: string }[] = [
   { key: "shape", label: "Shape" },
 ];
 
+const DETAIL_TITLES: Record<string, string> = {
+  presets: "Templates",
+  palette: "Palette",
+  header: "Header",
+  colors: "Colors",
+  buttons: "Buttons",
+  text: "Text",
+};
+
 const MIN_FONT_SIZE = 8;
 const MAX_FONT_SIZE = 72;
 
@@ -159,6 +168,7 @@ export default function StudioPage() {
 
   const [fontPickerTarget, setFontPickerTarget] = useState<"page" | "title" | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [toolsExpanded, setToolsExpanded] = useState(true);
 
   const applyPreset = (preset: StylePreset) => {
     // Clicking the already-active preset unselects it — the design keeps
@@ -342,13 +352,63 @@ export default function StudioPage() {
 
         </div>
 
-        {/* controls */}
-        <div className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#262626] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px] 2xl:w-[520px]">
-          {/* Design Heading */}
-          <div className="px-5 py-4">
-            <h3 className="font-display text-lg font-black text-ink dark:text-white">Design</h3>
+        {/* mobile live preview — sits above the fixed bottom sheet */}
+        <div className="lg:hidden">
+          <div
+            className={`grid place-items-center rounded-3xl bg-mist p-4 dark:bg-white/[0.02] ${
+              toolsExpanded ? "pb-[48vh]" : "pb-24"
+            }`}
+          >
+            {livePreview}
           </div>
+        </div>
 
+        {/* controls — static sidebar on desktop, fixed bottom sheet on mobile.
+            Same options list + drilldown either way, so mobile always has
+            every feature desktop has, with identical icons. */}
+        <div className="fixed inset-x-0 bottom-0 z-40 lg:static lg:z-auto lg:w-[380px] lg:h-full lg:shrink-0 xl:w-[440px] 2xl:w-[520px]">
+          <div className="mx-auto w-full max-w-lg rounded-t-3xl border border-b-0 border-ink/5 bg-mist shadow-soft-lg no-scrollbar dark:border-white/5 dark:bg-[#262626] lg:mx-0 lg:h-full lg:max-w-none lg:overflow-y-auto lg:rounded-3xl lg:border-b lg:shadow-none">
+            {/* Mobile-only heading — the option list's collapsible "Customize"
+                header, or (once a specific option is open) that option's own
+                title + close button, matching a focused full-screen editor
+                with no leftover chrome behind it. */}
+            {detailView === null ? (
+              <div className="flex items-center justify-between px-5 pt-4 pb-2 lg:hidden">
+                <div>
+                  <h3 className="font-display text-base font-black text-ink dark:text-white">Customize</h3>
+                  <p className="mt-0.5 text-xs text-ink/50 dark:text-white/50">
+                    Personalize your card. Changes update in real time.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setToolsExpanded((v) => !v)}
+                  aria-label={toolsExpanded ? "Collapse tools" : "Expand tools"}
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink/50 transition hover:bg-ink/5 dark:text-white/50 dark:hover:bg-white/10"
+                >
+                  <ChevronDown size={18} className={`transition-transform ${toolsExpanded ? "" : "rotate-180"}`} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between border-b border-ink/5 px-5 pt-4 pb-3 dark:border-white/5 lg:hidden">
+                <h3 className="font-display text-lg font-black text-ink dark:text-white">
+                  {DETAIL_TITLES[detailView] || ""}
+                </h3>
+                <button
+                  onClick={() => setDetailView(null)}
+                  aria-label="Close"
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink/5 text-ink/60 transition hover:bg-ink/10 dark:bg-white/10 dark:text-white/60 dark:hover:bg-white/20"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
+
+            {/* Design Heading — desktop only */}
+            <div className="hidden px-5 py-4 lg:block">
+              <h3 className="font-display text-lg font-black text-ink dark:text-white">Design</h3>
+            </div>
+
+            <div className={`no-scrollbar ${toolsExpanded ? "block" : "hidden"} max-h-[60vh] overflow-y-auto lg:block lg:max-h-none lg:overflow-visible`}>
           {detailView === null && (
             <div className="px-4 pb-4 space-y-3">
                {/* Templates Option — one-tap style presets (Aura, Sunset…) */}
@@ -512,7 +572,7 @@ export default function StudioPage() {
               {/* Back Button */}
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
+                className="hidden items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition lg:flex"
               >
                 ← Templates
               </button>
@@ -579,7 +639,7 @@ export default function StudioPage() {
               {/* Back Button */}
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
+                className="hidden items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition lg:flex"
               >
                 ← Palette
               </button>
@@ -846,7 +906,7 @@ export default function StudioPage() {
               {/* Back Button */}
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
+                className="hidden items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition lg:flex"
               >
                 ← Header
               </button>
@@ -1012,7 +1072,7 @@ export default function StudioPage() {
               {/* Back Button */}
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
+                className="hidden items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition lg:flex"
               >
                 ← Colors
               </button>
@@ -1054,7 +1114,7 @@ export default function StudioPage() {
               {/* Back Button */}
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
+                className="hidden items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition lg:flex"
               >
                 ← Buttons
               </button>
@@ -1210,7 +1270,7 @@ export default function StudioPage() {
               {/* Back Button */}
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
+                className="hidden items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition lg:flex"
               >
                 ← Text
               </button>
@@ -1339,7 +1399,8 @@ export default function StudioPage() {
               </div>
             </div>
           )}
-
+            </div>
+          </div>
         </div>
       </div>
 

@@ -261,18 +261,6 @@ export default function BusinessProfileModal({
               className="no-scrollbar w-full rounded-2xl border-2 border-brand-100 bg-white px-4 py-3 text-sm font-medium text-ink outline-none transition-all placeholder:text-ink/35 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
             />
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-semibold text-ink/80 dark:text-white/80">
-              About
-            </label>
-            <textarea
-              value={values.about}
-              onChange={(e) => set("about", e.target.value)}
-              placeholder="The fuller company description shown in the About section"
-              rows={4}
-              className="no-scrollbar w-full rounded-2xl border-2 border-brand-100 bg-white px-4 py-3 text-sm font-medium text-ink outline-none transition-all placeholder:text-ink/35 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
-            />
-          </div>
           <div className="grid grid-cols-2 gap-3">
             <Input
               label="Email"

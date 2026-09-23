@@ -52,6 +52,12 @@ export const businessProfileService = {
   removeDocument: (id: number, docId: string) =>
     apiClient.delete<ApiResponse<BusinessProfile>>(BUSINESS_PROFILE_ROUTES.removeDocument(id, docId)),
 
+  // Proxied through our own backend (auth'd, same-origin CORS-wise) instead of
+  // fetching the Cloudinary URL directly from the browser — sidesteps any
+  // cross-origin/Content-Disposition quirks on Cloudinary's raw delivery.
+  downloadDocument: (id: number, docId: string) =>
+    apiClient.get<Blob>(BUSINESS_PROFILE_ROUTES.downloadDocument(id, docId), { responseType: "blob" }),
+
   uploadLogo: (id: number, file: File) => {
     const form = new FormData();
     form.append("logo", file);

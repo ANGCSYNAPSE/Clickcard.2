@@ -87,6 +87,8 @@ export const BUSINESS_PROFILE_ROUTES = {
   uploadDocument: (id: number | string) => `/api/business-profiles/${id}/documents`,
   removeDocument: (id: number | string, docId: string) =>
     `/api/business-profiles/${id}/documents/${docId}`,
+  downloadDocument: (id: number | string, docId: string) =>
+    `/api/business-profiles/${id}/documents/${docId}/download`,
   uploadLogo: (id: number | string) => `/api/business-profiles/${id}/logo`,
   removeLogo: (id: number | string) => `/api/business-profiles/${id}/logo`,
   uploadCover: (id: number | string) => `/api/business-profiles/${id}/cover`,
