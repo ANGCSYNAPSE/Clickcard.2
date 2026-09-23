@@ -24,6 +24,7 @@ export interface BusinessProfileInput {
   linkedin_url?: string;
   twitter_url?: string;
   facebook_url?: string;
+  instagram_url?: string;
 }
 
 export const businessProfileService = {

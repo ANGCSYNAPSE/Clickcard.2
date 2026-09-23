@@ -1,6 +1,6 @@
 import { API_BASE_URL } from "./config";
 import { BUSINESS_PROFILE_ROUTES } from "@/apiRoutes";
-import type { BusinessLocation } from "@/types";
+import type { BusinessDocument, BusinessLocation } from "@/types";
 
 export interface PublicBusinessProfile {
   id: number;
@@ -28,6 +28,8 @@ export interface PublicBusinessProfile {
   linkedin_url?: string | null;
   twitter_url?: string | null;
   facebook_url?: string | null;
+  instagram_url?: string | null;
+  documents?: BusinessDocument[];
 }
 
 /** Server-side fetch for the public, shareable business profile page. */

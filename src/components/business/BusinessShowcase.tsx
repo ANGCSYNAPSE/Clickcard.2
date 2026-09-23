@@ -10,7 +10,7 @@ import {
   Pencil,
   Trash2,
   Share2,
-  DollarSign,
+  IndianRupee,
   Users,
   Star,
   MessageSquare,
@@ -20,7 +20,7 @@ import {
   Wallet,
   ExternalLink,
 } from "lucide-react";
-import { SiX, SiFacebook } from "react-icons/si";
+import { SiX, SiFacebook, SiInstagram } from "react-icons/si";
 import { FaLinkedin } from "react-icons/fa";
 import type { IconType } from "react-icons";
 import type { BusinessDocument, BusinessLocation } from "@/types";
@@ -50,6 +50,7 @@ export interface ShowcaseProfile {
   linkedin_url?: string | null;
   twitter_url?: string | null;
   facebook_url?: string | null;
+  instagram_url?: string | null;
   documents?: BusinessDocument[];
 }
 
@@ -83,22 +84,25 @@ export default function BusinessShowcase({
   const hasLocations = (profile.locations?.length || 0) > 0;
   const tabsList = [
     { id: "overview", label: "Overview" },
-    { id: "about", label: "About" },
     ...(documentsSlot ? [{ id: "documents", label: "Documents" }] : []),
-    ...(hasLocations ? [{ id: "locations", label: "Locations" }] : []),
   ] as const;
   const [tab, setTab] = useState<(typeof tabsList)[number]["id"]>("overview");
 
   const hasStats = Boolean(profile.revenue || profile.employee_count || profile.review_count != null || profile.rating != null);
   const hasOrgStatus = Boolean(profile.founded || profile.category || profile.funding || profile.founder);
   const hasGender = profile.gender_male_percent != null || profile.gender_female_percent != null;
-  const hasSocial = Boolean(profile.website || profile.linkedin_url || profile.twitter_url || profile.facebook_url);
-  const hasContact = Boolean(profile.email || profile.phone || profile.website || profile.address);
+  const hasSocial = Boolean(
+    profile.website || profile.linkedin_url || profile.twitter_url || profile.facebook_url || profile.instagram_url,
+  );
+  const hasContact = Boolean(profile.email || profile.phone);
 
   return (
     <div className="min-h-screen bg-paper-soft dark:bg-dark">
-      {/* Cover */}
-      <div className="relative h-40 w-full overflow-hidden bg-gradient-to-br from-primary to-secondary sm:h-56 lg:h-72">
+      {/* Cover — full width of its own container. On the dashboard, the
+          caller cancels AppShell's padding around this whole component so
+          it bleeds edge to edge; the public share page has no such padding
+          to begin with, so this stays plain there to avoid overflow. */}
+      <div className="relative h-64 overflow-hidden bg-gradient-to-br from-primary to-secondary sm:h-96 lg:h-[30rem]">
         {profile.cover_url && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={profile.cover_url} alt="" className="h-full w-full object-cover" />
@@ -127,7 +131,7 @@ export default function BusinessShowcase({
 
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         {/* Overlapping identity card */}
-        <div className="relative -mt-12 rounded-3xl border border-ink/5 bg-white p-5 shadow-soft-lg dark:border-white/5 dark:bg-[#262626] sm:-mt-16 sm:p-8">
+        <div className="relative -mt-20 rounded-3xl border border-ink/5 bg-white p-5 shadow-soft-lg dark:border-white/5 dark:bg-[#262626] sm:-mt-40 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <span className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-secondary text-white ring-4 ring-white shadow-soft dark:ring-[#262626] sm:h-24 sm:w-24">
               {profile.logo_url ? (
@@ -179,7 +183,7 @@ export default function BusinessShowcase({
             </p>
           )}
           {profile.description && (
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink/65 dark:text-white/65">
+            <p className="mt-3 max-w-4xl text-sm text-balance leading-relaxed text-ink/65 dark:text-white/65">
               {profile.description}
             </p>
           )}
@@ -190,6 +194,7 @@ export default function BusinessShowcase({
               {profile.linkedin_url && <SocialIcon href={profile.linkedin_url} icon={FaLinkedin} />}
               {profile.twitter_url && <SocialIcon href={profile.twitter_url} icon={SiX} />}
               {profile.facebook_url && <SocialIcon href={profile.facebook_url} icon={SiFacebook} />}
+              {profile.instagram_url && <SocialIcon href={profile.instagram_url} icon={SiInstagram} />}
             </div>
           )}
         </div>
@@ -212,14 +217,14 @@ export default function BusinessShowcase({
         </div>
 
         {/* Content */}
-        <div className="grid gap-6 py-6 lg:grid-cols-3 lg:gap-8">
-          <div className="space-y-6 lg:col-span-2">
+        <div className={`grid gap-6 py-6 ${tab === "documents" ? "" : "lg:grid-cols-3 lg:gap-8"}`}>
+          <div className={`space-y-6 ${tab === "documents" ? "" : "lg:col-span-2"}`}>
             {tab === "overview" && (
               <>
                 {hasStats && (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {profile.revenue && (
-                      <StatCard icon={DollarSign} label="Revenue" value={profile.revenue} tone="amber" />
+                      <StatCard icon={IndianRupee} label="Revenue" value={profile.revenue} tone="amber" />
                     )}
                     {profile.employee_count && (
                       <StatCard icon={Users} label="Employees" value={profile.employee_count} tone="blue" />
@@ -242,76 +247,56 @@ export default function BusinessShowcase({
               </>
             )}
 
-            {tab === "about" && (
-              <Card title={`About ${profile.company_name}`}>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink/60 dark:text-white/60">
-                  {profile.about || "No description added yet."}
-                </p>
-              </Card>
-            )}
-
             {tab === "documents" && documentsSlot}
+          </div>
 
-            {tab === "locations" && hasLocations && (
-              <div className="space-y-3">
-                {profile.locations!.map((loc, i) => (
-                  <div
-                    key={i}
-                    className="rounded-2xl border border-ink/5 bg-white p-4 shadow-soft dark:border-white/5 dark:bg-[#262626]"
-                  >
-                    {loc.label && <p className="font-bold text-ink dark:text-white">{loc.label}</p>}
-                    {loc.address && <p className="mt-1 text-sm text-ink/60 dark:text-white/60">{loc.address}</p>}
+          {/* Sidebar — hidden on the Documents tab so the file grid gets the full width */}
+          {tab !== "documents" && (
+            <div className="space-y-4">
+              {hasGender && (
+                <Card title="Employees by gender">
+                  <GenderBar male={profile.gender_male_percent} female={profile.gender_female_percent} />
+                </Card>
+              )}
+              {hasOrgStatus && (
+                    <Card title="Organization status">
+                      <div className="space-y-3">
+                        {profile.founded && <SidebarRow icon={Calendar} label="Founded" value={profile.founded} />}
+                        {profile.category && <SidebarRow icon={Landmark} label="Industry" value={profile.category} />}
+                        {profile.funding && <SidebarRow icon={Wallet} label="Funding" value={profile.funding} />}
+                        {profile.founder && <SidebarRow icon={UserIcon} label="Founder" value={profile.founder} />}
+                      </div>
+                    </Card>
+              )}
+              {hasContact && (
+                <Card title="Contact">
+                  <ContactRows profile={profile} />
+                </Card>
+              )}
+
+
+
+              {hasLocations && (
+                <Card title="Locations">
+                  <div className="space-y-3">
+                    {profile.locations!.map((loc, i) => (
+                      <div key={i}>
+                        <p className="text-sm font-bold text-ink dark:text-white">{loc.label || "Location"}</p>
+                        {loc.address && <p className="text-xs text-ink/50 dark:text-white/50">{loc.address}</p>}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-4">
-            {hasContact && (
-              <Card title="Contact">
-                <ContactRows profile={profile} />
-              </Card>
-            )}
-
-            {hasOrgStatus && (
-              <Card title="Organization status">
-                <div className="space-y-3">
-                  {profile.founded && <SidebarRow icon={Calendar} label="Founded" value={profile.founded} />}
-                  {profile.category && <SidebarRow icon={Landmark} label="Industry" value={profile.category} />}
-                  {profile.funding && <SidebarRow icon={Wallet} label="Funding" value={profile.funding} />}
-                  {profile.founder && <SidebarRow icon={UserIcon} label="Founder" value={profile.founder} />}
-                </div>
-              </Card>
-            )}
-
-            {hasGender && (
-              <Card title="Employees by gender">
-                <GenderBar male={profile.gender_male_percent} female={profile.gender_female_percent} />
-              </Card>
-            )}
-
-            {hasLocations && (
-              <Card title="Locations">
-                <div className="space-y-3">
-                  {profile.locations!.map((loc, i) => (
-                    <div key={i}>
-                      <p className="text-sm font-bold text-ink dark:text-white">{loc.label || "Location"}</p>
-                      {loc.address && <p className="text-xs text-ink/50 dark:text-white/50">{loc.address}</p>}
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-          </div>
+                </Card>
+              )}
+            </div>
+          )}
         </div>
 
         {ctaHref && (
           <div className="pb-12 text-center">
             <a
               href={ctaHref}
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-primary to-secondary px-6 py-3 text-sm font-bold text-white shadow-soft transition hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-full bg-black px-6 py-3 text-sm font-bold text-white shadow-soft transition hover:opacity-90"
             >
               Create your own ClickCard
             </a>
@@ -325,17 +310,6 @@ export default function BusinessShowcase({
 function ContactRows({ profile }: { profile: ShowcaseProfile }) {
   return (
     <div className="space-y-2">
-      {profile.website && (
-        <a
-          href={normalizeUrl(profile.website)}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-3 rounded-2xl bg-mist px-4 py-3 text-sm font-semibold text-ink transition hover:bg-paper-tint dark:bg-white/5 dark:text-white"
-        >
-          <Globe size={16} className="shrink-0 text-ink/40 dark:text-white/40" />
-          <span className="min-w-0 truncate">{profile.website}</span>
-        </a>
-      )}
       {profile.email && (
         <a
           href={`mailto:${profile.email}`}
@@ -354,12 +328,6 @@ function ContactRows({ profile }: { profile: ShowcaseProfile }) {
           <span className="min-w-0 truncate">{profile.phone}</span>
         </a>
       )}
-      {profile.address && (
-        <div className="flex items-center gap-3 rounded-2xl bg-mist px-4 py-3 text-sm font-semibold text-ink dark:bg-white/5 dark:text-white">
-          <MapPin size={16} className="shrink-0 text-ink/40 dark:text-white/40" />
-          <span className="min-w-0 truncate">{profile.address}</span>
-        </div>
-      )}
     </div>
   );
 }
@@ -377,7 +345,9 @@ const STAT_TONES = {
   amber: "bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
   blue: "bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
   violet: "bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
-  yellow: "bg-yellow-100 text-yellow-600 dark:bg-yellow-500/15 dark:text-yellow-300",
+  // "yellow" is a flat brand color in tailwind.config.ts (not a shade scale),
+  // so the usual bg-yellow-100/text-yellow-600 utilities don't exist.
+  yellow: "bg-yellow/15 text-yellow-hover dark:bg-yellow/20 dark:text-yellow",
 } as const;
 
 function StatCard({
@@ -386,7 +356,7 @@ function StatCard({
   value,
   tone,
 }: {
-  icon: typeof DollarSign;
+  icon: typeof IndianRupee;
   label: string;
   value: string;
   tone: keyof typeof STAT_TONES;

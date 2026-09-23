@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { FileText, Upload, Download, Trash2, Loader2 } from "lucide-react";
+import { Upload, Loader2 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import BusinessProfileModal, { type BusinessProfileFiles } from "@/components/app/BusinessProfileModal";
 import BusinessShowcase from "@/components/business/BusinessShowcase";
+import DocumentGrid from "@/components/business/DocumentGrid";
 import SharePopup from "@/components/app/SharePopup";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -22,13 +23,6 @@ import {
 import { pushToast } from "@/store/slices/uiSlice";
 import { SITE_URL } from "@/lib/config";
 import type { BusinessProfileInput } from "@/services/businessProfileService";
-
-const formatBytes = (bytes?: number) => {
-  if (!bytes) return "";
-  const kb = bytes / 1024;
-  if (kb < 1024) return `${kb.toFixed(0)} KB`;
-  return `${(kb / 1024).toFixed(1)} MB`;
-};
 
 export default function BusinessProfileDetailPage() {
   const router = useRouter();
@@ -175,37 +169,8 @@ export default function BusinessProfileDetailPage() {
       </div>
 
       {profile.documents && profile.documents.length > 0 ? (
-        <div className="mt-3 space-y-1.5">
-          {profile.documents.map((doc) => (
-            <div
-              key={doc.id}
-              className="flex items-center gap-2 rounded-xl bg-paper-soft px-3 py-2 dark:bg-white/5"
-            >
-              <FileText size={14} className="shrink-0 text-ink/45 dark:text-white/45" />
-              <span className="min-w-0 flex-1 truncate text-xs font-semibold text-ink/70 dark:text-white/70">
-                {doc.name}
-              </span>
-              {doc.size ? (
-                <span className="shrink-0 text-[10px] text-ink/35 dark:text-white/35">
-                  {formatBytes(doc.size)}
-                </span>
-              ) : null}
-              <a
-                href={doc.url}
-                target="_blank"
-                rel="noreferrer"
-                className="grid h-6 w-6 shrink-0 place-items-center rounded text-ink/45 transition hover:bg-white hover:text-brand-600 dark:text-white/45 dark:hover:bg-white/10"
-              >
-                <Download size={12} />
-              </a>
-              <button
-                onClick={() => removeDoc(doc.id)}
-                className="grid h-6 w-6 shrink-0 place-items-center rounded text-ink/45 transition hover:bg-white hover:text-rose-500 dark:text-white/45 dark:hover:bg-white/10"
-              >
-                <Trash2 size={12} />
-              </button>
-            </div>
-          ))}
+        <div className="mt-3">
+          <DocumentGrid documents={profile.documents} onRemove={removeDoc} />
         </div>
       ) : (
         <p className="mt-3 text-xs text-ink/40 dark:text-white/40">No documents uploaded yet.</p>
@@ -219,20 +184,25 @@ export default function BusinessProfileDetailPage() {
         <title>{profile.company_name} · ClickCard</title>
       </Head>
 
-      <BusinessShowcase
-        profile={profile}
-        backHref="/business-profiles"
-        onEdit={() => setModalOpen(true)}
-        onShare={() => {
-          if (!profile.slug) {
-            dispatch(pushToast("This profile isn't shareable yet — try refreshing the page", "error"));
-            return;
-          }
-          setShareOpen(true);
-        }}
-        onDelete={remove}
-        documentsSlot={documentsSlot}
-      />
+      {/* Cancels AppShell main's own px-4/sm:px-6 so BusinessShowcase's cover
+          bleeds edge to edge here — the public share page has no such
+          padding, so it doesn't need (and must not get) this treatment. */}
+      <div className="-mx-4 sm:-mx-6">
+        <BusinessShowcase
+          profile={profile}
+          backHref="/business-profiles"
+          onEdit={() => setModalOpen(true)}
+          onShare={() => {
+            if (!profile.slug) {
+              dispatch(pushToast("This profile isn't shareable yet — try refreshing the page", "error"));
+              return;
+            }
+            setShareOpen(true);
+          }}
+          onDelete={remove}
+          documentsSlot={documentsSlot}
+        />
+      </div>
 
       {modalOpen && (
         <BusinessProfileModal

@@ -4,6 +4,7 @@ import { Ghost } from "lucide-react";
 import { fetchPublicBusinessProfile, type PublicBusinessProfile } from "@/lib/publicBusiness";
 import { SITE_URL } from "@/lib/config";
 import BusinessShowcase from "@/components/business/BusinessShowcase";
+import DocumentGrid from "@/components/business/DocumentGrid";
 
 interface Props {
   profile: PublicBusinessProfile | null;
@@ -41,6 +42,15 @@ export default function PublicBusinessProfilePage({ profile, shareUrl }: Props) 
   const title = `${profile.company_name} · ClickCard`;
   const desc = profile.description || `${profile.company_name}${profile.category ? ` — ${profile.category}` : ""} on ClickCard.`;
 
+  const documentsSlot = profile.documents?.length ? (
+    <div className="rounded-3xl border border-ink/5 bg-white p-6 shadow-soft dark:border-white/5 dark:bg-[#262626]">
+      <h2 className="font-display text-lg font-black text-ink dark:text-white">Documents</h2>
+      <div className="mt-3">
+        <DocumentGrid documents={profile.documents} />
+      </div>
+    </div>
+  ) : undefined;
+
   return (
     <>
       <Head>
@@ -59,7 +69,7 @@ export default function PublicBusinessProfilePage({ profile, shareUrl }: Props) 
         {profile.logo_url && <meta name="twitter:image" content={profile.logo_url} />}
       </Head>
 
-      <BusinessShowcase profile={profile} ctaHref="/signup" />
+      <BusinessShowcase profile={profile} ctaHref="/signup" documentsSlot={documentsSlot} />
     </>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { X, Camera, FileText, Upload, Trash2, Building2, Image as ImageIcon, Plus } from "lucide-react";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import ImageCropModal from "@/components/app/ImageCropModal";
 import type { BusinessLocation, BusinessProfile } from "@/types";
 import type { BusinessProfileInput } from "@/services/businessProfileService";
 
@@ -60,6 +61,7 @@ export default function BusinessProfileModal({
     linkedin_url: profile?.linkedin_url || "",
     twitter_url: profile?.twitter_url || "",
     facebook_url: profile?.facebook_url || "",
+    instagram_url: profile?.instagram_url || "",
   });
   const [locations, setLocations] = useState<BusinessLocation[]>(profile?.locations || []);
   const [logo, setLogo] = useState<File | null>(null);
@@ -67,6 +69,8 @@ export default function BusinessProfileModal({
   const [cover, setCover] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [documents, setDocuments] = useState<File[]>([]);
+  const [cropTarget, setCropTarget] = useState<"logo" | "cover" | null>(null);
+  const [cropSource, setCropSource] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
@@ -97,13 +101,29 @@ export default function BusinessProfileModal({
   const onLogoChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (file) setLogo(file);
+    if (!file) return;
+    setCropTarget("logo");
+    setCropSource(URL.createObjectURL(file));
   };
 
   const onCoverChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (file) setCover(file);
+    if (!file) return;
+    setCropTarget("cover");
+    setCropSource(URL.createObjectURL(file));
+  };
+
+  const onCropConfirm = (file: File) => {
+    if (cropTarget === "logo") setLogo(file);
+    else if (cropTarget === "cover") setCover(file);
+    setCropTarget(null);
+    setCropSource(null);
+  };
+
+  const onCropCancel = () => {
+    setCropTarget(null);
+    setCropSource(null);
   };
 
   const onDocsChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,6 +147,7 @@ export default function BusinessProfileModal({
   };
 
   return (
+    <>
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm"
       onClick={onClose}
@@ -222,6 +243,12 @@ export default function BusinessProfileModal({
             value={values.category}
             onChange={(e) => set("category", e.target.value)}
           />
+          <Input
+            label="Website"
+            placeholder="https://…"
+            value={values.website}
+            onChange={(e) => set("website", e.target.value)}
+          />
           <div>
             <label className="mb-1.5 block text-sm font-semibold text-ink/80 dark:text-white/80">
               Bio
@@ -248,31 +275,17 @@ export default function BusinessProfileModal({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Input
-              label="Website"
-              placeholder="https://…"
-              value={values.website}
-              onChange={(e) => set("website", e.target.value)}
-            />
-            <Input
               label="Email"
               type="email"
               placeholder="contact@company.com"
               value={values.email}
               onChange={(e) => set("email", e.target.value)}
             />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
             <Input
               label="Phone"
               placeholder="+91 98765 43210"
               value={values.phone}
               onChange={(e) => set("phone", e.target.value)}
-            />
-            <Input
-              label="Address"
-              placeholder="City, Country"
-              value={values.address}
-              onChange={(e) => set("address", e.target.value)}
             />
           </div>
 
@@ -380,6 +393,12 @@ export default function BusinessProfileModal({
               onChange={(e) => set("facebook_url", e.target.value)}
             />
           </div>
+          <Input
+            label="Instagram"
+            placeholder="https://instagram.com/…"
+            value={values.instagram_url}
+            onChange={(e) => set("instagram_url", e.target.value)}
+          />
 
           {/* Locations */}
           <div>
@@ -488,5 +507,17 @@ export default function BusinessProfileModal({
         </div>
       </form>
     </div>
+
+    {cropSource && (
+      <ImageCropModal
+        imageSrc={cropSource}
+        aspect={cropTarget === "cover" ? 3 : 1}
+        cropShape="rect"
+        title={cropTarget === "cover" ? "Crop cover image" : "Crop logo"}
+        onCancel={onCropCancel}
+        onConfirm={onCropConfirm}
+      />
+    )}
+    </>
   );
 }
