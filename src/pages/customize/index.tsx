@@ -410,7 +410,79 @@ export default function StudioPage() {
 
             <div className={`no-scrollbar ${toolsExpanded ? "block" : "hidden"} max-h-[60vh] overflow-y-auto lg:block lg:max-h-none lg:overflow-visible`}>
           {detailView === null && (
-            <div className="px-4 pb-4 space-y-3">
+            <div className="no-scrollbar flex items-start gap-4 overflow-x-auto px-5 pb-4 lg:hidden">
+              <button
+                onClick={() => setDetailView("presets")}
+                className="flex shrink-0 flex-col items-center gap-1.5"
+              >
+                <span
+                  className="relative grid h-14 w-14 place-items-center overflow-hidden rounded-2xl border border-ink/10 dark:border-white/10"
+                  style={
+                    wallpaperType === "image" && backgroundImageUrl
+                      ? {
+                          backgroundImage: `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.55)), url(${backgroundImageUrl})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }
+                      : wallpaperType === "gradient"
+                      ? {
+                          background: `linear-gradient(${gradientDirection === "down" ? "to bottom" : "to top"}, ${gradientColor}, ${gradientColorEnd})`,
+                        }
+                      : { background: backgroundColor }
+                  }
+                >
+                  <span className="text-sm font-black" style={{ fontFamily: `"${titleFont}", sans-serif`, color: titleColor }}>
+                    Aa
+                  </span>
+                </span>
+                <span className="text-xs font-bold text-ink dark:text-white">Templates</span>
+              </button>
+
+              <button onClick={() => setDetailView("palette")} className="flex shrink-0 flex-col items-center gap-1.5">
+                <span
+                  className="grid h-14 w-14 place-items-center rounded-2xl border border-ink/10 dark:border-white/10"
+                  style={{ background: backgroundColor, color: getContrastText(backgroundColor) }}
+                >
+                  <Palette size={20} />
+                </span>
+                <span className="text-xs font-bold text-ink dark:text-white">Palette</span>
+              </button>
+
+              <button onClick={() => setDetailView("header")} className="flex shrink-0 flex-col items-center gap-1.5">
+                <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                  <PanelTop size={20} />
+                </span>
+                <span className="text-xs font-bold text-ink dark:text-white">Header</span>
+              </button>
+
+              <button onClick={() => setDetailView("buttons")} className="flex shrink-0 flex-col items-center gap-1.5">
+                <span className="grid h-14 w-14 place-items-center rounded-2xl border border-ink/10 bg-ink/5 dark:border-white/10 dark:bg-white/10">
+                  <span className="h-3 w-7 rounded-full border border-ink/15 dark:border-white/20" style={{ background: buttonColor }} />
+                </span>
+                <span className="text-xs font-bold text-ink dark:text-white">Buttons</span>
+              </button>
+
+              <button onClick={() => setDetailView("text")} className="flex shrink-0 flex-col items-center gap-1.5">
+                <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                  <CaseSensitive size={22} />
+                </span>
+                <span className="text-xs font-bold text-ink dark:text-white">Text</span>
+              </button>
+
+              <button onClick={() => setDetailView("colors")} className="flex shrink-0 flex-col items-center gap-1.5">
+                <span className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl border border-ink/10 dark:border-white/10">
+                  <span className="flex h-full w-full">
+                    <span className="h-full w-1/2" style={{ background: backgroundColor }} />
+                    <span className="h-full w-1/2" style={{ background: buttonColor }} />
+                  </span>
+                </span>
+                <span className="text-xs font-bold text-ink dark:text-white">Colors</span>
+              </button>
+            </div>
+          )}
+
+          {detailView === null && (
+            <div className="hidden px-4 pb-4 space-y-3 lg:block">
                {/* Templates Option — one-tap style presets (Aura, Sunset…) */}
               <button
                 onClick={() => setDetailView("presets")}
