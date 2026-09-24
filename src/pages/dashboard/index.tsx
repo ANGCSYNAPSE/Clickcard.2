@@ -172,7 +172,7 @@ export default function DashboardPage() {
       {/* completion + analytics stacked on the left, live phone preview on the right (lg+ only — opened via the "Preview" button below lg) — the chart grows to fill the remaining height so both columns end up flush */}
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="flex flex-col gap-6">
-          <ProfileCompletionCard completion={completion} />
+          {completion < 100 && <ProfileCompletionCard completion={completion} />}
           <AnalyticsTrendCard trend={dashboard?.trend} className="flex-1" />
         </div>
 

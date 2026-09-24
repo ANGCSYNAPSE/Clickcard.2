@@ -4,10 +4,6 @@ import {
   Check,
   Crown,
   Zap,
-  Sparkles,
-  Fingerprint,
-  Store,
-  LineChart,
   Loader2,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
@@ -21,26 +17,97 @@ import {
 import { pushToast } from "@/store/slices/uiSlice";
 import { pricing as PRICING } from "@/lib/site";
 
-const VERTICAL_ICON: Record<string, typeof Crown> = {
-  pro_identity: Fingerprint,
-  studio_pro: Sparkles,
-  business_storefront: Store,
-  analytics_growth: LineChart,
-};
-const VERTICAL_TINT: Record<string, string> = {
-  pro_identity: "bg-brand-500",
-  studio_pro: "bg-candy-yellow",
-  business_storefront: "bg-candy-pink",
-  analytics_growth: "bg-ink",
+const rupees = (paise: number) => `₹${Math.round(paise / 100).toLocaleString()}`;
+
+type Feature = { emoji: string; title: string; desc?: string };
+type Group = { label?: string; items: Feature[] };
+type PlanDisplay = {
+  id: string;
+  name: string;
+  blurb: string;
+  priceNote: string;
+  cta: string;
+  recommended?: boolean;
+  intro: string;
+  groups: Group[];
 };
 
-const rupees = (paise: number) => `₹${Math.round(paise / 100).toLocaleString()}`;
+const PLAN_DISPLAY: PlanDisplay[] = [
+  {
+    id: "free",
+    name: "Free",
+    blurb: "Get started with your own personal ClickCard",
+    priceNote: "Free, forever",
+    cta: "Get started",
+    intro: "Key features:",
+    groups: [
+      {
+        items: [
+          { emoji: "🪪", title: "1 digital profile", desc: "Your whole identity on one clean, shareable page" },
+          { emoji: "🔗", title: "5 links", desc: "Route people to your socials, work and contact" },
+          { emoji: "📱", title: "Standard QR code", desc: "Scannable from screens, print and packaging" },
+          { emoji: "🎨", title: "1 card template", desc: "A polished business card, ready in minutes" },
+          { emoji: "📊", title: "Basic analytics", desc: "See views and taps on your profile" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    blurb: "For professionals & creators looking to grow",
+    priceNote: "INR/mo · cancel anytime",
+    cta: "Go Pro",
+    recommended: true,
+    intro: "Everything in Free, plus:",
+    groups: [
+      {
+        label: "Link in bio",
+        items: [
+          { emoji: "♾️", title: "Unlimited links", desc: "No caps — add everything you make and sell" },
+          { emoji: "✨", title: "All Studio templates", desc: "120+ card, resume and poster designs" },
+          { emoji: "📄", title: "PDF resume export", desc: "A recruiter-ready PDF in one tap" },
+        ],
+      },
+      {
+        label: "Grow",
+        items: [
+          { emoji: "📈", title: "Custom QR & analytics", desc: "Branded QR codes with live scan tracking" },
+          { emoji: "🎁", title: "Referral rewards", desc: "Share your code and unlock premium perks" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "business",
+    name: "Business",
+    blurb: "For teams & storefronts that sell",
+    priceNote: "INR/mo · cancel anytime",
+    cta: "Scale up",
+    intro: "Everything in Pro, plus:",
+    groups: [
+      {
+        label: "Sell",
+        items: [
+          { emoji: "🛍️", title: "Product catalogue", desc: "Showcase products with images and prices" },
+          { emoji: "🕐", title: "Business hours & maps", desc: "Help customers find and visit you" },
+          { emoji: "🏢", title: "Business profile", desc: "A dedicated page for your brand or storefront" },
+        ],
+      },
+      {
+        label: "Team",
+        items: [
+          { emoji: "👥", title: "Team profiles", desc: "A consistent card for every teammate" },
+          { emoji: "⭐", title: "Priority support", desc: "Real answers from real humans, fast" },
+        ],
+      },
+    ],
+  },
+];
 
 export default function BillingPage() {
   const dispatch = useAppDispatch();
-  const { plans, verticals, subscription, status, upgrading } = useAppSelector(
-    (s) => s.billing,
-  );
+  const { plans, subscription, status, upgrading } = useAppSelector((s) => s.billing);
   const user = useAppSelector((s) => s.auth.user);
   const [cycle, setCycle] = useState<"monthly" | "yearly">("monthly");
 
@@ -92,7 +159,7 @@ export default function BillingPage() {
             </p>
             <p className="text-sm text-ink/55 dark:text-white/55">
               {currentPlanId === "free"
-                ? "Upgrade to unlock premium verticals."
+                ? "Upgrade to unlock premium features."
                 : `Renews ${subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString() : "—"} · ${subscription?.billingCycle}`}
             </p>
           </div>
@@ -107,49 +174,17 @@ export default function BillingPage() {
         )}
       </div>
 
-      {/* verticals */}
-      <h2 className="mb-3 mt-8 font-display text-lg font-bold text-ink dark:text-white">
-        What you unlock
-      </h2>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {verticals.map((v) => {
-          const Icon = VERTICAL_ICON[v.id] || Sparkles;
-          const active = subscription?.verticals?.includes(v.id);
-          return (
-            <div
-              key={v.id}
-              className={`rounded-3xl border bg-white p-5 dark:bg-[#262626] ${
-                active
-                  ? "border-transparent ring-2 ring-brand-400"
-                  : "border-ink/[0.06] dark:border-white/[0.06]"
-              }`}
-            >
-              <span className={`grid h-11 w-11 place-items-center rounded-2xl ${VERTICAL_TINT[v.id]} text-white`}>
-                <Icon size={20} />
-              </span>
-              <p className="mt-3 font-bold text-ink dark:text-white">{v.name}</p>
-              <p className="text-xs text-ink/55 dark:text-white/55">{v.tagline}</p>
-              {active && (
-                <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-candy-pink">
-                  <Check size={13} /> Active
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
       {/* cycle toggle */}
-      <div className="mt-10 flex items-center justify-center gap-3">
-        <span className={`text-sm font-bold ${cycle === "monthly" ? "text-ink dark:text-white" : "text-ink/40"}`}>Monthly</span>
+      <div className="mt-8 flex items-center justify-center gap-3">
+        <span className={`text-sm font-bold ${cycle === "monthly" ? "text-ink dark:text-white" : "text-ink/40 dark:text-white/40"}`}>Monthly</span>
         <button
           onClick={() => setCycle((c) => (c === "monthly" ? "yearly" : "monthly"))}
           className={`relative h-7 w-12 rounded-full transition ${cycle === "yearly" ? "bg-brand-500" : "bg-ink/20 dark:bg-white/20"}`}
         >
-          <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${cycle === "yearly" ? "left-6" : "left-1"}`} />
+          <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${cycle === "yearly" ? "left-6" : "left-1"}`} />
         </button>
-        <span className={`text-sm font-bold ${cycle === "yearly" ? "text-ink dark:text-white" : "text-ink/40"}`}>
-          Yearly <span className="text-candy-pink">· save ~2 months</span>
+        <span className={`text-sm font-bold ${cycle === "yearly" ? "text-ink dark:text-white" : "text-ink/40 dark:text-white/40"}`}>
+          Yearly <span className="text-brand-500">· save ~2 months</span>
         </span>
       </div>
 
@@ -160,73 +195,117 @@ export default function BillingPage() {
         </div>
       ) : (
         <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {plans.map((p, idx) => {
-            // Use shared pricing from site config (PRICING array)
+          {PLAN_DISPLAY.map((display, idx) => {
             const pricingConfig = PRICING[idx] || PRICING[0];
-            const basePrice = parseInt(pricingConfig.price.replace("₹", "").replace(/,/g, ""));
-            const price = cycle === "yearly" ? (basePrice * 12) * 100 : basePrice * 100; // Convert to paise for rupees function
-            const isCurrent = p.id === currentPlanId;
-            const isFree = p.id === "free";
+            const basePrice = parseInt(pricingConfig.price.replace("₹", "").replace(/,/g, "")) || 0;
+            const price = cycle === "yearly" ? basePrice * 12 * 100 : basePrice * 100;
+            const isCurrent = display.id === currentPlanId;
+            const isFree = display.id === "free";
+            const isRec = display.recommended;
+
             return (
               <div
-                key={p.id}
-                className={`relative flex flex-col rounded-3xl border bg-white p-6 dark:bg-[#262626] ${
-                  p.popular
-                    ? "border-transparent shadow-soft ring-2 ring-brand-400"
-                    : "border-ink/[0.06] dark:border-white/[0.06]"
+                key={display.id}
+                className={`relative flex flex-col overflow-hidden rounded-[28px] ${
+                  isRec
+                    ? "bg-ink text-white dark:bg-white dark:text-ink"
+                    : "border border-ink/[0.06] bg-white text-ink dark:border-white/[0.06] dark:bg-[#262626] dark:text-white"
                 }`}
               >
-                {p.popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-500 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-white shadow-soft">
-                    Most popular
-                  </span>
-                )}
-                <p className="font-display text-lg font-black text-ink dark:text-white">{p.name}</p>
-                <p className="text-sm text-ink/55 dark:text-white/55">{p.tagline}</p>
-                <p className="mt-3">
-                  <span className="font-display text-3xl font-black text-ink dark:text-white">{rupees(price)}</span>
-                  <span className="text-sm text-ink/50 dark:text-white/50">
-                    {isFree ? " forever" : cycle === "yearly" ? " /yr" : " /mo"}
-                  </span>
-                </p>
-                <ul className="mt-5 flex-1 space-y-2.5">
-                  {(isFree
-                    ? ["1 profile", "5 links", "Standard QR", "Basic analytics"]
-                    : verticals.filter((v) => p.verticals.includes(v.id)).map((v) => v.name)
-                  ).map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-ink/70 dark:text-white/70">
-                      <Check size={16} className="mt-0.5 shrink-0 text-candy-pink" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  disabled={isCurrent || isFree || upgrading === p.id}
-                  onClick={() => onUpgrade(p.id)}
-                  className={`mt-6 inline-flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold transition ${
-                    isCurrent
-                      ? "cursor-default bg-ink/5 text-ink/40 dark:bg-white/5 dark:text-white/40"
-                      : isFree
-                        ? "cursor-default bg-ink/5 text-ink/40 dark:bg-white/5 dark:text-white/40"
-                        : p.popular
-                          ? "bg-brand-500 text-white hover:bg-brand-600"
-                          : "bg-brand-50 text-brand-600 hover:bg-brand-100 dark:bg-white/5 dark:text-white"
-                  }`}
-                >
-                  {upgrading === p.id ? (
-                    <Loader2 size={15} className="animate-spin" />
-                  ) : isCurrent ? (
-                    "Current plan"
-                  ) : isFree ? (
-                    "Free forever"
-                  ) : (
-                    <><Zap size={15} /> Upgrade to {p.name}</>
-                  )}
-                </button>
+                {/* header */}
+                <div className="px-7 pb-4 pt-7">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-2xl font-extrabold tracking-tight">
+                      {display.name}
+                    </p>
+                    {isRec && (
+                      <span className="mt-1 shrink-0 rounded-full bg-brand-400 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-white">
+                        Best value
+                      </span>
+                    )}
+                  </div>
+                  <p className={`mt-1 text-sm font-medium ${isRec ? "text-white/60 dark:text-ink/60" : "opacity-55"}`}>
+                    {display.blurb}
+                  </p>
+                </div>
+
+                {/* body */}
+                <div className="flex flex-1 flex-col px-7 pb-8">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-extrabold tracking-tight">
+                      {isFree ? "₹0" : rupees(price)}
+                    </span>
+                    <span className={`text-sm font-semibold ${isRec ? "text-white/45 dark:text-ink/45" : "opacity-45"}`}>
+                      {display.priceNote}
+                    </span>
+                  </div>
+
+                  <button
+                    disabled={isCurrent || isFree || upgrading === display.id}
+                    onClick={() => !isFree && !isCurrent && onUpgrade(display.id)}
+                    className={`mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition ${
+                      isCurrent
+                        ? "cursor-default bg-ink/10 text-ink/40 dark:bg-white/10 dark:text-white/40"
+                        : isFree
+                          ? "cursor-default bg-ink/5 text-ink/40 dark:bg-white/5 dark:text-white/40"
+                          : isRec
+                            ? "bg-brand-500 text-white hover:bg-brand-600"
+                            : "bg-ink text-white hover:bg-ink/80 dark:bg-white dark:text-ink dark:hover:bg-white/90"
+                    }`}
+                  >
+                    {upgrading === display.id ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : isCurrent ? (
+                      <><Check size={15} /> Current plan</>
+                    ) : isFree ? (
+                      display.cta
+                    ) : (
+                      <><Zap size={15} /> {display.cta}</>
+                    )}
+                  </button>
+
+                  <p className="mt-7 text-sm font-bold">
+                    {display.intro}
+                  </p>
+
+                  <div className="mt-4 space-y-5">
+                    {display.groups.map((group, gi) => (
+                      <div key={gi}>
+                        {group.label && (
+                          <p className={`mb-3 text-xs font-bold uppercase tracking-[0.15em] ${isRec ? "text-white/40 dark:text-ink/40" : "opacity-40"}`}>
+                            {group.label}
+                          </p>
+                        )}
+                        <ul className="space-y-3">
+                          {group.items.map((f) => (
+                            <li key={f.title} className="flex items-start gap-3">
+                              <span aria-hidden className="mt-0.5 text-lg leading-none">{f.emoji}</span>
+                              <span>
+                                <span className={`block text-sm font-bold ${isRec ? "text-white dark:text-ink" : "text-ink dark:text-white"}`}>
+                                  {f.title}
+                                </span>
+                                {f.desc && (
+                                  <span className={`mt-0.5 block text-xs font-medium leading-relaxed ${isRec ? "text-white/55 dark:text-ink/55" : "text-ink/55 dark:text-white/55"}`}>
+                                    {f.desc}
+                                  </span>
+                                )}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             );
           })}
         </div>
       )}
+
+      <p className="mt-8 text-center text-sm font-semibold text-ink/45 dark:text-white/45">
+        Prices in INR. Cancel anytime — your free profile stays live forever.
+      </p>
     </AppShell>
   );
 }
