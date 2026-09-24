@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 import {
   ArrowLeft,
   Building2,
@@ -63,6 +63,34 @@ export interface ShowcaseProfile {
 }
 
 const normalizeUrl = (url: string) => (/^https?:\/\//.test(url) ? url : `https://${url}`);
+
+/** Sanitizes the rich-text About HTML before rendering it with
+ * dangerouslySetInnerHTML. Uses `sanitize-html` (pure JS, no jsdom) rather
+ * than isomorphic-dompurify — that package's Node/jsdom path routinely fails
+ * to bundle correctly under Vercel's serverless output tracing, which was
+ * crashing this page (500 FUNCTION_INVOCATION_FAILED) for any profile whose
+ * About section actually had content. */
+const sanitizeAboutHtml = (html: string) =>
+  sanitizeHtml(html, {
+    allowedTags: [
+      "p", "br", "strong", "em", "u", "s", "a", "img", "ul", "ol", "li", "span",
+      "h1", "h2", "h3", "h4", "blockquote", "code", "pre",
+    ],
+    allowedAttributes: {
+      a: ["href", "target", "rel"],
+      img: ["src", "alt", "width", "height"],
+      span: ["style"],
+      p: ["style"],
+    },
+    allowedStyles: {
+      "*": {
+        color: [/^#[0-9a-fA-F]{3,8}$/, /^rgb\(/, /^rgba\(/],
+        "font-family": [/^[\w\s,'"-]+$/],
+        "font-size": [/^\d+(\.\d+)?(px|em|rem|%)$/],
+      },
+    },
+    allowedSchemes: ["http", "https", "mailto"],
+  });
 
 /**
  * Shared "company page" layout — cover banner, overlapping identity card,
@@ -418,7 +446,7 @@ function AboutCard({
         ) : about ? (
           <div
             className="tiptap-content max-w-none text-sm leading-relaxed text-ink/60 dark:text-white [&_a]:text-brand-600 [&_a]:underline [&_img]:my-2 [&_img]:max-w-full [&_img]:rounded-xl [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5"
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(about) }}
+            dangerouslySetInnerHTML={{ __html: sanitizeAboutHtml(about) }}
           />
         ) : (
           <button

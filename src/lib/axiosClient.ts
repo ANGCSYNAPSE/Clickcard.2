@@ -59,7 +59,23 @@ apiClient.interceptors.response.use(
       !NO_REFRESH_PATHS.some((p) => url.includes(p)) &&
       tokenService.getRefresh();
 
-    if (!refreshable) return Promise.reject(error);
+    if (!refreshable) {
+      // A 401 with no usable refresh token means the session is dead (expired,
+      // revoked, or never had a refresh token). Clear it and send the user to
+      // login instead of silently leaving a stale access token in place — that
+      // token would otherwise keep getting attached and rejected on every
+      // request on every page load.
+      if (
+        status === 401 &&
+        !NO_REFRESH_PATHS.some((p) => url.includes(p)) &&
+        typeof window !== "undefined" &&
+        !window.location.pathname.startsWith("/login")
+      ) {
+        tokenService.clear();
+        window.location.href = "/login?session=expired";
+      }
+      return Promise.reject(error);
+    }
 
     if (isRefreshing) {
       return new Promise((resolve, reject) => {

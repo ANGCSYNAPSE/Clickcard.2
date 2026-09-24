@@ -12,9 +12,7 @@ import {
   fetchNotifications,
   markRead,
   markAllRead,
-  receiveNotification,
 } from "@/store/slices/notificationSlice";
-import { connectNotifications, disconnectNotifications } from "@/lib/socketClient";
 
 const ICONS: Record<string, typeof Bell> = {
   referral: Gift,
@@ -34,24 +32,17 @@ const timeAgo = (iso: string) => {
 export default function NotificationBell() {
   const dispatch = useAppDispatch();
   const { items, unread } = useAppSelector((s) => s.notifications);
-  const userId = useAppSelector((s) => s.auth.user?.id ?? s.auth.user?.userId);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
+  // Polled instead of streamed over a socket — the backend runs on Vercel
+  // serverless functions, which don't support persistent WebSocket
+  // connections, so a live socket there only ever fails to connect.
   useEffect(() => {
     dispatch(fetchNotifications());
+    const interval = setInterval(() => dispatch(fetchNotifications()), 30000);
+    return () => clearInterval(interval);
   }, [dispatch]);
-
-  // Live socket stream.
-  useEffect(() => {
-    if (!userId) return;
-    connectNotifications(
-      userId,
-      (n) => dispatch(receiveNotification(n)),
-      () => dispatch(fetchNotifications()),
-    );
-    return () => disconnectNotifications();
-  }, [userId, dispatch]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
