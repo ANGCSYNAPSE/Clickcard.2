@@ -18,6 +18,7 @@ import {
   Globe,
   MapPin,
   ChevronRight,
+  ChevronLeft,
   Loader2,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
@@ -330,7 +331,7 @@ export default function PortfolioPage() {
         </section>
 
         <aside className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#262626] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px]">
-          <div className="px-5 py-4">
+          <div className={`px-5 py-4 ${detailView !== null ? "hidden" : ""}`}>
             <h3 className="font-display text-lg font-black text-ink dark:text-white">Edit Portfolio</h3>
           </div>
 
@@ -414,7 +415,7 @@ export default function PortfolioPage() {
                 onClick={() => setDetailView(null)}
                 className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
               >
-                ← Details
+                <ChevronLeft size={16} /> Details
               </button>
               <div className="space-y-6 px-5 pb-4">
                 <div className="space-y-2">
@@ -852,7 +853,7 @@ export default function PortfolioPage() {
                 onClick={() => setDetailView(null)}
                 className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
               >
-                ← Palette
+                <ChevronLeft size={16} /> Palette
               </button>
               <div className="px-5 pb-4 space-y-4">
                 <div className="flex items-center justify-between gap-4">
@@ -886,7 +887,7 @@ export default function PortfolioPage() {
                 onClick={() => setDetailView(null)}
                 className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
               >
-                ← Text
+                <ChevronLeft size={16} /> Text
               </button>
               <div className="space-y-5 px-5 pb-4">
                 <div className="flex items-center justify-between gap-4">

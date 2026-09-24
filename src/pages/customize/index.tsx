@@ -7,7 +7,6 @@ import {
   Sparkles,
   Palette,
   ChevronRight,
-  ChevronDown,
   Type,
   Image as ImageIcon,
   Video,
@@ -20,9 +19,10 @@ import {
   CaseSensitive,
   Camera,
   User as UserIcon,
+  Eye,
+  ChevronLeft,
   Plus,
   Minus,
-  Eye,
   X,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
@@ -75,6 +75,47 @@ const DETAIL_TITLES: Record<string, string> = {
 
 const MIN_FONT_SIZE = 8;
 const MAX_FONT_SIZE = 72;
+
+/** Scales a fixed 320×680 child to fit the available container.
+ *  fitHeight=true (default) scales to fit both width and height (panel mode).
+ *  fitHeight=false scales to fill width only (mobile strip mode). */
+function ScaledPreview({ children, fitHeight = true }: { children: React.ReactNode; fitHeight?: boolean }) {
+  const outerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const el = outerRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      const scaleByWidth = width / 320;
+      const scaleByHeight = fitHeight && height > 0 ? height / 680 : scaleByWidth;
+      setScale(Math.min(scaleByWidth, scaleByHeight));
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [fitHeight]);
+
+  if (fitHeight) {
+    return (
+      <div ref={outerRef} className="w-full h-full overflow-hidden flex items-center justify-center">
+        <div style={{ width: 320 * scale, height: 680 * scale, position: "relative", flexShrink: 0 }}>
+          <div style={{ width: 320, height: 680, transform: `scale(${scale})`, transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
+            {children}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={outerRef} className="w-full overflow-hidden" style={{ height: 680 * scale }}>
+      <div style={{ width: 320, height: 680, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 /** A Word-style font-size box: type a point size directly, or nudge it with +/-. */
 function FontSizeInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
@@ -153,7 +194,6 @@ export default function StudioPage() {
   const savingProfile = useAppSelector((s) => s.profile.saving);
 
   const [expandedSection, setExpandedSection] = useState<string | null>("palette");
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [detailView, setDetailView] = useState<string | null>(null);
   const [gradientStyle, setGradientStyle] = useState<"custom" | "premade">("custom");
   const [picture, setPicture] = useState<File | null>(null);
@@ -168,7 +208,7 @@ export default function StudioPage() {
 
   const [fontPickerTarget, setFontPickerTarget] = useState<"page" | "title" | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
-  const [toolsExpanded, setToolsExpanded] = useState(true);
+  const [mdPreviewOpen, setMdPreviewOpen] = useState(false);
 
   const applyPreset = (preset: StylePreset) => {
     // Clicking the already-active preset unselects it — the design keeps
@@ -325,14 +365,15 @@ export default function StudioPage() {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </Head>
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 lg:shrink-0">
+      <div className="mb-4 hidden items-center justify-between gap-3 md:flex md:shrink-0">
         <h1 className="font-display text-2xl font-black text-ink dark:text-white">Customize</h1>
         <div className="flex flex-wrap items-center gap-2">
+          {/* Preview toggle — md only (lg has the side-by-side layout) */}
           <button
-            onClick={() => setPreviewOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs sm:text-sm font-bold text-ink shadow-soft ring-1 ring-ink/[0.06] transition hover:bg-ink/5 dark:bg-white/10 dark:text-white dark:ring-white/[0.06] lg:hidden"
+            onClick={() => setMdPreviewOpen((v) => !v)}
+            className="hidden items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-4 py-2 text-sm font-bold text-ink transition hover:bg-ink/5 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 md:flex lg:hidden"
           >
-            <Eye size={16} /> Preview
+            <Eye size={15} /> {mdPreviewOpen ? "Hide preview" : "Preview"}
           </button>
           {(dirty || profileDirty || !!picture) && (
             <Button onClick={saveAll} loading={savingProfile} className="text-xs sm:text-sm">
@@ -342,54 +383,64 @@ export default function StudioPage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 lg:min-h-0 lg:flex-1 lg:flex-row">
-        {/* preview + gallery */}
-        <div className="hidden min-h-0 lg:flex lg:flex-1 lg:flex-col">
-          {/* live preview */}
-          <div className="grid place-items-center rounded-3xl  bg-mist p-4 sm:p-6 dark:bg-white/[0.02] min-h-[340px] sm:min-h-[410px] lg:flex-1 lg:overflow-hidden">
-            {livePreview}
+      <div className="flex flex-col gap-6 md:min-h-0 md:flex-1 lg:flex-row lg:min-h-0 lg:overflow-hidden">
+        {/* preview panel — always visible lg+, visible on md via modal */}
+        <div className="hidden min-h-0 lg:flex lg:flex-1 lg:flex-col lg:overflow-hidden">
+          {/* live preview — ScaledPreview scales the fixed 320×680 card to fit */}
+          <div className="flex flex-1 flex-col items-center justify-center rounded-3xl bg-mist p-4 dark:bg-white/[0.02] lg:overflow-hidden">
+            <ScaledPreview>{livePreview}</ScaledPreview>
           </div>
-
         </div>
 
-        {/* mobile live preview — sits above the fixed bottom sheet */}
-        <div className="lg:hidden">
+        {/* md preview modal — 320×680 card centered over blurred backdrop */}
+        {mdPreviewOpen && (
           <div
-            className={`grid place-items-center rounded-3xl bg-mist p-4 dark:bg-white/[0.02] ${
-              toolsExpanded ? "pb-[48vh]" : "pb-24"
-            }`}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm lg:hidden"
+            onClick={() => setMdPreviewOpen(false)}
           >
-            {livePreview}
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setMdPreviewOpen(false)}
+                aria-label="Close preview"
+                className="absolute -top-11 right-0 z-30 grid h-9 w-9 place-items-center rounded-full bg-white text-ink shadow-soft transition hover:opacity-90 dark:bg-[#262626] dark:text-white"
+              >
+                <X size={16} />
+              </button>
+              <div style={{ width: 320, height: 680 }}>
+                {livePreview}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* mobile live preview — same contained box as desktop */}
+        <div className="md:hidden">
+          {(dirty || profileDirty || !!picture) && (
+            <div className="mb-3 flex justify-end">
+              <button
+                onClick={saveAll}
+                disabled={savingProfile}
+                className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-ink shadow-soft ring-1 ring-ink/[0.06] transition hover:bg-ink/5 disabled:opacity-60 dark:bg-white/10 dark:text-white dark:ring-white/[0.06]"
+              >
+                <Save size={14} /> {savingProfile ? "Saving…" : "Save"}
+              </button>
+            </div>
+          )}
+          <div className={`rounded-3xl bg-mist dark:bg-white/[0.02] ${detailView === null ? "pb-22" : "pb-[40vh]"}`}>
+            <ScaledPreview fitHeight={false}>{livePreview}</ScaledPreview>
           </div>
         </div>
 
-        {/* controls — static sidebar on desktop, fixed bottom sheet on mobile.
-            Same options list + drilldown either way, so mobile always has
-            every feature desktop has, with identical icons. */}
-        <div className="fixed inset-x-0 bottom-0 z-40 lg:static lg:z-auto lg:w-[380px] lg:h-full lg:shrink-0 xl:w-[440px] 2xl:w-[520px]">
-          <div className="mx-auto w-full max-w-lg rounded-t-3xl border border-b-0 border-ink/5 bg-mist shadow-soft-lg no-scrollbar dark:border-white/5 dark:bg-[#262626] lg:mx-0 lg:h-full lg:max-w-none lg:overflow-y-auto lg:rounded-3xl lg:border-b lg:shadow-none">
-            {/* Mobile-only heading — the option list's collapsible "Customize"
-                header, or (once a specific option is open) that option's own
-                title + close button, matching a focused full-screen editor
-                with no leftover chrome behind it. */}
-            {detailView === null ? (
-              <div className="flex items-center justify-between px-5 pt-4 pb-2 lg:hidden">
-                <div>
-                  <h3 className="font-display text-base font-black text-ink dark:text-white">Customize</h3>
-                  <p className="mt-0.5 text-xs text-ink/50 dark:text-white/50">
-                    Personalize your card. Changes update in real time.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setToolsExpanded((v) => !v)}
-                  aria-label={toolsExpanded ? "Collapse tools" : "Expand tools"}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink/50 transition hover:bg-ink/5 dark:text-white/50 dark:hover:bg-white/10"
-                >
-                  <ChevronDown size={18} className={`transition-transform ${toolsExpanded ? "" : "rotate-180"}`} />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between border-b border-ink/5 px-5 pt-4 pb-3 dark:border-white/5 lg:hidden">
+        {/* controls — static sidebar on md+, fixed bottom bar/sheet on
+            mobile. Same options list + drilldown either way, so mobile always
+            has every feature desktop has, with identical icons. */}
+        <div className="fixed inset-x-0 bottom-0 z-40 md:static md:z-auto md:w-full md:h-full lg:w-[380px] lg:h-full lg:shrink-0 xl:w-[440px] 2xl:w-[520px]">
+          <div className="mx-auto w-full max-w-lg rounded-t-3xl border border-b-0 border-ink/5 bg-mist shadow-soft-lg no-scrollbar dark:border-white/5 dark:bg-[#262626] md:mx-0 md:h-full md:max-w-none md:overflow-y-auto md:rounded-3xl md:border-b md:shadow-none">
+            {/* Mobile-only heading — shown only once a specific option is
+                open, as that option's own title + close button. The icon
+                row itself (below) needs no header — it's always just the bar. */}
+            {detailView !== null && (
+              <div className="flex items-center justify-between border-b border-ink/5 px-5 pt-4 pb-3 dark:border-white/5 md:hidden">
                 <h3 className="font-display text-lg font-black text-ink dark:text-white">
                   {DETAIL_TITLES[detailView] || ""}
                 </h3>
@@ -403,20 +454,20 @@ export default function StudioPage() {
               </div>
             )}
 
-            {/* Design Heading — desktop only */}
-            <div className="hidden px-5 py-4 lg:block">
+            {/* Design Heading — md+, only when no detail is open */}
+            <div className={`hidden px-5 py-4 md:block ${detailView !== null ? "md:hidden" : ""}`}>
               <h3 className="font-display text-lg font-black text-ink dark:text-white">Design</h3>
             </div>
 
-            <div className={`no-scrollbar ${toolsExpanded ? "block" : "hidden"} max-h-[60vh] overflow-y-auto lg:block lg:max-h-none lg:overflow-visible`}>
+            <div className={`no-scrollbar max-h-[30vh] overflow-y-auto md:max-h-none ${detailView !== null ? "min-h-[30vh] md:min-h-0" : ""}`}>
           {detailView === null && (
-            <div className="no-scrollbar flex items-start gap-4 overflow-x-auto px-5 pb-4 lg:hidden">
+            <div className="no-scrollbar flex items-start gap-3 overflow-x-auto px-5 pb-2 pt-2 md:hidden">
               <button
                 onClick={() => setDetailView("presets")}
-                className="flex shrink-0 flex-col items-center gap-1.5"
+                className="flex shrink-0 flex-col items-center gap-1"
               >
                 <span
-                  className="relative grid h-14 w-14 place-items-center overflow-hidden rounded-2xl border border-ink/10 dark:border-white/10"
+                  className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl border border-ink/10 dark:border-white/10"
                   style={
                     wallpaperType === "image" && backgroundImageUrl
                       ? {
@@ -431,58 +482,58 @@ export default function StudioPage() {
                       : { background: backgroundColor }
                   }
                 >
-                  <span className="text-sm font-black" style={{ fontFamily: `"${titleFont}", sans-serif`, color: titleColor }}>
+                  <span className="text-xs font-black" style={{ fontFamily: `"${titleFont}", sans-serif`, color: titleColor }}>
                     Aa
                   </span>
                 </span>
-                <span className="text-xs font-bold text-ink dark:text-white">Templates</span>
+                <span className="text-[11px] font-bold text-ink dark:text-white">Templates</span>
               </button>
 
-              <button onClick={() => setDetailView("palette")} className="flex shrink-0 flex-col items-center gap-1.5">
+              <button onClick={() => setDetailView("palette")} className="flex shrink-0 flex-col items-center gap-1">
                 <span
-                  className="grid h-14 w-14 place-items-center rounded-2xl border border-ink/10 dark:border-white/10"
+                  className="grid h-11 w-11 place-items-center rounded-xl border border-ink/10 dark:border-white/10"
                   style={{ background: backgroundColor, color: getContrastText(backgroundColor) }}
                 >
-                  <Palette size={20} />
+                  <Palette size={16} />
                 </span>
-                <span className="text-xs font-bold text-ink dark:text-white">Palette</span>
+                <span className="text-[11px] font-bold text-ink dark:text-white">Palette</span>
               </button>
 
-              <button onClick={() => setDetailView("header")} className="flex shrink-0 flex-col items-center gap-1.5">
-                <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                  <PanelTop size={20} />
+              <button onClick={() => setDetailView("header")} className="flex shrink-0 flex-col items-center gap-1">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                  <PanelTop size={16} />
                 </span>
-                <span className="text-xs font-bold text-ink dark:text-white">Header</span>
+                <span className="text-[11px] font-bold text-ink dark:text-white">Header</span>
               </button>
 
-              <button onClick={() => setDetailView("buttons")} className="flex shrink-0 flex-col items-center gap-1.5">
-                <span className="grid h-14 w-14 place-items-center rounded-2xl border border-ink/10 bg-ink/5 dark:border-white/10 dark:bg-white/10">
-                  <span className="h-3 w-7 rounded-full border border-ink/15 dark:border-white/20" style={{ background: buttonColor }} />
+              <button onClick={() => setDetailView("buttons")} className="flex shrink-0 flex-col items-center gap-1">
+                <span className="grid h-11 w-11 place-items-center rounded-xl border border-ink/10 bg-ink/5 dark:border-white/10 dark:bg-white/10">
+                  <span className="h-2.5 w-6 rounded-full border border-ink/15 dark:border-white/20" style={{ background: buttonColor }} />
                 </span>
-                <span className="text-xs font-bold text-ink dark:text-white">Buttons</span>
+                <span className="text-[11px] font-bold text-ink dark:text-white">Buttons</span>
               </button>
 
-              <button onClick={() => setDetailView("text")} className="flex shrink-0 flex-col items-center gap-1.5">
-                <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                  <CaseSensitive size={22} />
+              <button onClick={() => setDetailView("text")} className="flex shrink-0 flex-col items-center gap-1">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                  <CaseSensitive size={18} />
                 </span>
-                <span className="text-xs font-bold text-ink dark:text-white">Text</span>
+                <span className="text-[11px] font-bold text-ink dark:text-white">Text</span>
               </button>
 
-              <button onClick={() => setDetailView("colors")} className="flex shrink-0 flex-col items-center gap-1.5">
-                <span className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl border border-ink/10 dark:border-white/10">
+              <button onClick={() => setDetailView("colors")} className="flex shrink-0 flex-col items-center gap-1">
+                <span className="grid h-11 w-11 place-items-center overflow-hidden rounded-xl border border-ink/10 dark:border-white/10">
                   <span className="flex h-full w-full">
                     <span className="h-full w-1/2" style={{ background: backgroundColor }} />
                     <span className="h-full w-1/2" style={{ background: buttonColor }} />
                   </span>
                 </span>
-                <span className="text-xs font-bold text-ink dark:text-white">Colors</span>
+                <span className="text-[11px] font-bold text-ink dark:text-white">Colors</span>
               </button>
             </div>
           )}
 
           {detailView === null && (
-            <div className="hidden px-4 pb-4 space-y-3 lg:block">
+            <div className="hidden px-4 pb-4 space-y-3 md:block">
                {/* Templates Option — one-tap style presets (Aura, Sunset…) */}
               <button
                 onClick={() => setDetailView("presets")}
@@ -644,9 +695,9 @@ export default function StudioPage() {
               {/* Back Button */}
               <button
                 onClick={() => setDetailView(null)}
-                className="hidden items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition lg:flex"
+                className="hidden items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition md:flex"
               >
-                ← Templates
+                <ChevronLeft size={20} /> Templates
               </button>
 
               <div className="px-5 pb-4">
@@ -697,10 +748,6 @@ export default function StudioPage() {
                     );
                   })}
                 </div>
-                <p className="mt-4 text-xs text-ink/45 dark:text-white/45">
-                  Applies colors, wallpaper, header layout, buttons and fonts all at once — you can still fine-tune
-                  anything afterward in the panels below.
-                </p>
               </div>
             </div>
           )}
@@ -711,9 +758,9 @@ export default function StudioPage() {
               {/* Back Button */}
               <button
                 onClick={() => setDetailView(null)}
-                className="hidden items-center gap-2 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition lg:flex"
+                className="hidden items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition md:inline-flex"
               >
-                ← Palette
+                <ChevronLeft size={20} /> Palette
               </button>
 
               {/* Palette Options */}
@@ -978,9 +1025,9 @@ export default function StudioPage() {
               {/* Back Button */}
               <button
                 onClick={() => setDetailView(null)}
-                className="hidden items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition lg:flex"
+                className="hidden items-center gap-1 px-5 py-3 text-sm font-bold text-ink dark:text-white transition md:inline-flex"
               >
-                ← Header
+                <ChevronLeft size={20} /> Header
               </button>
 
               <div className="px-5 py-2 space-y-5">
@@ -1144,9 +1191,9 @@ export default function StudioPage() {
               {/* Back Button */}
               <button
                 onClick={() => setDetailView(null)}
-                className="hidden items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition lg:flex"
+                className="hidden items-center gap-1 px-5 py-3 text-sm font-bold text-ink dark:text-white transition md:inline-flex"
               >
-                ← Colors
+                <ChevronLeft size={20} /> Colors
               </button>
 
               <div className="px-5 py-2 space-y-5">
@@ -1186,9 +1233,9 @@ export default function StudioPage() {
               {/* Back Button */}
               <button
                 onClick={() => setDetailView(null)}
-                className="hidden items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition lg:flex"
+                className="hidden items-center gap-1 px-5 py-3 text-sm font-bold text-ink dark:text-white transition md:inline-flex"
               >
-                ← Buttons
+                <ChevronLeft size={20} /> Buttons
               </button>
 
               <div className="px-5 py-2 space-y-5">
@@ -1342,9 +1389,9 @@ export default function StudioPage() {
               {/* Back Button */}
               <button
                 onClick={() => setDetailView(null)}
-                className="hidden items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition lg:flex"
+                className="hidden items-center gap-1 px-5 py-3 text-sm font-bold text-ink dark:text-white transition md:inline-flex"
               >
-                ← Text
+                <ChevronLeft size={20} /> Text
               </button>
 
               <div className="px-5 py-2 space-y-5">
@@ -1475,24 +1522,6 @@ export default function StudioPage() {
           </div>
         </div>
       </div>
-
-      {previewOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm lg:hidden"
-          onClick={() => setPreviewOpen(false)}
-        >
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={() => setPreviewOpen(false)}
-              aria-label="Close preview"
-              className="absolute -top-11 right-0 z-30 grid h-9 w-9 place-items-center rounded-full bg-white text-ink shadow-soft transition hover:opacity-90 dark:bg-[#262626] dark:text-white"
-            >
-              <X size={16} />
-            </button>
-            <div className="max-h-[90vh] overflow-y-auto">{livePreview}</div>
-          </div>
-        </div>
-      )}
 
       {cropSource && (
         <ImageCropModal

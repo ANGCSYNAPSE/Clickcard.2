@@ -279,24 +279,23 @@ export default function ProfilePreviewPage() {
               {/* Live preview mockup */}
               <div className="rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#262626]">
                 <h3 className="mb-4 font-bold text-ink dark:text-white">Live Preview</h3>
-                <div className="flex justify-center overflow-hidden rounded-2xl bg-paper-soft py-4 dark:bg-dark">
-                  <div style={{ width: 192, height: 408 }}>
-                    <div style={{ width: 320, height: 680, transform: "scale(0.6)", transformOrigin: "top left" }}>
-                      <LiveProfileCard
-                        {...design}
-                        name={name}
-                        username={user?.username}
-                        avatarUrl={avatarUrl}
-                        bio={draft.personal?.bio}
-                        socialLinks={social}
-                        contact={draft.contact}
-                        experience={draft.experience}
-                        education={draft.education}
-                        products={draft.products}
-                        business={draft.business}
-                      />
-                    </div>
-                  </div>
+                {/* Full-width scrollable preview — card fills the column width */}
+                <div className="overflow-hidden rounded-2xl" style={{ height: 560 }}>
+                  <LiveProfileCard
+                    {...design}
+                    name={name}
+                    username={user?.username}
+                    avatarUrl={avatarUrl}
+                    bio={draft.personal?.bio}
+                    socialLinks={social}
+                    contact={draft.contact}
+                    experience={draft.experience}
+                    education={draft.education}
+                    products={draft.products}
+                    business={draft.business}
+                    interactive
+                    fullWidth
+                  />
                 </div>
                 <p className="mt-4 text-center text-xs text-ink/45 dark:text-white/45">
                   Exactly what visitors see on your ClickCard link

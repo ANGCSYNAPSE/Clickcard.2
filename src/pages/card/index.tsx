@@ -13,6 +13,7 @@ import {
   Eye,
   Loader2,
   ChevronRight,
+  ChevronLeft,
   Pencil,
   Mail,
   Phone,
@@ -396,7 +397,7 @@ export default function CardPage() {
 
         {/* control rail — same shell/list/detail-view pattern as the Customize page */}
         <aside className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#262626] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px]">
-          <div className="px-5 py-4">
+          <div className={`px-5 py-4 ${detailView !== null ? "hidden" : ""}`}>
             <h3 className="font-display text-lg font-black text-ink dark:text-white">Edit Card</h3>
           </div>
 
@@ -504,9 +505,9 @@ export default function CardPage() {
             <div className="space-y-1">
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
+                className="flex items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
               >
-                ← Details
+                <ChevronLeft size={20} /> Details
               </button>
               <div className="space-y-6 px-5 pb-4">
                 {/* Personal */}
@@ -681,9 +682,9 @@ export default function CardPage() {
             <div className="space-y-1">
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
+                className="flex items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
               >
-                ← Template
+                <ChevronLeft size={20} /> Template
               </button>
               <div className="grid grid-cols-2 gap-3 px-5 pb-4">
                 {CARD_TEMPLATES.map((tpl) => {
@@ -736,9 +737,9 @@ export default function CardPage() {
             <div className="space-y-1">
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
+                className="flex items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
               >
-                ← Palette
+                <ChevronLeft size={20} /> Palette
               </button>
               <div className="px-5 pb-4">
                 <div className="grid grid-cols-3 gap-2">
@@ -884,9 +885,9 @@ export default function CardPage() {
             <div className="space-y-1">
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-ink dark:text-white transition"
+                className="flex items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
               >
-                ← Text
+                <ChevronLeft size={20} /> Text
               </button>
               <div className="space-y-5 px-5 pb-4">
                 {/* Font family */}

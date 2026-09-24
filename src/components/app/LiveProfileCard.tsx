@@ -121,6 +121,7 @@ export default function LiveProfileCard({
   bioFontSize = 12,
   bodyFontSize = 12,
   interactive = false,
+  fullWidth = false,
   onShare,
 }: {
   primary: string;
@@ -165,6 +166,10 @@ export default function LiveProfileCard({
    * instead of decorative chrome. False (default) for every "live preview"
    * panel — Studio, Dashboard, Profile editor. */
   interactive?: boolean;
+  /** When true (and interactive is also true), suppresses the sm+ max-width
+   * cap and centering so the card fills its parent container edge-to-edge —
+   * used by the in-app preview page panel. */
+  fullWidth?: boolean;
   /** Called when the header's share icon is tapped (interactive mode only). */
   onShare?: () => void;
 }) {
@@ -288,7 +293,9 @@ export default function LiveProfileCard({
         // short profile doesn't leave a huge blank gap above the footer —
         // it reads the same compact size as the Dashboard/Studio preview.
         interactive
-          ? "relative h-[100dvh] w-full overflow-hidden sm:mx-auto sm:my-8 sm:h-[85vh] sm:max-w-[420px] sm:rounded-3xl sm:shadow-card"
+          ? fullWidth
+            ? "relative h-full w-full overflow-hidden"
+            : "relative h-[100dvh] w-full overflow-hidden sm:mx-auto sm:my-8 sm:h-[85vh] sm:max-w-[420px] sm:rounded-3xl sm:shadow-card"
           : "relative rounded-3xl overflow-hidden"
       }
       style={{

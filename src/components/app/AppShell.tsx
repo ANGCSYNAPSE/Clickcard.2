@@ -15,7 +15,6 @@ import {
   X,
   ExternalLink,
   Search,
-  ChevronDown,
   Crown,
   Zap,
   FileText,
@@ -283,7 +282,6 @@ export default function AppShell({
                     {initial}
                   </span>
                 )}
-                <ChevronDown size={14} className="text-ink/50 dark:text-white/50" />
               </button>
               {menuOpen && (
                 <div className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-2xl border border-ink/[0.06] bg-white py-1.5 shadow-card dark:border-white/[0.06] dark:bg-[#262626]">
@@ -320,7 +318,7 @@ export default function AppShell({
         <main
           className={
             fullHeight
-              ? "mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:flex lg:h-[calc(100dvh-4rem)] lg:flex-col lg:overflow-hidden lg:py-5"
+              ? "mx-auto max-w-6xl px-4 py-6 sm:px-6 md:flex md:h-[calc(100dvh-4rem)] md:flex-col md:overflow-hidden md:py-5"
               : "mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8"
           }
         >
