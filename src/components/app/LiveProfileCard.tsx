@@ -1,5 +1,5 @@
 import { useEffect, type CSSProperties, type ReactNode } from "react";
-import { Share, Phone, MessageCircle, Mail, Globe, Briefcase, GraduationCap, Package, Building2, User, MapPin } from "lucide-react";
+import { Share, Phone, MessageCircle, Mail, Globe, Briefcase, GraduationCap, Package, Building2, User, ExternalLink } from "lucide-react";
 import { getSocialIcon } from "@/lib/socialPlatforms";
 
 export type WallpaperType = "fill" | "gradient" | "blur" | "pattern" | "image" | "video";
@@ -44,7 +44,7 @@ export interface LiveProfileBusiness {
   name?: string;
   category?: string;
   description?: string;
-  mapUrl?: string;
+  profileLink?: string;
 }
 
 /** Renders a real link when `href` is given (interactive/public mode), otherwise
@@ -534,10 +534,10 @@ export default function LiveProfileCard({
             {experience.map((e, i) => (
               <div
                 key={i}
-                className="flex items-start gap-2.5 px-3 py-2.5 backdrop-blur-sm"
+                className="flex items-center gap-2.5 px-3 py-2.5 backdrop-blur-sm"
                 style={cardStyle}
               >
-                <Briefcase size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
+                <Briefcase size={14} className="shrink-0" style={{ color: cardText }} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-bold" style={{ color: cardText, ...bodySizeStyle }}>
                     {e.role || "Role"}
@@ -566,10 +566,10 @@ export default function LiveProfileCard({
             {education.map((e, i) => (
               <div
                 key={i}
-                className="flex items-start gap-2.5 px-3 py-2.5 backdrop-blur-sm"
+                className="flex items-center gap-2.5 px-3 py-2.5 backdrop-blur-sm"
                 style={cardStyle}
               >
-                <GraduationCap size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
+                <GraduationCap size={14} className="shrink-0" style={{ color: cardText }} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-bold" style={{ color: cardText, ...bodySizeStyle }}>
                     {e.institution || "Institution"}
@@ -594,10 +594,10 @@ export default function LiveProfileCard({
               <LinkOrDiv
                 key={i}
                 href={interactive ? p.link : undefined}
-                className="flex items-start gap-2.5 px-3 py-2.5 backdrop-blur-sm"
+                className="flex items-center gap-2.5 px-3 py-2.5 backdrop-blur-sm"
                 style={cardStyle}
               >
-                <Package size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
+                <Package size={14} className="shrink-0" style={{ color: cardText }} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-bold" style={{ color: cardText, ...bodySizeStyle }}>
                     {p.name || "Product"}
@@ -625,12 +625,13 @@ export default function LiveProfileCard({
               Business
             </p>
             {business.filter((b) => b.name).map((b, i) => (
-              <div
+              <LinkOrDiv
                 key={i}
-                className="flex items-start gap-2.5 px-3 py-2.5 backdrop-blur-sm"
+                href={interactive ? b.profileLink : undefined}
+                className="flex items-center gap-2.5 px-3 py-2.5 backdrop-blur-sm transition hover:opacity-90"
                 style={cardStyle}
               >
-                <Building2 size={14} className="mt-0.5 shrink-0" style={{ color: cardText }} />
+                <Building2 size={14} className="shrink-0" style={{ color: cardText }} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-bold" style={{ color: cardText, ...bodySizeStyle }}>
                     {b.name}
@@ -640,26 +641,22 @@ export default function LiveProfileCard({
                       {b.category || b.description}
                     </p>
                   )}
-                  {interactive && b.mapUrl && (
-                    <a
-                      href={b.mapUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-1.5 inline-flex items-center gap-1 font-bold underline-offset-2 hover:underline"
-                      style={{ color: cardText, ...bodySubSizeStyle }}
-                    >
-                      <MapPin size={11} /> View on map
-                    </a>
-                  )}
                 </div>
-              </div>
+                {interactive && b.profileLink && (
+                  <ExternalLink size={13} className="shrink-0 opacity-60" style={{ color: cardText }} />
+                )}
+              </LinkOrDiv>
             ))}
           </div>
         )}
 
           {/* Footer — pinned to the bottom when content is short, scrolls with content when it overflows */}
           <div className="mt-auto shrink-0 pt-6 pb-2 flex flex-col items-center gap-4">
-            {interactive ? (
+            {/* Only the real public page renders as `interactive` — the
+                owner's own editor/dashboard previews (not interactive)
+                skip this CTA since it makes no sense to invite an
+                already-signed-in owner to join. */}
+            {interactive && (
               <a
                 href="/signup"
                 className="shrink-0 px-8 py-2.5 rounded-full font-bold text-sm shadow-lg transition hover:opacity-90"
@@ -667,16 +664,6 @@ export default function LiveProfileCard({
               >
                 Join on ClickCard
               </a>
-            ) : (
-              <button
-                className="shrink-0 px-8 py-2.5 rounded-full font-bold text-sm shadow-lg transition hover:opacity-90"
-                style={{
-                  background: textColor,
-                  color: bg,
-                }}
-              >
-                Join on ClickCard
-              </button>
             )}
             <div className="text-center text-[10px] opacity-60" style={{ color: pageColor }}>
               <p>Report • Privacy</p>

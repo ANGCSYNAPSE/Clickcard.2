@@ -40,7 +40,7 @@ export default function CardPage({ profile, slug, shareUrl }: Props) {
   }
 
   const name = profile.fullName || `@${profile.username}`;
-  const title = `${name}'s Digital Card · ClickCard`;
+  const title = `${name}'s Business Card · ClickCard`;
   const desc = `View ${name}'s digital business card on ClickCard`;
   const ogImg = profile.profilePicture;
 

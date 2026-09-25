@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { QRCodeCanvas } from "qrcode.react";
 import {
   X as CloseIcon,
   Settings,
@@ -11,9 +10,11 @@ import {
   Mail,
 } from "lucide-react";
 import { SiWhatsapp, SiX, SiFacebook } from "react-icons/si";
-import { getSocialIcon } from "@/lib/socialPlatforms";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import QRPreview from "@/components/qr/QRPreview";
+import { useAppDispatch } from "@/store/hooks";
 import { pushToast } from "@/store/slices/uiSlice";
+import { qrDesignService } from "@/services/qrDesignService";
+import { DEFAULT_QR_SETTINGS, type QrDesignSettings } from "@/lib/qrStyling";
 
 /** The "Share" popup — profile link + QR + quick share destinations. */
 export default function SharePopup({
@@ -26,17 +27,25 @@ export default function SharePopup({
   onClose: () => void;
 }) {
   const dispatch = useAppDispatch();
-  const profile = useAppSelector((s) => s.profile.data);
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(true);
+  const [qrSettings, setQrSettings] = useState<QrDesignSettings>(DEFAULT_QR_SETTINGS);
+
+  useEffect(() => {
+    qrDesignService
+      .getMine()
+      .then(({ data }) => {
+        if (data.data?.settings) setQrSettings({ ...DEFAULT_QR_SETTINGS, ...data.data.settings });
+      })
+      .catch(() => {});
+  }, []);
 
   const shortLabel = profileUrl.replace(/^https?:\/\//, "");
-  const socialLinks = (profile?.social || []).filter((s) => s.url || s.username);
   const isCvShare = shareType === "cv";
   const isCardShare = shareType === "card";
   const isBusinessShare = shareType === "business";
   const isSimpleShare = isCvShare || isCardShare || isBusinessShare;
-  const typeLabel = isCvShare ? "CV" : isCardShare ? "Card" : isBusinessShare ? "Business" : "Profile";
+  const typeLabel = isCvShare ? "CV" : isCardShare ? "Business Card" : isBusinessShare ? "Business" : "Profile";
   const badgeSymbol = isCvShare ? "CV" : isCardShare ? "♦" : isBusinessShare ? "B" : "C";
 
   const copyLink = async () => {
@@ -131,45 +140,13 @@ export default function SharePopup({
                   >
                     <CloseIcon size={14} />
                   </button>
-                  <div className="mx-auto grid h-32 w-32 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5 lg:h-40 lg:w-40 lg:p-3">
-                    <div className="scale-100 lg:scale-125 origin-center">
-                      <QRCodeCanvas id="qr-share-popup" value={profileUrl} size={112} level="M" />
-                    </div>
+                  <div className="mx-auto grid h-36 w-36 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5">
+                    <QRPreview data={profileUrl} settings={qrSettings} size={112} fileName="clickcard-qr" />
                   </div>
                   <p className="mt-2 text-sm font-bold text-ink dark:text-white">
                     Scan to open your {isCvShare ? "CV" : isCardShare ? "card" : isBusinessShare ? "business page" : "profile"}
                   </p>
                   <p className="text-xs text-ink/50 dark:text-white/50">Scan with your phone</p>
-                </div>
-              )}
-
-              {/* my platforms */}
-              {!isSimpleShare && socialLinks.length > 0 && (
-                <div className="mt-5 w-full">
-                  <p className="mb-2 text-xs font-black uppercase tracking-wider text-ink/50 dark:text-white/50">
-                    My platforms
-                  </p>
-                  <div className="flex flex-wrap justify-center gap-3">
-                    {socialLinks.map((s, i) => {
-                      const Icon = getSocialIcon(s.platform);
-                      return (
-                        <a
-                          key={`${s.platform}-${i}`}
-                          href={s.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex flex-col items-center gap-1"
-                        >
-                          <span className="grid h-11 w-11 place-items-center rounded-full bg-mist text-ink/70 transition hover:bg-ink/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10">
-                            <Icon size={18} />
-                          </span>
-                          <span className="max-w-[56px] truncate text-[10px] font-semibold text-ink/60 dark:text-white/60">
-                            {s.platform}
-                          </span>
-                        </a>
-                      );
-                    })}
-                  </div>
                 </div>
               )}
             </div>

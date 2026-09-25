@@ -123,7 +123,7 @@ export interface BusinessSection {
   category?: string;
   description?: string;
   logo?: string;
-  mapUrl?: string;
+  profileLink?: string;
   hours?: BusinessHours[];
 }
 

@@ -7,9 +7,9 @@ import {
   FileText,
   Gift,
   Link2,
-  Smartphone,
-  CreditCard as Card,
+  IdCard as Card,
   Store,
+  Building2,
 } from "lucide-react";
 
 const reveal = {
@@ -59,8 +59,9 @@ export default function BentoGrid() {
             </p>
             <div className="mt-6 space-y-2.5">
               {[
-                "Instagram",
+                "Social platforms",
                 "My resume",
+                "Business profile",
                 "Book a meeting",
                 "Shop my products",
               ].map((l) => (
@@ -174,15 +175,15 @@ export default function BentoGrid() {
             </p>
           </div>
 
-          {/* Offline-ready */}
+          {/* Business Profile */}
           <div className={`${tile} bg-dark text-white`} style={{ borderColor: "transparent" }}>
             <span className={`${iconBox} bg-primary text-white`}>
-              <Smartphone className="h-5 w-5" />
+              <Building2 className="h-5 w-5" />
             </span>
-            <h3 className="mt-4 text-base font-extrabold">Works offline</h3>
+            <h3 className="mt-4 text-base font-extrabold">Business Profile</h3>
             <p className="mt-1 text-sm font-medium text-white/60">
-              NFC taps, wallet passes &amp; printed QR — no app needed to
-              receive.
+              A dedicated page for your business — logo, docs, socials &amp;
+              contact, shareable in one link.
             </p>
           </div>
         </motion.div>

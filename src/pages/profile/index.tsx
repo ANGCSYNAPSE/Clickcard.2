@@ -134,6 +134,19 @@ function SortableSocialIcon({
   );
 }
 
+const MAX_JOB_DESCRIPTION_WORDS = 20;
+
+/** Drops any words past `max` — used while typing, so pasting a long block never sticks. */
+function limitWords(text: string, max: number) {
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length <= max) return text;
+  return words.slice(0, max).join(" ");
+}
+
+function wordCount(text: string) {
+  return text.trim() ? text.trim().split(/\s+/).length : 0;
+}
+
 export default function ProfileEditorPage() {
   const dispatch = useAppDispatch();
   const { draft, saving, status, dirty } = useAppSelector((s) => s.profile);
@@ -598,14 +611,19 @@ export default function ProfileEditorPage() {
                       <Input label="End" placeholder="Present" value={item.endDate || ""} onChange={(e) => set({ endDate: e.target.value })} />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-semibold text-ink/80 dark:text-white/80">
-                        Job description
-                      </label>
+                      <div className="mb-1.5 flex items-center justify-between">
+                        <label className="block text-sm font-semibold text-ink/80 dark:text-white/80">
+                          Job description
+                        </label>
+                        <span className="text-xs font-medium text-ink/40 dark:text-white/40">
+                          {wordCount(item.description || "")}/{MAX_JOB_DESCRIPTION_WORDS} words
+                        </span>
+                      </div>
                       <textarea
                         rows={3}
                         placeholder="What did you work on?"
                         value={item.description || ""}
-                        onChange={(e) => set({ description: e.target.value })}
+                        onChange={(e) => set({ description: limitWords(e.target.value, MAX_JOB_DESCRIPTION_WORDS) })}
                         className="w-full rounded-2xl border-2 border-brand-100 bg-white p-3.5 sm:p-4 text-sm font-medium text-ink outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100 dark:border-white/10 dark:bg-white/5 dark:text-white"
                       />
                     </div>
@@ -619,7 +637,7 @@ export default function ProfileEditorPage() {
                 items={draft.business || []}
                 onChange={(v) => patch("business", v)}
                 empty="No business added yet."
-                blank={{ name: "", category: "", description: "", mapUrl: "" }}
+                blank={{ name: "", category: "", profileLink: "" }}
                 addLabel="Add business"
                 render={(item, set) => (
                   <>
@@ -627,16 +645,7 @@ export default function ProfileEditorPage() {
                       <Input label="Business name" value={item.name || ""} onChange={(e) => set({ name: e.target.value })} />
                       <Input label="Category" placeholder="Café, Studio…" value={item.category || ""} onChange={(e) => set({ category: e.target.value })} />
                     </div>
-                    <Input label="Map URL" placeholder="https://maps.google.com/…" value={item.mapUrl || ""} onChange={(e) => set({ mapUrl: e.target.value })} />
-                    <div>
-                      <label className="mb-1.5 block text-sm font-semibold text-ink/80 dark:text-white/80">Description</label>
-                      <textarea
-                        rows={3}
-                        value={item.description || ""}
-                        onChange={(e) => set({ description: e.target.value })}
-                        className="w-full rounded-2xl border-2 border-brand-100 bg-white p-3.5 sm:p-4 text-sm font-medium text-ink outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100 dark:border-white/10 dark:bg-white/5 dark:text-white"
-                      />
-                    </div>
+                    <Input label="Business Profile Link" placeholder="https://clickcard.app/business/your-business" value={item.profileLink || ""} onChange={(e) => set({ profileLink: e.target.value })} />
                   </>
                 )}
               />
@@ -656,9 +665,10 @@ export default function ProfileEditorPage() {
                       <Input
                         label="Price"
                         placeholder="499"
+                        inputMode="numeric"
                         leftIcon={<span className="text-sm font-bold">₹</span>}
                         value={item.price || ""}
-                        onChange={(e) => set({ price: e.target.value })}
+                        onChange={(e) => set({ price: e.target.value.replace(/\D/g, "") })}
                       />
                     </div>
                     <Input label="Link" placeholder="https://…" value={item.link || ""} onChange={(e) => set({ link: e.target.value })} />

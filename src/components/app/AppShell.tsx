@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import {
   LayoutDashboard,
   User,
-  CreditCard,
+  IdCard,
   SlidersHorizontal,
   Share2,
   BarChart3,
@@ -40,8 +40,8 @@ const NAV_GROUPS = [
       { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { label: "Profile", href: "/profile", icon: User },
       { label: "Customize", href: "/customize", icon: SlidersHorizontal },
-      { label: "Card", href: "/card", icon: CreditCard },
       { label: "CV", href: "/cv", icon: FileText },
+      { label: "Business Card", href: "/card", icon: IdCard },
       { label: "Business Profile", href: "/business-profiles", icon: Building2 },
       // { label: "Portfolio", href: "/portfolio", icon: LayoutGrid },
     ],
@@ -267,6 +267,14 @@ export default function AppShell({
               <Zap size={13} /> Upgrade
             </Link>
             )}
+            <Link
+              href="/referral"
+              aria-label="Referral"
+              title="Referral"
+              className="grid h-10 w-10 place-items-center rounded-xl text-ink/70 transition hover:bg-ink/5 hover:text-ink dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
+            >
+              <Gift size={19} />
+            </Link>
             <NotificationBell />
             <ThemeToggle />
 

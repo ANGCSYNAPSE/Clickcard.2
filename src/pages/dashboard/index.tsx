@@ -15,13 +15,14 @@ import {
   Eye,
   MousePointerClick,
   Download,
-  CreditCard as Card,
+  IdCard,
   Share2,
   BarChart3,
   Pencil,
   ArrowRight,
   Plus,
   X,
+  Gift,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import ProfilePreview from "@/components/app/ProfilePreview";
@@ -29,6 +30,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProfile } from "@/store/slices/profileSlice";
 import { fetchShareTotals, fetchShareLinks } from "@/store/slices/shareSlice";
 import { fetchDashboardAnalytics } from "@/store/slices/analyticsSlice";
+import { referralService } from "@/services/referralService";
 import type { DashboardTrendPoint } from "@/services/analyticsService";
 
 /** Solid retro-sunset tiles — icon, title, one-line hint. */
@@ -41,11 +43,11 @@ const QUICK = [
     tint: "bg-brand-500",
   },
   {
-    label: "Card",
+    label: "Business Card",
     hint: "Customize your card",
     href: "/customize",
-    icon: Card,
-    tint: "bg-candy-yellow",
+    icon: IdCard,
+    tint: "bg-[#3A3024]",
   },
   {
     label: "Share profile",
@@ -61,6 +63,13 @@ const QUICK = [
     icon: BarChart3,
     tint: "bg-ink dark:bg-white/5",
   },
+  {
+    label: "Referral",
+    hint: "Invite friends",
+    href: "/referral",
+    icon: Gift,
+    tint: "bg-[#E68A2E]",
+  },
 ];
 
 export default function DashboardPage() {
@@ -70,12 +79,17 @@ export default function DashboardPage() {
   const { links } = useAppSelector((s) => s.share);
   const { dashboard } = useAppSelector((s) => s.analytics);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [referralCount, setReferralCount] = useState(0);
 
   useEffect(() => {
     dispatch(fetchProfile());
     dispatch(fetchShareTotals());
     dispatch(fetchShareLinks());
     dispatch(fetchDashboardAnalytics());
+    referralService
+      .myReferrals()
+      .then(({ data }) => setReferralCount(Number(data.data?.stats?.total_referrals ?? 0)))
+      .catch(() => {});
   }, [dispatch]);
 
   const completion = useMemo(() => {
@@ -121,6 +135,13 @@ export default function DashboardPage() {
       delta: today?.pdfDownloads ?? 0,
       icon: Download,
       tint: "bg-candy-pink/55",
+    },
+    {
+      label: "Referrals",
+      value: referralCount,
+      delta: 0,
+      icon: Gift,
+      tint: "bg-candy-cyan",
     },
   ];
 
@@ -202,7 +223,7 @@ export default function DashboardPage() {
       )}
 
       {/* stats */}
-      <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
         {stats.map((s) => (
           <div
             key={s.label}
@@ -232,7 +253,7 @@ export default function DashboardPage() {
       <h2 className="mb-3 mt-8 font-display text-lg font-bold text-ink dark:text-white">
         Quick actions
       </h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {QUICK.map((q) => (
           <Link
             key={q.label}

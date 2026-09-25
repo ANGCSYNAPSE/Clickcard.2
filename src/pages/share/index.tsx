@@ -13,22 +13,29 @@ import {
   QrCode,
   Download,
   Share2,
+  Pencil,
+  X,
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import SharePopup from "@/components/app/SharePopup";
+import QRPreview from "@/components/qr/QRPreview";
+import QRCustomizer from "@/components/qr/QRCustomizer";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchShareLinks,
+  fetchShareTotals,
   createShareLink,
   deleteShareLink,
 } from "@/store/slices/shareSlice";
 import { fetchProfile } from "@/store/slices/profileSlice";
 import { shareService } from "@/services/shareService";
+import { qrDesignService } from "@/services/qrDesignService";
 import { pushToast } from "@/store/slices/uiSlice";
 import { useEntitlement } from "@/lib/useEntitlement";
 import { SHARE_BASE_URL, SITE_URL } from "@/lib/config";
+import { DEFAULT_QR_SETTINGS, type QrDesignSettings } from "@/lib/qrStyling";
 import { UpgradeHint, LimitReachedBanner } from "@/components/app/Upsell";
 import type { ShareLink } from "@/types";
 
@@ -39,7 +46,7 @@ const linkUrl = (l: ShareLink) =>
 
 export default function SharePage() {
   const dispatch = useAppDispatch();
-  const { links, status, mutating } = useAppSelector((s) => s.share);
+  const { links, status, mutating, totals } = useAppSelector((s) => s.share);
   const user = useAppSelector((s) => s.auth.user);
   const { withinLimit, limit, isPaid } = useEntitlement();
   const profileStatus = useAppSelector((s) => s.profile.status);
@@ -47,8 +54,19 @@ export default function SharePage() {
   const [profileCopied, setProfileCopied] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showSharePopup, setShowSharePopup] = useState(false);
+  const [showQrCustomizer, setShowQrCustomizer] = useState(true);
+  const [qrSettings, setQrSettings] = useState<QrDesignSettings>(DEFAULT_QR_SETTINGS);
 
   const profileUrl = user?.username ? `${SITE_URL}/${user.username}` : null;
+
+  useEffect(() => {
+    qrDesignService
+      .getMine()
+      .then(({ data }) => {
+        if (data.data?.settings) setQrSettings({ ...DEFAULT_QR_SETTINGS, ...data.data.settings });
+      })
+      .catch(() => {});
+  }, []);
 
   const copyProfileUrl = async () => {
     if (!profileUrl) return;
@@ -58,20 +76,12 @@ export default function SharePage() {
     setTimeout(() => setProfileCopied(false), 1500);
   };
 
-  const downloadProfileQR = () => {
-    const canvas = document.getElementById("qr-profile") as HTMLCanvasElement | null;
-    if (!canvas) return;
-    const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/png");
-    a.download = `${user?.username || "profile"}-qr.png`;
-    a.click();
-  };
-
   const atLimit = !withinLimit("links", links.length);
   const linkCap = limit("links");
 
   useEffect(() => {
     dispatch(fetchShareLinks());
+    dispatch(fetchShareTotals());
     if (profileStatus === "idle") dispatch(fetchProfile());
   }, [dispatch, profileStatus]);
 
@@ -167,31 +177,70 @@ export default function SharePage() {
 
       {/* Your profile QR — always available, independent of custom share links */}
       {profileUrl && (
-        <div className="mt-5 flex flex-col items-center gap-4 rounded-3xl border border-ink/5 bg-white p-5 text-center dark:border-white/5 dark:bg-[#262626] sm:flex-row sm:items-center sm:text-left">
-          <div className="grid h-36 w-36 shrink-0 place-items-center rounded-2xl bg-white p-2 ring-1 ring-ink/5 dark:bg-white sm:h-28 sm:w-28">
-            <QRCodeCanvas
-              id="qr-profile"
-              value={profileUrl}
-              size={128}
-              level="M"
-              style={{ width: "100%", height: "100%" }}
+        <div className="relative mt-5 flex flex-col items-center gap-4 rounded-3xl border border-ink/5 bg-white p-5 text-center dark:border-white/5 dark:bg-[#262626] sm:flex-row sm:items-center sm:text-left">
+          {!showQrCustomizer && (
+            <button
+              onClick={() => setShowQrCustomizer(true)}
+              aria-label="Customize QR"
+              className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-xl text-ink/60 transition hover:bg-brand-50 hover:text-brand-600 dark:text-white/60 dark:hover:bg-white/5"
+            >
+              <Pencil size={16} />
+            </button>
+          )}
+          <div className="grid h-32 w-32 shrink-0 place-items-center rounded-2xl bg-white p-1 ring-1 ring-ink/5 dark:bg-white overflow-hidden">
+            <QRPreview
+              data={profileUrl}
+              settings={qrSettings}
+              size={121}
+              fileName={`${user?.username || "profile"}-qr`}
             />
           </div>
           <div className="min-w-0 flex-1">
             <p className="font-bold text-ink dark:text-white">Your profile QR</p>
-            <p className="truncate text-xs font-mono text-ink/45 dark:text-white/45">{profileUrl}</p>
-            <p className="mt-1 text-sm text-ink/55 dark:text-white/55">
-              Scans open your live ClickCard profile.
-            </p>
+            <button
+              onClick={copyProfileUrl}
+              className="flex max-w-full items-center gap-1.5 truncate text-sm font-mono font-semibold text-ink/70 transition hover:text-brand-600 dark:text-white/70 dark:hover:text-white"
+              title="Click to copy"
+            >
+              <span className="truncate">{profileUrl}</span>
+              {profileCopied ? (
+                <Check size={14} className="shrink-0 text-candy-pink" />
+              ) : (
+                <Copy size={14} className="shrink-0" />
+              )}
+            </button>
           </div>
-          <div className="flex items-center gap-2">
-            <IconBtn onClick={copyProfileUrl} label="Copy">
-              {profileCopied ? <Check size={16} className="text-candy-pink" /> : <Copy size={16} />}
-            </IconBtn>
-            <IconBtn onClick={downloadProfileQR} label="Download QR">
-              <Download size={16} />
+          <div className="flex items-center gap-3 mr-4">
+            <div className="text-center">
+              <p className="font-display text-2xl lg:5xl font-black text-ink dark:text-white">
+                {(totals?.totalVisits ?? 0).toLocaleString()}
+              </p>
+              <p className="text-[10px] lg:text-xs font-bold uppercase tracking-wide text-ink/45 dark:text-white/45">
+                Scans
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showQrCustomizer && profileUrl && (
+        <div className="mt-5 rounded-3xl border border-ink/5 bg-mist p-4 dark:border-white/5 dark:bg-white/[0.02] sm:p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-lg font-bold text-ink dark:text-white">Customize your QR</h2>
+              <p className="text-sm text-ink/55 dark:text-white/55">
+                Design updates the QR shown above once saved.
+              </p>
+            </div>
+            <IconBtn onClick={() => setShowQrCustomizer(false)} label="Close">
+              <X size={18} />
             </IconBtn>
           </div>
+          <QRCustomizer
+            data={profileUrl}
+            fileName={`${user?.username || "profile"}-qr`}
+            onSaved={setQrSettings}
+          />
         </div>
       )}
 

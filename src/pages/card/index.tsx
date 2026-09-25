@@ -295,7 +295,7 @@ export default function CardPage() {
   return (
     <AppShell fullHeight>
       <Head>
-        <title>Digital Card · ClickCard</title>
+        <title>Business Card · ClickCard</title>
       </Head>
 
       {/* Hidden full-size copy for PDF export — independent of whichever
@@ -311,7 +311,7 @@ export default function CardPage() {
       <div className="hidden flex-wrap items-center justify-between gap-3 pb-4 lg:flex lg:shrink-0">
         <div className="min-w-0">
           <h1 className="font-display text-2xl font-black text-ink dark:text-white">
-            Digital Card
+            Business Card
           </h1>
           <p className="text-sm text-ink/55 dark:text-white/55">
             Pick a template, customise colours, then share or download as PDF.

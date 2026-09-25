@@ -99,7 +99,7 @@ export interface PublicProfile {
     name?: string;
     category?: string;
     description?: string;
-    mapUrl?: string;
+    profileLink?: string;
     hours?: PublicHours[];
   }[];
   views?: number;
@@ -205,7 +205,7 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
     })),
     business: bizList
       .filter((b) => b?.name)
-      .map((b) => ({ name: b.name, category: b.category, description: b.description, mapUrl: b.mapUrl, hours: b.hours })),
+      .map((b) => ({ name: b.name, category: b.category, description: b.description, profileLink: b.profileLink, hours: b.hours })),
     views: d.views,
     updatedAt: d.updated_at,
     design: {

@@ -100,6 +100,10 @@ export const BUSINESS_PROFILE_ROUTES = {
   public: (id: number | string) => `/api/public/business-profiles/${id}`,
 } as const;
 
+export const QR_DESIGN_ROUTES = {
+  mine: "/api/qr-design",
+} as const;
+
 export const API_ROUTES = {
   ...AUTH_ROUTES,
   ...USER_ROUTES,
