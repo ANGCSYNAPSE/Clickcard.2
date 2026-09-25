@@ -1,7 +1,10 @@
+import { useState } from "react";
 import type { FullProfile } from "@/types";
 import LiveProfileCard from "@/components/app/LiveProfileCard";
+import SharePopup from "@/components/app/SharePopup";
 import { useAppSelector } from "@/store/hooks";
 import { displayName } from "@/lib/personal";
+import { SITE_URL } from "@/lib/config";
 
 /** The same Linktree-style live preview card used in the Studio design tool. */
 export default function ProfilePreview({
@@ -19,20 +22,28 @@ export default function ProfilePreview({
   // Discord has no profile URL, so an entry with only a username (no numeric
   // User ID yet) still shows as a non-clickable badge instead of vanishing.
   const socialLinks = (profile.social || []).filter((s) => s.url || s.username);
+  const [showSharePopup, setShowSharePopup] = useState(false);
+  const profileUrl = username ? `${SITE_URL}/${username}` : null;
 
   return (
-    <LiveProfileCard
-      {...design}
-      name={name}
-      username={username}
-      avatarUrl={avatarUrl}
-      bio={bio}
-      socialLinks={socialLinks}
-      contact={profile.contact}
-      experience={profile.experience}
-      education={profile.education}
-      products={profile.products}
-      business={profile.business}
-    />
+    <>
+      <LiveProfileCard
+        {...design}
+        name={name}
+        username={username}
+        avatarUrl={avatarUrl}
+        bio={bio}
+        socialLinks={socialLinks}
+        contact={profile.contact}
+        experience={profile.experience}
+        education={profile.education}
+        products={profile.products}
+        business={profile.business}
+        onShare={profileUrl ? () => setShowSharePopup(true) : undefined}
+      />
+      {showSharePopup && profileUrl && (
+        <SharePopup profileUrl={profileUrl} onClose={() => setShowSharePopup(false)} />
+      )}
+    </>
   );
 }

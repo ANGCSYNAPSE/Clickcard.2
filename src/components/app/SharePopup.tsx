@@ -6,7 +6,6 @@ import {
   Copy,
   Check,
   QrCode as QrCodeIcon,
-  CreditCard,
   Mail,
 } from "lucide-react";
 import { SiWhatsapp, SiX, SiFacebook } from "react-icons/si";
@@ -30,6 +29,7 @@ export default function SharePopup({
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(true);
   const [qrSettings, setQrSettings] = useState<QrDesignSettings>(DEFAULT_QR_SETTINGS);
+  const [qrLoading, setQrLoading] = useState(true);
 
   useEffect(() => {
     qrDesignService
@@ -37,7 +37,8 @@ export default function SharePopup({
       .then(({ data }) => {
         if (data.data?.settings) setQrSettings({ ...DEFAULT_QR_SETTINGS, ...data.data.settings });
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setQrLoading(false));
   }, []);
 
   const shortLabel = profileUrl.replace(/^https?:\/\//, "");
@@ -140,8 +141,12 @@ export default function SharePopup({
                   >
                     <CloseIcon size={14} />
                   </button>
-                  <div className="mx-auto grid h-36 w-36 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5">
-                    <QRPreview data={profileUrl} settings={qrSettings} size={112} fileName="clickcard-qr" />
+                  <div className="mx-auto grid h-38 w-36 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5">
+                    {qrLoading ? (
+                      <div className="h-full w-full animate-pulse rounded-lg bg-ink/5" />
+                    ) : (
+                      <QRPreview data={profileUrl} settings={qrSettings} size={120} fileName="clickcard-qr" />
+                    )}
                   </div>
                   <p className="mt-2 text-sm font-bold text-ink dark:text-white">
                     Scan to open your {isCvShare ? "CV" : isCardShare ? "card" : isBusinessShare ? "business page" : "profile"}
@@ -166,17 +171,6 @@ export default function SharePopup({
               {isBusinessShare ? "Open page" : isSimpleShare ? `Open ${typeLabel}` : "My ClickCard"}
             </span>
           </a>
-          {!isSimpleShare && (
-            <Link href="/card" className="relative flex shrink-0 flex-col items-center gap-1">
-              <span className="grid h-11 w-11 place-items-center rounded-full bg-mist text-ink/70 dark:bg-white/5 dark:text-white/70">
-                <CreditCard size={18} />
-              </span>
-              <span className="absolute -top-1 right-0 rounded-full bg-candy-pink px-1.5 py-0.5 text-[8px] font-black text-white">
-                NEW
-              </span>
-              <span className="text-[10px] font-semibold text-ink/60 dark:text-white/60">Cards</span>
-            </Link>
-          )}
           <button onClick={() => setShowQr((v) => !v)} className="flex shrink-0 flex-col items-center gap-1">
             <span className="grid h-11 w-11 place-items-center rounded-full bg-mist text-ink/70 dark:bg-white/5 dark:text-white/70">
               <QrCodeIcon size={18} />

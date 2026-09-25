@@ -166,6 +166,7 @@ export default function ProfilePreviewPage() {
               education={draft.education}
               products={draft.products}
               business={draft.business}
+              onShare={profileUrl ? () => setShareOpen(true) : undefined}
             />
           </div>
 
@@ -293,6 +294,7 @@ export default function ProfilePreviewPage() {
                     education={draft.education}
                     products={draft.products}
                     business={draft.business}
+                    onShare={profileUrl ? () => setShareOpen(true) : undefined}
                     interactive
                     fullWidth
                   />

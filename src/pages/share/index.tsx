@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Head from "next/head";
+import dynamic from "next/dynamic";
 import { useFormik } from "formik";
 import { QRCodeCanvas } from "qrcode.react";
 import {
@@ -21,7 +22,15 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import SharePopup from "@/components/app/SharePopup";
 import QRPreview from "@/components/qr/QRPreview";
-import QRCustomizer from "@/components/qr/QRCustomizer";
+
+// Code-split — the customizer (patterns, gradients, logo uploader, eye
+// styles) is a large chunk of UI that isn't needed just to view the QR
+// card at the top, so it loads in its own bundle instead of bloating the
+// page's initial JS.
+const QRCustomizer = dynamic(() => import("@/components/qr/QRCustomizer"), {
+  ssr: false,
+  loading: () => <div className="h-64 animate-pulse rounded-2xl bg-ink/5 dark:bg-white/5" />,
+});
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchShareLinks,
@@ -56,6 +65,12 @@ export default function SharePage() {
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [showQrCustomizer, setShowQrCustomizer] = useState(true);
   const [qrSettings, setQrSettings] = useState<QrDesignSettings>(DEFAULT_QR_SETTINGS);
+  // Your saved design might differ a lot from the plain default (pattern,
+  // colors, logo). Rendering the default first and then swapping to the
+  // real one once it loads is a visible flash, so the QR stays hidden
+  // behind a skeleton until the real settings are known.
+  const [qrLoading, setQrLoading] = useState(true);
+  const [qrUpdatedAt, setQrUpdatedAt] = useState<string | null>(null);
 
   const profileUrl = user?.username ? `${SITE_URL}/${user.username}` : null;
 
@@ -64,8 +79,10 @@ export default function SharePage() {
       .getMine()
       .then(({ data }) => {
         if (data.data?.settings) setQrSettings({ ...DEFAULT_QR_SETTINGS, ...data.data.settings });
+        setQrUpdatedAt(data.data?.updatedAt ?? null);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setQrLoading(false));
   }, []);
 
   const copyProfileUrl = async () => {
@@ -188,12 +205,16 @@ export default function SharePage() {
             </button>
           )}
           <div className="grid h-32 w-32 shrink-0 place-items-center rounded-2xl bg-white p-1 ring-1 ring-ink/5 dark:bg-white overflow-hidden">
-            <QRPreview
-              data={profileUrl}
-              settings={qrSettings}
-              size={121}
-              fileName={`${user?.username || "profile"}-qr`}
-            />
+            {qrLoading ? (
+              <div className="h-full w-full animate-pulse rounded-xl bg-ink/5" />
+            ) : (
+              <QRPreview
+                data={profileUrl}
+                settings={qrSettings}
+                size={121}
+                fileName={`${user?.username || "profile"}-qr`}
+              />
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <p className="font-bold text-ink dark:text-white">Your profile QR</p>
@@ -236,11 +257,17 @@ export default function SharePage() {
               <X size={18} />
             </IconBtn>
           </div>
-          <QRCustomizer
-            data={profileUrl}
-            fileName={`${user?.username || "profile"}-qr`}
-            onSaved={setQrSettings}
-          />
+          {qrLoading ? (
+            <div className="h-64 animate-pulse rounded-2xl bg-ink/5 dark:bg-white/5" />
+          ) : (
+            <QRCustomizer
+              data={profileUrl}
+              fileName={`${user?.username || "profile"}-qr`}
+              onSaved={setQrSettings}
+              initialSettings={qrSettings}
+              initialUpdatedAt={qrUpdatedAt}
+            />
+          )}
         </div>
       )}
 

@@ -29,6 +29,7 @@ import Button from "@/components/ui/Button";
 import LiveProfileCard from "@/components/app/LiveProfileCard";
 import ImageCropModal from "@/components/app/ImageCropModal";
 import FontPickerModal from "@/components/app/FontPickerModal";
+import SharePopup from "@/components/app/SharePopup";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProfile, saveProfile, updateSection } from "@/store/slices/profileSlice";
 import { pushToast } from "@/store/slices/uiSlice";
@@ -46,6 +47,7 @@ import { STYLE_PRESETS, type StylePreset } from "@/lib/stylePresets";
 import { displayName } from "@/lib/personal";
 import { FONT_ITEMS, loadGoogleFont } from "@/lib/fonts";
 import { getContrastText } from "@/lib/color";
+import { SITE_URL } from "@/lib/config";
 
 const PALETTES = [
   { name: "Brand", primary: "#BE5103", accent: "#069494" },
@@ -208,6 +210,7 @@ export default function StudioPage() {
   const [fontPickerTarget, setFontPickerTarget] = useState<"page" | "title" | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [mdPreviewOpen, setMdPreviewOpen] = useState(false);
+  const [showSharePopup, setShowSharePopup] = useState(false);
 
   const applyPreset = (preset: StylePreset) => {
     // Clicking the already-active preset unselects it — the design keeps
@@ -353,6 +356,7 @@ export default function StudioPage() {
       titleFontSize={titleFontSize}
       bioFontSize={bioFontSize}
       bodyFontSize={bodyFontSize}
+      onShare={user?.username ? () => setShowSharePopup(true) : undefined}
     />
   );
 
@@ -1550,6 +1554,10 @@ export default function StudioPage() {
           }}
           onClose={() => setFontPickerTarget(null)}
         />
+      )}
+
+      {showSharePopup && user?.username && (
+        <SharePopup profileUrl={`${SITE_URL}/${user.username}`} onClose={() => setShowSharePopup(false)} />
       )}
     </AppShell>
   );

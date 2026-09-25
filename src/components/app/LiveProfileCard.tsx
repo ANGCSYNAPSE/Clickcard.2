@@ -340,7 +340,7 @@ export default function LiveProfileCard({
             <h3 className="text-sm ">CC</h3>
           </div>
         )}
-        {interactive ? (
+        {onShare ? (
           <button
             type="button"
             onClick={onShare}

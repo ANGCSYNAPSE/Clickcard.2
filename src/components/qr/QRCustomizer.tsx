@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Download,
   Palette,
-  Sparkles,
+  Blend,
   Image as ImageIcon,
   Square,
   Settings2,
@@ -107,14 +107,26 @@ export default function QRCustomizer({
   data,
   fileName,
   onSaved,
+  initialSettings,
+  initialUpdatedAt,
 }: {
   data: string;
   fileName: string;
   onSaved?: (settings: QrDesignSettings) => void;
+  /**
+   * Pass these when the caller already fetched the saved design (e.g. the
+   * Share page loads it once to show the top QR, and this panel opens by
+   * default right alongside it) — skips a second, redundant network round
+   * trip that was making the panel feel slow to open.
+   */
+  initialSettings?: QrDesignSettings | null;
+  initialUpdatedAt?: string | null;
 }) {
   const dispatch = useAppDispatch();
-  const [settings, setSettings] = useState<QrDesignSettings>(DEFAULT_QR_SETTINGS);
-  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState<QrDesignSettings>(
+    initialSettings ? { ...DEFAULT_QR_SETTINGS, ...initialSettings } : DEFAULT_QR_SETTINGS,
+  );
+  const [loading, setLoading] = useState(initialSettings === undefined);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -123,7 +135,21 @@ export default function QRCustomizer({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const readyTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
+  const armReadyBanner = (updatedAt?: string | null) => {
+    const savedAt = updatedAt ? new Date(updatedAt).getTime() : 0;
+    const remaining = 60_000 - (Date.now() - savedAt);
+    if (savedAt && remaining > 0) {
+      setShowReadyBanner(true);
+      readyTimerRef.current = setTimeout(() => setShowReadyBanner(false), remaining);
+    }
+  };
+
   useEffect(() => {
+    // The caller already has this data — nothing to fetch.
+    if (initialSettings !== undefined) {
+      armReadyBanner(initialUpdatedAt);
+      return;
+    }
     let cancelled = false;
     qrDesignService
       .getMine()
@@ -134,12 +160,7 @@ export default function QRCustomizer({
         // than a minute ago — otherwise every time you revisit or reopen
         // this panel, the mount-time effect would show it again, which
         // looked like it "never" went away.
-        const savedAt = res.data?.updatedAt ? new Date(res.data.updatedAt).getTime() : 0;
-        const remaining = 60_000 - (Date.now() - savedAt);
-        if (savedAt && remaining > 0) {
-          setShowReadyBanner(true);
-          readyTimerRef.current = setTimeout(() => setShowReadyBanner(false), remaining);
-        }
+        armReadyBanner(res.data?.updatedAt);
       })
       .finally(() => !cancelled && setLoading(false));
     return () => {
@@ -258,7 +279,7 @@ export default function QRCustomizer({
         {/* gradient */}
         <div className={SECTION_CLASS}>
           <div className="flex items-center justify-between">
-            <SectionHeader icon={Sparkles} title="Gradient" />
+            <SectionHeader icon={Blend} title="Gradient" />
             <label className="relative inline-flex cursor-pointer items-center">
               <input
                 type="checkbox"
