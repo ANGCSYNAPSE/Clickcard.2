@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { authService } from "@/services/authService";
 import { tokenService } from "@/lib/tokenService";
 import { extractError } from "@/lib/axiosClient";
+import { completeRegistration } from "@/store/slices/registrationSlice";
 import type {
   AuthUser,
   CurrentUser,
@@ -227,6 +228,18 @@ const authSlice = createSlice({
         s.user = null;
         s.isAuthenticated = false;
         s.status = "idle";
+      })
+      // A brand-new signup stores its tokens via registrationSlice's own
+      // thunk (a separate slice), which never touched auth state — leaving
+      // `user`/`isAuthenticated` stale (null/false) until a full page
+      // reload re-ran Providers' one-time bootstrap fetch. Reacting to the
+      // same fulfilled action here (a plain action type, listenable from
+      // any slice) populates it immediately instead.
+      .addCase(completeRegistration.fulfilled, (s, a) => {
+        if (!a.payload) return;
+        s.user = { email: a.payload.email, username: a.payload.username };
+        s.isAuthenticated = true;
+        s.bootstrapped = true;
       });
   },
 });
