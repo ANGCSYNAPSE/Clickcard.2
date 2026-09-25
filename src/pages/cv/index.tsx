@@ -6,9 +6,6 @@ import {
   Palette as PaletteIcon,
   CaseSensitive,
   Save,
-  FileText,
-  Smartphone,
-  Eye,
   Pencil,
   Plus,
   Trash2,
@@ -63,13 +60,12 @@ const PALETTES: { name: string; primary: string; accent: string }[] = [
   { name: "Midnight Fade", primary: "#1F2937", accent: "#F472B6" },
 ];
 
-type ViewMode = "cv" | "mobile" | "preview";
-
-const VIEW_MODES: { id: ViewMode; label: string; icon: typeof FileText }[] = [
-  { id: "cv", label: "CV", icon: FileText },
-  { id: "mobile", label: "Mobile", icon: Smartphone },
-  { id: "preview", label: "Preview", icon: Eye },
-];
+const CV_DETAIL_TITLES: Record<string, string> = {
+  template: "Template",
+  details: "Details",
+  palette: "Palette",
+  text: "Text",
+};
 
 export default function CvPage() {
   const guard = useRequireAuth();
@@ -91,8 +87,6 @@ export default function CvPage() {
   const [awards, setAwards] = useState<AwardItem[]>(draft.digitalCard?.awards || []);
   const [languages, setLanguages] = useState<LanguageItem[]>(draft.digitalCard?.languages || []);
   const [references, setReferences] = useState<ReferenceItem[]>(draft.digitalCard?.references || []);
-  const [view, setView] = useState<ViewMode>("cv");
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [detailView, setDetailView] = useState<string | null>(null);
   const [fontPickerOpen, setFontPickerOpen] = useState(false);
   const [skillPickerOpen, setSkillPickerOpen] = useState(false);
@@ -103,6 +97,29 @@ export default function CvPage() {
   const cvPhotoFileRef = useRef<HTMLInputElement>(null);
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(draft.digitalCard?.socialLinks || []);
+  const experience = draft.experience || [];
+  const education = draft.education || [];
+
+  // Tracks unsaved edits — "dirty" whenever the current CV differs from the
+  // last known-saved snapshot. The snapshot re-baselines whenever
+  // draft.digitalCard changes (initial load, or right after a successful
+  // save re-fetches the canonical profile), so this never flashes dirty on
+  // first load and clears itself as soon as a save completes.
+  const savedSnapshotRef = useRef<string | null>(null);
+  useEffect(() => {
+    savedSnapshotRef.current = JSON.stringify({
+      templateId, primary, accent, theme, fontFamily, textColor,
+      skills, projects, awards, languages, references, socialLinks,
+      personal: draft.personal, contact: draft.contact, experience, education,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft.digitalCard]);
+  const currentSnapshot = JSON.stringify({
+    templateId, primary, accent, theme, fontFamily, textColor,
+    skills, projects, awards, languages, references, socialLinks,
+    personal: draft.personal, contact: draft.contact, experience, education,
+  });
+  const dirty = savedSnapshotRef.current !== null && currentSnapshot !== savedSnapshotRef.current;
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -129,9 +146,6 @@ export default function CvPage() {
   useEffect(() => {
     loadGoogleFont(fontFamily);
   }, [fontFamily]);
-
-  const experience = draft.experience || [];
-  const education = draft.education || [];
 
   const onlyDigits = (v: string) => v.replace(/\D/g, "");
   /** Phone field is exactly a 10-digit number — no country code, spaces, or symbols. */
@@ -315,7 +329,6 @@ export default function CvPage() {
     }
   };
 
-  const publicUrl = typeof window !== "undefined" ? `${SITE_URL}/${profileUser?.username || ""}` : "";
   const cvUrl = typeof window !== "undefined" ? `${SITE_URL}/${profileUser?.username || ""}/cv` : "";
   const onShare = () => setShowSharePopup(true);
 
@@ -353,62 +366,12 @@ export default function CvPage() {
     />
   );
 
-  // The view-switching stage body — shared between the inline lg+ stage
-  // section and the below-lg "Preview" modal so both stay in sync.
+  // The stage body — shared between the inline lg+ stage section and the
+  // below-lg mobile view so both stay in sync.
   const stageViewer = (
-    <>
-      <div
-        className={`flex min-h-[420px] min-w-0 flex-1 justify-center overflow-x-auto py-2 no-scrollbar lg:min-h-0 lg:overflow-y-auto ${
-          view === "cv" ? "items-start" : "items-center"
-        }`}
-      >
-        {view === "cv" && <div className="w-full max-w-[820px]">{stage}</div>}
-
-        {view === "mobile" && (
-          <div className="w-full max-w-[300px] rounded-[2.2rem] bg-ink p-2.5">
-            <div className="flex h-[600px] flex-col overflow-hidden rounded-[1.8rem] bg-white dark:bg-[#262626]">
-              <div className="flex shrink-0 items-center justify-between px-4 pb-1.5 pt-2 text-[10px] font-bold text-ink/70 dark:text-white/70">
-                <span>9:41</span>
-                <span className="rounded-full bg-ink/10 px-2 py-0.5 dark:bg-white/10">LIVE</span>
-              </div>
-              <div className="no-scrollbar flex-1 overflow-auto p-3">{stage}</div>
-            </div>
-          </div>
-        )}
-
-        {view === "preview" && (
-          <div className="flex h-[560px] w-full max-w-[480px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#262626]">
-            <div className="flex shrink-0 items-center gap-2 border-b border-ink/[0.06] px-3 py-2 dark:border-white/[0.06]">
-              <span className="h-2.5 w-2.5 rounded-full bg-brand-500" />
-              <span className="h-2.5 w-2.5 rounded-full bg-candy-yellow" />
-              <span className="h-2.5 w-2.5 rounded-full bg-candy-pink" />
-              <span className="ml-2 truncate rounded-md bg-mist px-2 py-1 text-[10px] font-semibold text-ink/50 dark:bg-white/5 dark:text-white/50">
-                {publicUrl || "clickcard.app"}
-              </span>
-            </div>
-            <div className="no-scrollbar flex-1 overflow-auto p-4">{stage}</div>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-3 flex justify-center lg:shrink-0">
-        <div className="inline-flex items-center gap-1 rounded-xl bg-white p-1 dark:bg-white/5">
-          {VIEW_MODES.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => setView(m.id)}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                view === m.id
-                  ? "bg-brand-50 text-brand-600 dark:bg-white/10 dark:text-white"
-                  : "text-ink/50 hover:text-brand-600 dark:text-white/50"
-              }`}
-            >
-              <m.icon size={14} /> {m.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </>
+    <div className="flex min-h-[420px] min-w-0 flex-1 items-start justify-center overflow-x-auto py-2 no-scrollbar lg:min-h-0 lg:overflow-y-auto">
+      <div className="w-full min-w-0 max-w-[820px]">{stage}</div>
+    </div>
   );
 
   return (
@@ -424,7 +387,7 @@ export default function CvPage() {
         {stage}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 lg:shrink-0">
+      <div className="hidden flex-wrap items-center justify-between gap-3 pb-4 lg:flex lg:shrink-0">
         <div className="min-w-0">
           <h1 className="font-display text-2xl font-black text-ink dark:text-white">CV</h1>
           <p className="text-sm text-ink/55 dark:text-white/55">
@@ -432,12 +395,6 @@ export default function CvPage() {
           </p>
         </div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-          <button
-            onClick={() => setPreviewOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs sm:text-sm font-bold text-ink shadow-soft ring-1 ring-ink/[0.06] transition hover:bg-ink/5 dark:bg-white/10 dark:text-white dark:ring-white/[0.06] lg:hidden"
-          >
-            <Eye size={16} /> Preview
-          </button>
           <Button variant="outline" onClick={onShare}>
             <Share2 size={18} /> Share
           </Button>
@@ -452,19 +409,101 @@ export default function CvPage() {
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-col gap-5 lg:min-h-0 lg:flex-1 lg:flex-row">
-        {/* stage — hidden below lg (opened via the "Preview" button instead) */}
+      <div className="flex min-w-0 flex-col gap-5 md:min-h-0 md:flex-1 md:overflow-y-auto lg:flex-row">
+        {/* stage — desktop only, boxed */}
         <section className="hidden min-w-0 flex-col rounded-3xl border border-ink/[0.06] bg-mist p-4 dark:border-white/[0.06] dark:bg-white/[0.02] lg:flex lg:min-h-0 lg:flex-1">
           {stageViewer}
         </section>
 
-        <aside className="rounded-3xl border border-ink/5 bg-mist dark:border-white/5 dark:bg-[#262626] no-scrollbar lg:w-[380px] lg:h-full lg:shrink-0 lg:overflow-y-auto xl:w-[440px]">
-          <div className={`px-5 py-4 ${detailView !== null ? "hidden" : ""}`}>
+        {/* mobile stage — Share/Download live in the bottom bar, not floating;
+            Save floats absolutely over the top-right corner of the preview,
+            only while there are unsaved changes, so it never pushes the
+            preview down when it appears. */}
+        <div className="relative lg:hidden">
+          {dirty && (
+            <button
+              onClick={onSave}
+              disabled={saving}
+              className="absolute right-0 top-0 z-10 inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-ink shadow-soft ring-1 ring-ink/[0.06] transition hover:bg-ink/5 disabled:opacity-60 dark:bg-white/10 dark:text-white dark:ring-white/[0.06]"
+            >
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+              {saving ? "Saving…" : "Save"}
+            </button>
+          )}
+          <div className={detailView === null ? "py-10" : "py-[5vh]"}>{stageViewer}</div>
+        </div>
+
+        {/* control rail — static sidebar on desktop, fixed bottom bar/sheet on
+            mobile. Same options list + drilldown either way. */}
+        <aside className="fixed inset-x-0 bottom-0 z-40 lg:static lg:z-auto lg:w-[380px] lg:h-full lg:shrink-0 xl:w-[440px]">
+          <div
+            className={`mx-auto rounded-t-3xl border border-b-0 border-ink/5 bg-mist shadow-soft-lg no-scrollbar dark:border-white/5 dark:bg-[#262626] lg:mx-0 lg:h-full lg:w-full lg:max-w-none lg:overflow-y-auto lg:rounded-3xl lg:border-b lg:shadow-none ${
+              detailView === null ? "w-fit max-w-full" : "w-full max-w-lg"
+            }`}
+          >
+          {detailView !== null && (
+            <div className="flex items-center justify-between border-b border-ink/5 px-5 pt-4 pb-3 dark:border-white/5 lg:hidden">
+              <h3 className="font-display text-lg font-black text-ink dark:text-white">
+                {CV_DETAIL_TITLES[detailView] || ""}
+              </h3>
+              <button
+                onClick={() => setDetailView(null)}
+                aria-label="Close"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink/5 text-ink/60 transition hover:bg-ink/10 dark:bg-white/10 dark:text-white/60 dark:hover:bg-white/20"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
+          <div className="hidden px-5 py-4 lg:block">
             <h3 className="font-display text-lg font-black text-ink dark:text-white">Edit CV</h3>
           </div>
 
+          <div className="no-scrollbar max-h-[50vh] overflow-y-auto lg:max-h-none lg:overflow-visible">
           {detailView === null && (
-            <div className="px-4 pb-4 space-y-3">
+            <div className="no-scrollbar flex items-start gap-3 overflow-x-auto px-5 py-4 lg:hidden">
+              <button onClick={() => setDetailView("template")} className="flex shrink-0 flex-col items-center gap-1">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-ink/5 text-ink dark:bg-white/10 dark:text-white">
+                  <LayoutTemplate size={16} />
+                </span>
+                <span className="text-[11px] font-bold text-ink dark:text-white">Template</span>
+              </button>
+              <button onClick={() => setDetailView("details")} className="flex shrink-0 flex-col items-center gap-1">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-ink/5 text-ink dark:bg-white/10 dark:text-white">
+                  <Pencil size={16} />
+                </span>
+                <span className="text-[11px] font-bold text-ink dark:text-white">Details</span>
+              </button>
+              <button onClick={() => setDetailView("palette")} className="flex shrink-0 flex-col items-center gap-1">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-ink/5 text-ink dark:bg-white/10 dark:text-white">
+                  <PaletteIcon size={16} />
+                </span>
+                <span className="text-[11px] font-bold text-ink dark:text-white">Palette</span>
+              </button>
+              <button onClick={() => setDetailView("text")} className="flex shrink-0 flex-col items-center gap-1">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-ink/5 text-ink dark:bg-white/10 dark:text-white">
+                  <CaseSensitive size={18} />
+                </span>
+                <span className="text-[11px] font-bold text-ink dark:text-white">Text</span>
+              </button>
+              <button onClick={onShare} className="flex shrink-0 flex-col items-center gap-1">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-ink/5 text-ink dark:bg-white/10 dark:text-white">
+                  <Share2 size={16} />
+                </span>
+                <span className="text-[11px] font-bold text-ink dark:text-white">Share</span>
+              </button>
+              <button onClick={onDownload} disabled={downloading} className="flex shrink-0 flex-col items-center gap-1">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-ink/5 text-ink dark:bg-white/10 dark:text-white">
+                  {downloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+                </span>
+                <span className="text-[11px] font-bold text-ink dark:text-white">Download</span>
+              </button>
+            </div>
+          )}
+
+          {detailView === null && (
+            <div className="hidden px-4 pb-4 space-y-3 lg:block">
               <button
                 onClick={() => setDetailView("template")}
                 className="w-full rounded-2xl bg-white px-5 py-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-md dark:bg-white/[0.04]"
@@ -561,7 +600,7 @@ export default function CvPage() {
             <div className="space-y-1">
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
+                className="hidden items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition lg:flex"
               >
                 <ChevronLeft size={20} /> Template
               </button>
@@ -623,7 +662,7 @@ export default function CvPage() {
             <div className="space-y-1">
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
+                className="hidden items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition lg:flex"
               >
                 <ChevronLeft size={20} /> Details
               </button>
@@ -1278,7 +1317,7 @@ export default function CvPage() {
             <div className="space-y-1">
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
+                className="hidden items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition lg:flex"
               >
                 <ChevronLeft size={20} /> Palette
               </button>
@@ -1312,7 +1351,7 @@ export default function CvPage() {
             <div className="space-y-1">
               <button
                 onClick={() => setDetailView(null)}
-                className="flex items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition"
+                className="hidden items-center gap-1 px-5 py-3 text-sm font-bold text-ink/60 hover:text-ink dark:text-white/60 dark:hover:text-white transition lg:flex"
               >
                 <ChevronLeft size={20} /> Text
               </button>
@@ -1360,28 +1399,10 @@ export default function CvPage() {
               </div>
             </div>
           )}
+          </div>
+          </div>
         </aside>
       </div>
-
-      {previewOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm lg:hidden"
-          onClick={() => setPreviewOpen(false)}
-        >
-          <div className="relative w-full max-w-[480px]" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={() => setPreviewOpen(false)}
-              aria-label="Close preview"
-              className="absolute -top-11 right-0 z-30 grid h-9 w-9 place-items-center rounded-full bg-white text-ink shadow-soft transition hover:opacity-90 dark:bg-[#262626] dark:text-white"
-            >
-              <X size={16} />
-            </button>
-            <div className="flex max-h-[90vh] flex-col overflow-y-auto rounded-3xl border border-ink/[0.06] bg-mist p-4 dark:border-white/[0.06] dark:bg-[#1a1a1a]">
-              {stageViewer}
-            </div>
-          </div>
-        </div>
-      )}
 
       {fontPickerOpen && (
         <FontPickerModal

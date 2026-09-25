@@ -294,7 +294,7 @@ export default function SignupPage() {
             <Input
               name="referralCode"
               label="Referral code (optional)"
-              placeholder="CC-ABC123"
+              placeholder="482913"
               className={AUTH_FIELD_CLASS}
               leftIcon={<Gift size={18} />}
               value={userForm.values.referralCode}

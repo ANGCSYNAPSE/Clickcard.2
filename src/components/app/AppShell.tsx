@@ -20,6 +20,7 @@ import {
   FileText,
   LayoutGrid,
   Building2,
+  Gift,
 } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 import ThemeToggle from "@/components/ui/ThemeToggle";
@@ -50,6 +51,7 @@ const NAV_GROUPS = [
     items: [
       { label: "Share & QR", href: "/share", icon: Share2 },
       { label: "Analytics", href: "/analytics", icon: BarChart3 },
+      { label: "Referral", href: "/referral", icon: Gift },
     ],
   },
   {
@@ -129,14 +131,14 @@ export default function AppShell({
     <div className="min-h-screen bg-mist dark:bg-[#1a1a1a]">
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-[45] bg-black/50 backdrop-blur-sm lg:hidden"
           onClick={() => dispatch(setSidebar(false))}
         />
       )}
 
       {/* ───────── sidebar ───────── */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-[min(270px,calc(100vw-3rem))] flex-col overflow-y-auto border-r border-ink/[0.06] bg-white px-4 py-5 transition-transform dark:border-white/[0.06] dark:bg-[#262626] lg:w-[270px] lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(270px,calc(100vw-3rem))] flex-col overflow-y-auto border-r border-ink/[0.06] bg-white px-4 py-5 transition-transform dark:border-white/[0.06] dark:bg-[#262626] lg:w-[270px] lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

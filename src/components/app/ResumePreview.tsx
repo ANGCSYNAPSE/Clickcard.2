@@ -46,6 +46,7 @@ function useMeasuredWidth<T extends HTMLElement>(fallback: number) {
   return { ref, width };
 }
 
+
 /**
  * Measures each content block off-screen, then packs them into as many
  * fixed-height A4 pages as needed — pages grow/shrink automatically as
@@ -574,12 +575,15 @@ export default function ResumePreview({
 
   const { ref: containerRef, width: containerWidth } = useMeasuredWidth<HTMLDivElement>(PAGE_WIDTH);
 
-  // Shrink (never grow) to fit the container, keeping the exact A4 aspect
-  // ratio and proportional margins so it always reads as a real page.
-  const pageWidth = Math.min(PAGE_WIDTH, containerWidth || PAGE_WIDTH);
-  const pageHeight = pageWidth * (PAGE_HEIGHT / PAGE_WIDTH);
-  const pagePadding = pageWidth * (PAGE_PADDING / PAGE_WIDTH);
+  // The page always lays out at its true A4 pixel size — fonts, padding and
+  // pagination stay identical no matter the container, so the CV reads the
+  // same on a phone as on a desktop. Only the final visual size is scaled
+  // (never grown, only shrunk) to fit whatever space the container has.
+  const pageWidth = PAGE_WIDTH;
+  const pageHeight = PAGE_HEIGHT;
+  const pagePadding = PAGE_PADDING;
   const contentHeight = pageHeight - pagePadding * 2;
+  const scale = containerWidth > 0 ? Math.min(containerWidth / PAGE_WIDTH, 1) : 1;
 
   const contactItems = (
     [
@@ -922,29 +926,35 @@ export default function ResumePreview({
 
   if (isTwoColumn && tpl) {
     return (
-      <div ref={containerRef} className="flex w-full flex-col items-center gap-6">
-        <TwoColumnResume
-          tpl={tpl}
-          fullName={fullName}
-          tagline={p.tagline}
-          contactItems={contactItems}
-          bio={p.bio}
-          skills={skills || []}
-          languages={languages || []}
-          awards={awards || []}
-          experience={experience}
-          education={education}
-          references={references || []}
-          fontFamily={fontFamily}
-          pageWidth={pageWidth}
-          pageHeight={pageHeight}
-        />
+      <div ref={containerRef} className="flex w-full justify-center">
+        <div
+          className="flex flex-col items-center gap-6"
+          style={{ width: pageWidth, zoom: scale }}
+        >
+          <TwoColumnResume
+            tpl={tpl}
+            fullName={fullName}
+            tagline={p.tagline}
+            contactItems={contactItems}
+            bio={p.bio}
+            skills={skills || []}
+            languages={languages || []}
+            awards={awards || []}
+            experience={experience}
+            education={education}
+            references={references || []}
+            fontFamily={fontFamily}
+            pageWidth={pageWidth}
+            pageHeight={pageHeight}
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className="flex w-full flex-col items-center gap-6">
+    <div ref={containerRef} className="flex w-full justify-center">
+      <div className="flex flex-col items-center gap-6" style={{ width: pageWidth, zoom: scale }}>
       {/* Off-screen measurement pass — invisible, same width as a real page's content area */}
       <div
         aria-hidden
@@ -984,6 +994,7 @@ export default function ResumePreview({
           )}
         </div>
       ))}
+      </div>
     </div>
   );
 }

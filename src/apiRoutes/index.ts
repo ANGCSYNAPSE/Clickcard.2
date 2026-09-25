@@ -24,6 +24,10 @@ export const USER_ROUTES = {
   current: "/api/users/current",
 } as const;
 
+export const REFERRAL_ROUTES = {
+  my: "/api/referrals/my",
+} as const;
+
 export const PROFILE_ROUTES = {
   create: "/api/users/profile/create",
   full: "/api/users/profile/full",

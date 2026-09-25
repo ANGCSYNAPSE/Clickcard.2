@@ -15,10 +15,9 @@ import {
   ArrowDown,
   Target,
   Save,
-  PanelTop,
   CaseSensitive,
   Camera,
-  User as UserIcon,
+  UserRound as UserIcon,
   Eye,
   ChevronLeft,
   Plus,
@@ -413,10 +412,11 @@ export default function StudioPage() {
           </div>
         )}
 
-        {/* mobile live preview — same contained box as desktop */}
-        <div className="md:hidden">
+        {/* mobile live preview — full-bleed, no box, cancels AppShell's own
+            page padding (-mx) so it reaches the true edges of the screen */}
+        <div className="md:hidden -mx-4 sm:-mx-6">
           {(dirty || profileDirty || !!picture) && (
-            <div className="mb-3 flex justify-end">
+            <div className="mb-3 flex justify-end px-4 sm:px-6">
               <button
                 onClick={saveAll}
                 disabled={savingProfile}
@@ -426,7 +426,7 @@ export default function StudioPage() {
               </button>
             </div>
           )}
-          <div className={`rounded-3xl bg-mist dark:bg-white/[0.02] ${detailView === null ? "pb-22" : "pb-[40vh]"}`}>
+          <div className={detailView === null ? "pb-22" : "pb-[40vh]"}>
             <ScaledPreview fitHeight={false}>{livePreview}</ScaledPreview>
           </div>
         </div>
@@ -435,7 +435,11 @@ export default function StudioPage() {
             mobile. Same options list + drilldown either way, so mobile always
             has every feature desktop has, with identical icons. */}
         <div className="fixed inset-x-0 bottom-0 z-40 md:static md:z-auto md:w-full md:h-full lg:w-[380px] lg:h-full lg:shrink-0 xl:w-[440px] 2xl:w-[520px]">
-          <div className="mx-auto w-full max-w-lg rounded-t-3xl border border-b-0 border-ink/5 bg-mist shadow-soft-lg no-scrollbar dark:border-white/5 dark:bg-[#262626] md:mx-0 md:h-full md:max-w-none md:overflow-y-auto md:rounded-3xl md:border-b md:shadow-none">
+          <div
+            className={`mx-auto rounded-t-3xl border border-b-0 border-ink/5 bg-mist shadow-soft-lg no-scrollbar dark:border-white/5 dark:bg-[#262626] md:mx-0 md:h-full md:w-full md:max-w-none md:overflow-y-auto md:rounded-3xl md:border-b md:shadow-none ${
+              detailView === null ? "w-fit max-w-full" : "w-full max-w-lg"
+            }`}
+          >
             {/* Mobile-only heading — shown only once a specific option is
                 open, as that option's own title + close button. The icon
                 row itself (below) needs no header — it's always just the bar. */}
@@ -494,14 +498,15 @@ export default function StudioPage() {
                   className="grid h-11 w-11 place-items-center rounded-xl border border-ink/10 dark:border-white/10"
                   style={{ background: backgroundColor, color: getContrastText(backgroundColor) }}
                 >
-                  <Palette size={16} />
+                  <Palette size={20} />
                 </span>
                 <span className="text-[11px] font-bold text-ink dark:text-white">Palette</span>
               </button>
 
               <button onClick={() => setDetailView("header")} className="flex shrink-0 flex-col items-center gap-1">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                  <PanelTop size={16} />
+                <span className="relative grid h-11 w-11 place-items-center rounded-2xl bg-ink/10 text-ink/40 dark:bg-white/10 dark:text-white/40">
+                  <UserIcon size={25} fill="currentColor" fillOpacity={0.35} strokeWidth={1.75} />
+                  {/* <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-red-500" /> */}
                 </span>
                 <span className="text-[11px] font-bold text-ink dark:text-white">Header</span>
               </button>
@@ -591,7 +596,7 @@ export default function StudioPage() {
                       className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 dark:border-white/10"
                       style={{ background: backgroundColor, color: getContrastText(backgroundColor) }}
                     >
-                      <Palette size={16} />
+                      <Palette size={20} />
                     </span>
                     <p className="text-sm font-bold text-ink dark:text-white">Palette</p>
                   </div>
@@ -611,8 +616,9 @@ export default function StudioPage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                      <PanelTop size={16} />
+                    <span className="relative grid h-9 w-9 place-items-center rounded-2xl bg-ink/10 text-ink/40 dark:bg-white/10 dark:text-white/40">
+                      <UserIcon size={25} fill="currentColor" fillOpacity={0.35} strokeWidth={1.75} />
+                      {/* <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-red-500" /> */}
                     </span>
                     <p className="text-sm font-bold text-ink dark:text-white">Header</p>
                   </div>
@@ -1062,7 +1068,7 @@ export default function StudioPage() {
                               className="relative grid h-7 w-7 place-items-center bg-white/30 text-white"
                               style={avatarShape}
                             >
-                              <UserIcon size={14} />
+                              <UserIcon size={30} />
                             </span>
                           </span>
                           <span className="text-[11px] font-semibold text-ink/70 dark:text-white/70">{l.label}</span>

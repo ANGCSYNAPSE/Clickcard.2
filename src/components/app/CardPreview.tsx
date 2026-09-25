@@ -102,6 +102,7 @@ function Footer({ t, url }: { t: Tokens; url: string }) {
   );
 }
 
+
 /** Repeating chevron/arrow tile used by the Chevron Pattern template. */
 function ChevronPattern({ id, fill, bg }: { id: string; fill: string; bg: string }) {
   return (
@@ -256,6 +257,79 @@ function ElementsFace({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/**
+ * A portrait card's two faces are each too tall to show side by side on a
+ * phone at a readable size, so mobile shows one face at a time with a
+ * Front/Back toggle instead — desktop still shows both at once, unchanged.
+ */
+function PortraitFacePreview({
+  front,
+  back,
+  fieldValue,
+  designWidth,
+  fallbackBg,
+  faceStyle,
+}: {
+  front?: CardFaceDef;
+  back?: CardFaceDef;
+  fieldValue: (field?: string) => string;
+  designWidth: number;
+  fallbackBg: string;
+  faceStyle: CSSProperties;
+}) {
+  const [active, setActive] = useState<"front" | "back">("front");
+  const activeFace = active === "front" ? front : back;
+
+  return (
+    <div className="flex w-full max-w-[340px] flex-col items-center ml-2 lg:ml-0 gap-3 md:max-w-[696px] md:flex-row md:items-start md:gap-4">
+      {/* mobile — one face at a time. Width is capped by a viewport-height
+          budget (header + bottom bar + the toggle row below, all roughly
+          fixed pixel chrome) run back through the card's own aspect ratio,
+          so the single face — plus the toggle under it — always fits the
+          screen without needing a scroll. */}
+      <div className="w-full md:hidden">
+        {activeFace && (
+          <div className="mx-auto max-w-[min(340px,calc((100vh_-_312px)/1.75))]">
+            <div data-card-face={active} style={faceStyle} className="mx-auto border border-ink/10">
+              <ElementsFace face={activeFace} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={fallbackBg} />
+            </div>
+          </div>
+        )}
+        {front && back && (
+          <div className="mt-3 flex items-center justify-center gap-2">
+            {(["front", "back"] as const).map((side) => (
+              <button
+                key={side}
+                type="button"
+                onClick={() => setActive(side)}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-bold capitalize transition ${
+                  active === side
+                    ? "bg-ink text-white dark:bg-white dark:text-ink"
+                    : "bg-ink/5 text-ink/60 dark:bg-white/10 dark:text-white/60"
+                }`}
+              >
+                {side}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* md and up — both faces side by side */}
+      {front && (
+        <div data-card-face="front" style={faceStyle} className="hidden border border-ink/10 md:block">
+          <ElementsFace face={front} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={fallbackBg} />
+        </div>
+      )}
+      {back && (
+        <div data-card-face="back" style={faceStyle} className="hidden border border-ink/10 md:block">
+          <ElementsFace face={back} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={fallbackBg} />
+        </div>
+      )}
     </div>
   );
 }
@@ -471,21 +545,18 @@ export default function CardPreview({
       fontFamily: cardStyle.fontFamily,
     };
 
-    // Portrait faces are too tall to stack — sit the back face beside the
-    // front instead of below it, so the preview doesn't run off the page.
+    // One face at a time on mobile (with a Front/Back toggle) — a portrait
+    // face is too tall to show both side by side at a readable size on a
+    // phone; side-by-side from lg up, where there's room for both.
     return (
-      <div className="flex w-full flex-row items-start justify-center gap-4" style={{ maxWidth: RENDER_WIDTH * 2 + 16 }}>
-        {tpl?.front && (
-          <div data-card-face="front" style={faceStyle} className="border border-ink/10">
-            <ElementsFace face={tpl.front} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
-          </div>
-        )}
-        {tpl?.back && (
-          <div data-card-face="back" style={faceStyle} className="border border-ink/10">
-            <ElementsFace face={tpl.back} fieldValue={fieldValue} designWidth={designWidth} fallbackBg={colors.background} />
-          </div>
-        )}
-      </div>
+      <PortraitFacePreview
+        front={tpl?.front}
+        back={tpl?.back}
+        fieldValue={fieldValue}
+        designWidth={designWidth}
+        fallbackBg={colors.background}
+        faceStyle={faceStyle}
+      />
     );
   }
 

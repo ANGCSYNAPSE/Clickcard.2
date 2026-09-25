@@ -17,6 +17,8 @@ export interface CurrentUser {
   profilePicture?: string;
   isPublic?: boolean;
   createdAt?: string;
+  /** Raw backend field (snake_case) — this user's own 6-digit referral code. */
+  referral_code?: string;
 }
 
 export type AuthType = "google" | "apple";
@@ -283,6 +285,24 @@ export interface BusinessProfile {
   status?: string;
   created_at?: string;
   updated_at?: string;
+}
+
+/* ---------------- Referrals ---------------- */
+
+export interface ReferredUser {
+  id: number;
+  referrer_id: number;
+  referred_id: number;
+  status: string;
+  created_at: string;
+  email: string;
+  first_name?: string;
+  username: string;
+}
+
+export interface ReferralStats {
+  total_referrals: string;
+  completed_profiles: string;
 }
 
 /* ---------------- API envelope ---------------- */
