@@ -141,11 +141,11 @@ export default function SharePopup({
                   >
                     <CloseIcon size={14} />
                   </button>
-                  <div className="mx-auto grid h-38 w-36 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5">
+                  <div className="mx-auto grid h-36 w-36 place-items-center rounded-xl bg-white p-2 ring-1 ring-ink/5">
                     {qrLoading ? (
                       <div className="h-full w-full animate-pulse rounded-lg bg-ink/5" />
                     ) : (
-                      <QRPreview data={profileUrl} settings={qrSettings} size={120} fileName="clickcard-qr" />
+                      <QRPreview data={profileUrl} settings={qrSettings} size={128} fileName="clickcard-qr" />
                     )}
                   </div>
                   <p className="mt-2 text-sm font-bold text-ink dark:text-white">
