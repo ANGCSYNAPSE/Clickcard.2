@@ -440,7 +440,7 @@ export default function CardPage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 bg-ink/5 text-ink dark:border-white/10 dark:bg-white/10 dark:text-white">
                       <LayoutTemplate size={16} />
                     </span>
                     <p className="text-sm font-bold text-ink dark:text-white">Template</p>
@@ -461,7 +461,7 @@ export default function CardPage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 bg-ink/5 text-ink dark:border-white/10 dark:bg-white/10 dark:text-white">
                       <Pencil size={16} />
                     </span>
                     <p className="text-sm font-bold text-ink dark:text-white">Details</p>
@@ -477,10 +477,7 @@ export default function CardPage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span
-                      className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 dark:border-white/10"
-                      style={{ background: primary, color: "#fff" }}
-                    >
+                    <span className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 bg-ink/5 text-ink dark:border-white/10 dark:bg-white/10 dark:text-white">
                       <PaletteIcon size={16} />
                     </span>
                     <p className="text-sm font-bold text-ink dark:text-white">Palette</p>
@@ -501,7 +498,7 @@ export default function CardPage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 bg-ink/5 text-ink dark:border-white/10 dark:bg-white/10 dark:text-white">
                       <CaseSensitive size={18} />
                     </span>
                     <p className="text-sm font-bold text-ink dark:text-white">Text</p>

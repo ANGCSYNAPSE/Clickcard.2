@@ -508,23 +508,22 @@ export default function StudioPage() {
               </button>
 
               <button onClick={() => setDetailView("header")} className="flex shrink-0 flex-col items-center gap-1">
-                <span className="relative grid h-11 w-11 place-items-center rounded-2xl bg-ink/10 text-ink/40 dark:bg-white/10 dark:text-white/40">
-                  <UserIcon size={25} fill="currentColor" fillOpacity={0.35} strokeWidth={1.75} />
-                  {/* <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-red-500" /> */}
+                <span className="grid h-11 w-11 place-items-center rounded-xl border border-ink/10 bg-ink/5 text-ink dark:border-white/10 dark:bg-white/10 dark:text-white">
+                  <UserIcon size={25} fill="currentColor" fillOpacity={0} strokeWidth={1.75} />
                 </span>
                 <span className="text-[11px] font-bold text-ink dark:text-white">Header</span>
               </button>
 
               <button onClick={() => setDetailView("buttons")} className="flex shrink-0 flex-col items-center gap-1">
-                <span className="grid h-11 w-11 place-items-center rounded-xl border border-ink/10 bg-ink/5 dark:border-white/10 dark:bg-white/10">
+                <span className="grid h-11 w-11 place-items-center rounded-xl border border-ink/10 bg-ink/5 text-ink dark:border-white/10 dark:bg-white/10 dark:text-white">
                   <span className="h-2.5 w-6 rounded-full border border-ink/15 dark:border-white/20" style={{ background: buttonColor }} />
                 </span>
                 <span className="text-[11px] font-bold text-ink dark:text-white">Buttons</span>
               </button>
 
               <button onClick={() => setDetailView("text")} className="flex shrink-0 flex-col items-center gap-1">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                  <CaseSensitive size={18} />
+                <span className="grid h-11 w-11 place-items-center rounded-xl border border-ink/10 bg-ink/5 text-ink dark:border-white/10 dark:bg-white/10 dark:text-white">
+                  <CaseSensitive size={22} />
                 </span>
                 <span className="text-[11px] font-bold text-ink dark:text-white">Text</span>
               </button>
@@ -620,9 +619,8 @@ export default function StudioPage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className="relative grid h-9 w-9 place-items-center rounded-2xl bg-ink/10 text-ink/40 dark:bg-white/10 dark:text-white/40">
-                      <UserIcon size={25} fill="currentColor" fillOpacity={0.35} strokeWidth={1.75} />
-                      {/* <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-red-500" /> */}
+                    <span className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 bg-ink/5 text-ink dark:border-white/10 dark:bg-white/10 dark:text-white">
+                      <UserIcon size={25} fill="currentColor" fillOpacity={0} strokeWidth={1.75} />
                     </span>
                     <p className="text-sm font-bold text-ink dark:text-white">Header</p>
                   </div>
@@ -642,7 +640,7 @@ export default function StudioPage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 bg-ink/5 dark:border-white/10 dark:bg-white/10">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 bg-ink/5 text-ink dark:border-white/10 dark:bg-white/10 dark:text-white">
                       <span
                         className="h-3 w-6 rounded-full border border-ink/15 dark:border-white/20"
                         style={{ background: buttonColor }}
@@ -666,8 +664,8 @@ export default function StudioPage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 text-brand-600 dark:bg-white/10 dark:text-white">
-                      <CaseSensitive size={18} />
+                    <span className="grid h-9 w-9 place-items-center rounded-lg border border-ink/10 bg-ink/5 text-ink dark:border-white/10 dark:bg-white/10 dark:text-white">
+                      <CaseSensitive size={22} />
                     </span>
                     <p className="text-sm font-bold text-ink dark:text-white">Text</p>
                   </div>
