@@ -5,17 +5,17 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Sparkles, Star } from "lucide-react";
 
-import Img1 from "@/images/hero/1_designer.png";
-import Img2 from "@/images/hero/2_founder.png";
-import Img3 from "@/images/hero/3_influncer.png";
-import Img4 from "@/images/hero/4_singer.png";
-import Img5 from "@/images/hero/5_gym.png";
-import Img6 from "@/images/hero/6_student.png";
-import Img7 from "@/images/hero/7_dev.png";
-import Img8 from "@/images/hero/8_freelancer.png";
-import Img9 from "@/images/hero/9_standup.png";
-import Img10 from "@/images/hero/10_tattoo.png";
-import Img11 from "@/images/hero/11_makeover.png";
+import Img1 from "@/images/hero/1_designer.svg";
+import Img2 from "@/images/hero/2_founder.svg";
+import Img3 from "@/images/hero/3_influncer.svg";
+import Img4 from "@/images/hero/4_singer.svg";
+import Img5 from "@/images/hero/5_gym.svg";
+import Img6 from "@/images/hero/6_student.svg";
+import Img7 from "@/images/hero/7_dev.svg";
+import Img8 from "@/images/hero/8_freelancer.svg";
+import Img9 from "@/images/hero/9_standup.svg";
+import Img10 from "@/images/hero/10_tattoo.svg";
+import Img11 from "@/images/hero/11_makeover.svg";
 
 import ClaimBar from "./ClaimBar";
 import { heroAvatars } from "@/lib/site";

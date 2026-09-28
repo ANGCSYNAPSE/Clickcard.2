@@ -206,6 +206,7 @@ export default function AppShell({
                     <Link
                       key={item.href}
                       href={item.href}
+                      data-tour={`nav-${item.href.replace(/^\//, "")}`}
                       className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
                         active
                           ? "bg-brand-50 text-brand-600 dark:bg-white/10 dark:text-white"
@@ -228,6 +229,7 @@ export default function AppShell({
         {user?.username && (
           <Link
             href="/profile/preview"
+            data-tour="view-public-page"
             className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-ink/10 px-3 py-2.5 text-xs font-bold text-ink/70 transition hover:border-brand-300 hover:text-brand-700 dark:border-white/10 dark:text-white/70"
           >
             <ExternalLink size={14} /> View public page

@@ -48,6 +48,7 @@ import { displayName } from "@/lib/personal";
 import { FONT_ITEMS, loadGoogleFont } from "@/lib/fonts";
 import { getContrastText } from "@/lib/color";
 import { SITE_URL } from "@/lib/config";
+import { compressImageFile } from "@/lib/imageCompression";
 
 const PALETTES = [
   { name: "Brand", primary: "#BE5103", accent: "#069494" },
@@ -166,6 +167,7 @@ export default function StudioPage() {
     theme,
     wallpaperType,
     backgroundImageUrl,
+    bannerImageUrl,
     backgroundColor,
     gradientColor,
     gradientColorEnd,
@@ -201,7 +203,7 @@ export default function StudioPage() {
   const [pictureUrl, setPictureUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [cropSource, setCropSource] = useState<string | null>(null);
-  const [bannerImageUrl, setBannerImageUrl] = useState<string | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
   const [cutoutAvatarUrl, setCutoutAvatarUrl] = useState<string | null>(null);
   const [removingBg, setRemovingBg] = useState(false);
@@ -247,10 +249,25 @@ export default function StudioPage() {
     setCropSource(null);
   };
 
-  const onPickBanner = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onPickBanner = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
+    e.target.value = "";
     if (!f) return;
-    setBannerImageUrl(URL.createObjectURL(f));
+    let upload = f;
+    try {
+      // A raw phone photo (often 3-8MB) can exceed the backend's 5MB
+      // upload limit — downscale/re-encode client-side first so a normal
+      // banner photo always fits, instead of failing on save.
+      upload = await compressImageFile(f, { maxDimension: 1600, quality: 0.82 });
+    } catch (err) {
+      dispatch(pushToast(err instanceof Error ? err.message : "Could not process that image", "error"));
+      return;
+    }
+    setBannerFile(upload);
+    // Preview immediately with a local blob URL and mark the design dirty
+    // (updateDesign always does) — the real, uploaded URL replaces this
+    // once Save actually persists the file.
+    set({ bannerImageUrl: URL.createObjectURL(upload) });
   };
 
   const previewAvatar = pictureUrl || draft.personal?.profilePicture;
@@ -291,21 +308,30 @@ export default function StudioPage() {
     // digitalCard.design) so the public page — viewed by anyone who scans
     // the QR — can render with the same look Studio shows here, not just
     // this browser's own localStorage cache.
+    let savedDesign: Record<string, unknown> = design as unknown as Record<string, unknown>;
     if (profileDirty || picture || dirty) {
       const profileToSave = dirty
-        ? { ...draft, digitalCard: { ...draft.digitalCard, design: design as unknown as Record<string, unknown> } }
+        ? { ...draft, digitalCard: { ...draft.digitalCard, design: savedDesign } }
         : draft;
-      const res = await dispatch(saveProfile({ profile: profileToSave, picture }));
+      const res = await dispatch(saveProfile({ profile: profileToSave, picture, bannerImage: bannerFile }));
       if (!saveProfile.fulfilled.match(res)) {
         dispatch(pushToast((res.payload as string) || "Could not save profile", "error"));
         return;
       }
       setPicture(null);
       setPictureUrl(null);
+      setBannerFile(null);
+      // A banner upload replaces the local blob preview with the server's
+      // real, hosted URL in the response — cache that instead of the
+      // pre-save `design` closure, which would otherwise write a
+      // browser-session-only blob: URL into localStorage.
+      const returnedDesign = (res.payload as { digitalCard?: { design?: Record<string, unknown> } } | undefined)
+        ?.digitalCard?.design;
+      if (returnedDesign) savedDesign = returnedDesign;
     }
     if (dirty) {
       try {
-        localStorage.setItem(STUDIO_DESIGN_KEY, JSON.stringify(design));
+        localStorage.setItem(STUDIO_DESIGN_KEY, JSON.stringify(savedDesign));
       } catch {
         /* ignore blocked storage */
       }
@@ -1114,15 +1140,17 @@ export default function StudioPage() {
                     <p className="text-sm font-semibold text-ink dark:text-white">Banner image</p>
                     <button
                       onClick={() => bannerFileRef.current?.click()}
-                      className="relative grid h-14 w-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-ink/10 text-ink/40 dark:bg-white/10 dark:text-white/40"
+                      className="relative grid h-14 w-20 shrink-0 place-items-center"
                       aria-label="Upload banner image"
                     >
-                      {bannerImageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={bannerImageUrl} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <ImageIcon size={18} />
-                      )}
+                      <span className="grid h-full w-full place-items-center overflow-hidden rounded-xl bg-ink/10 text-ink/40 dark:bg-white/10 dark:text-white/40">
+                        {bannerImageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={bannerImageUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <ImageIcon size={18} />
+                        )}
+                      </span>
                       <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#262626] dark:text-white">
                         <Plus size={12} />
                       </span>

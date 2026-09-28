@@ -51,11 +51,15 @@ export const fetchProfile = createAsyncThunk(
 export const saveProfile = createAsyncThunk(
   "profile/save",
   async (
-    { profile, picture }: { profile: FullProfile; picture?: File | null },
+    {
+      profile,
+      picture,
+      bannerImage,
+    }: { profile: FullProfile; picture?: File | null; bannerImage?: File | null },
     { rejectWithValue },
   ) => {
     try {
-      await profileService.save(profile, picture);
+      await profileService.save(profile, picture, bannerImage);
       // Re-fetch the canonical, server-normalized profile (real picture URL,
       // computed fields, etc.) so every screen sharing this store — live
       // preview, dashboard, studio — updates immediately with the true saved

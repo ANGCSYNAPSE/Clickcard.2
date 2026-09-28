@@ -4,7 +4,7 @@ import { useEffect, useState, type ElementType } from "react";
 import { motion } from "framer-motion";
 import { QrCode, Contact } from "lucide-react";
 import { SiFacebook, SiYoutube, SiTiktok } from "react-icons/si";
-import Img1 from "../../images/avatar.jpg";
+import Img1 from "../../images/avatar.svg";
 
 
 type IconType = ElementType;

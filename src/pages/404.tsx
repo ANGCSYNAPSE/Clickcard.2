@@ -1,17 +1,33 @@
 import Head from "next/head";
-import Link from "next/link";
-import { ArrowRight, Home, LifeBuoy, Compass } from "lucide-react";
-import { motion } from "framer-motion";
-import { WEBAPP_URL, LOGIN_URL, PLANS_URL } from "@/lib/site";
+import { useRouter } from "next/router";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
+import { Globe } from "@/components/ui/Globe";
 
-const DESTINATIONS: { label: string; href: string; description: string }[] = [
-  { label: "Sign in", href: LOGIN_URL, description: "Access your ClickCard" },
-  { label: "Pricing", href: PLANS_URL, description: "Plans & verticals" },
-  { label: "App dashboard", href: WEBAPP_URL, description: "Your portal" },
-  { label: "Home", href: "/", description: "Back to the landing" },
-];
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" as const } },
+} satisfies Variants;
+
+const globeVariants = {
+  hidden: { scale: 0.85, opacity: 0, y: 10 },
+  visible: { scale: 1, opacity: 1, y: 0, transition: { duration: 0.9, ease: "easeOut" as const } },
+  floating: {
+    y: [-4, 4],
+    transition: { duration: 5, ease: "easeInOut" as const, repeat: Infinity, repeatType: "reverse" as const },
+  },
+} satisfies Variants;
 
 export default function NotFoundPage() {
+  const router = useRouter();
+  // Real "back" (previous history entry) rather than always "/" — if there
+  // is no history to go back to (e.g. the 404 was opened directly), fall
+  // back to home instead of leaving the button a no-op.
+  const goBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) router.back();
+    else router.push("/");
+  };
+
   return (
     <>
       <Head>
@@ -19,67 +35,55 @@ export default function NotFoundPage() {
         <meta name="robots" content="noindex" />
       </Head>
 
-      <div className="relative grid min-h-screen place-items-center overflow-hidden bg-paper-soft px-4 py-16">
-        <div className="pointer-events-none absolute inset-0 dots-bg opacity-70" />
+      <div className="relative grid min-h-screen place-items-center overflow-hidden bg-paper-soft px-4 py-16 dark:bg-[#1a1a1a]">
+        <div className="pointer-events-none absolute inset-0 dots-bg opacity-70 dark:opacity-20" />
         <div className="pointer-events-none absolute -left-32 top-10 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
         <div className="pointer-events-none absolute -right-32 bottom-10 h-80 w-80 rounded-full bg-secondary/20 blur-3xl" />
 
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="relative mx-auto w-full max-w-2xl text-center"
-        >
-          <span className="inline-block rounded-full bg-white/70 px-4 py-1 text-xs font-black uppercase tracking-[0.18em] text-primary shadow-soft backdrop-blur">
-            404 · Not found
-          </span>
-          <h1 className="mt-6 font-display text-5xl font-black leading-[1.05] text-ink sm:text-6xl">
-            Lost in the digital void
-          </h1>
-          <p className="mx-auto mt-4 max-w-md text-base text-ink/60">
-            The page you&apos;re looking for has vanished like a paper business
-            card in the digital age.
-          </p>
+        <AnimatePresence mode="wait">
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            variants={fadeUp}
+            className="relative mx-auto w-full max-w-2xl text-center"
+          >
+            {/* 4 [spinning globe] 4 */}
+            <motion.div className="mb-8 flex items-center justify-center gap-4 sm:gap-6" variants={fadeUp}>
+              <span className="select-none font-display text-7xl font-black text-ink/80 sm:text-8xl dark:text-white/80">
+                4
+              </span>
+              <motion.div
+                className="relative h-24 w-24 shrink-0 sm:h-32 sm:w-32"
+                variants={globeVariants}
+                animate={["visible", "floating"]}
+              >
+                <Globe theme="light" />
+                <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.08)_0%,transparent_70%)]" />
+              </motion.div>
+              <span className="select-none font-display text-7xl font-black text-ink/80 sm:text-8xl dark:text-white/80">
+                4
+              </span>
+            </motion.div>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-br from-primary to-secondary px-6 py-3 text-sm font-bold text-white shadow-soft-lg transition hover:scale-105"
-            >
-              <Home size={16} /> Go home
-            </Link>
-            <a
-              href="mailto:support@clickcard.app"
-              className="inline-flex items-center gap-2 rounded-2xl border-2 border-primary/20 bg-white px-6 py-3 text-sm font-bold text-dark transition hover:bg-primary/10"
-            >
-              <LifeBuoy size={16} /> Contact support
-            </a>
-          </div>
-
-          <div className="mt-12">
-            <p className="mb-4 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-ink/45">
-              <Compass size={14} /> Popular destinations
+            <h1 className="font-display text-4xl font-black leading-[1.05] text-ink sm:text-5xl dark:text-white">
+              Ups! Lost in space
+            </h1>
+            <p className="mx-auto mt-4 max-w-md text-base text-ink/60 dark:text-white/55">
+              We couldn&apos;t find the page you&apos;re looking for. It might have
+              been moved or deleted.
             </p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {DESTINATIONS.map((d) => (
-                <Link
-                  key={d.href}
-                  href={d.href}
-                  className="group flex items-center justify-between rounded-2xl bg-white p-4 text-left shadow-soft ring-1 ring-black/[0.03] transition hover:-translate-y-0.5 hover:shadow-soft-lg"
-                >
-                  <span>
-                    <span className="block font-bold text-ink">{d.label}</span>
-                    <span className="text-xs text-ink/55">{d.description}</span>
-                  </span>
-                  <ArrowRight
-                    size={16}
-                    className="text-ink/30 transition group-hover:translate-x-0.5 group-hover:text-primary"
-                  />
-                </Link>
-              ))}
+
+            <div className="mt-8 flex items-center justify-center">
+              <button
+                onClick={goBack}
+                className="inline-flex items-center gap-2 rounded-2xl bg-ink px-6 py-3 text-sm font-bold text-white shadow-soft-lg transition hover:opacity-90 dark:bg-white dark:text-ink"
+              >
+                <ArrowLeft size={16} /> Go back
+              </button>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </>
   );

@@ -22,10 +22,11 @@ export const profileService = {
    * boundary — do NOT set it to "multipart/form-data" by hand instead, that
    * ships a boundary-less request the backend can't parse either.
    */
-  save: (profileData: FullProfile, profilePicture?: File | null) => {
+  save: (profileData: FullProfile, profilePicture?: File | null, headerImage?: File | null) => {
     const form = new FormData();
     form.append("profileData", JSON.stringify(toApiProfile(profileData)));
     if (profilePicture) form.append("profilePicture", profilePicture);
+    if (headerImage) form.append("headerImage", headerImage);
     return apiClient.post<ApiResponse<FullProfile>>(PROFILE_ROUTES.create, form, {
       headers: { "Content-Type": undefined },
     });

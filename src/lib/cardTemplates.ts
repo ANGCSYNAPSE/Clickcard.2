@@ -98,10 +98,10 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
 
   background: {
     // RIGHT CARD = FRONT
-    front: "/templates/orange-geometric/front.png",
+    front: "/templates/orange-geometric/front.svg",
 
     // LEFT CARD = BACK
-    back: "/templates/orange-geometric/back.png",
+    back: "/templates/orange-geometric/back.svg",
   },
 
   card: {
@@ -115,7 +115,7 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
   front: {
     background: {
       type: "image",
-      image: "/templates/orange-geometric/front.png",
+      image: "/templates/orange-geometric/front.svg",
     },
 
     elements: [
@@ -262,7 +262,7 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
   back: {
     background: {
       type: "image",
-      image: "/templates/orange-geometric/back.png",
+      image: "/templates/orange-geometric/back.svg",
     },
 
     elements: [
@@ -536,8 +536,8 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
 
   // Actual asset folder is /public/templates/navy-chevron/ (not navy-geometric).
   background: {
-    front: "/templates/navy-chevron/front.png",
-    back: "/templates/navy-chevron/back.png",
+    front: "/templates/navy-chevron/front.svg",
+    back: "/templates/navy-chevron/back.svg",
   },
 
   card: {
@@ -555,7 +555,7 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
   front: {
     background: {
       type: "image",
-      image: "/templates/navy-chevron/front.png",
+      image: "/templates/navy-chevron/front.svg",
     },
 
     elements: [
@@ -614,7 +614,7 @@ export const CARD_TEMPLATES: CardTemplateDef[] = [
   back: {
     background: {
       type: "image",
-      image: "/templates/navy-chevron/back.png",
+      image: "/templates/navy-chevron/back.svg",
     },
 
     elements: [

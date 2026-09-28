@@ -1,9 +1,9 @@
 "use client";
 
-import Img1 from "../../images/img1.png";
-import Img2 from "../../images/img2.png";
-import Img3 from "../../images/img3.png";
-import Img4 from "../../images/img4.png";
+import Img1 from "../../images/img1.svg";
+import Img2 from "../../images/img2.svg";
+import Img3 from "../../images/img3.svg";
+import Img4 from "../../images/img4.svg";
 
 type Card = { src: string; heightClass: string };
 

@@ -26,12 +26,66 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import ProfilePreview from "@/components/app/ProfilePreview";
+import ProductTour, { type TourStep } from "@/components/app/ProductTour";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProfile } from "@/store/slices/profileSlice";
 import { fetchShareTotals, fetchShareLinks } from "@/store/slices/shareSlice";
 import { fetchDashboardAnalytics } from "@/store/slices/analyticsSlice";
 import { referralService } from "@/services/referralService";
 import type { DashboardTrendPoint } from "@/services/analyticsService";
+
+const ONBOARDING_TOUR_KEY = "cc_onboarding_tour_seen";
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    title: "Welcome to ClickCard 👋",
+    body: "This is your dashboard — home base for building and sharing your digital identity. Here's a quick tour of everything you can do.",
+  },
+  {
+    target: "hero-build-profile",
+    title: "Build Your Profile",
+    body: "Add or update your information to create your digital identity.",
+  },
+  {
+    target: "nav-customize",
+    title: "Customize Your Card",
+    body: "Personalize the look and feel of your ClickCard with themes, colors, fonts and layout options.",
+  },
+  {
+    target: "live-preview",
+    title: "Your Live Card",
+    body: "This is how your ClickCard appears to visitors. Any changes you make to your profile will be reflected here instantly.",
+  },
+  {
+    target: "nav-cv",
+    title: "Build your CV",
+    body: "Turn your profile into a shareable, downloadable resume — pick a template and it's ready as a PDF.",
+  },
+  {
+    target: "nav-card",
+    title: "Business Card",
+    body: "Design a digital business card with your own template, colors and QR — share it or download it as a print-ready PDF.",
+  },
+  {
+    target: "nav-business-profiles",
+    title: "Business Profile",
+    body: "Running a business? Give it its own public page with a logo, documents, socials and contact details.",
+  },
+  {
+    target: "nav-share",
+    title: "Share & QR",
+    body: "Get your public link and a QR code, or create short custom links to track how each one performs.",
+  },
+  {
+    target: "nav-referral",
+    title: "Referrals",
+    body: "Share your referral code with friends — track who joins and how many complete their profile.",
+  },
+  {
+    title: "You're all set! 🎉",
+    body: "That's everything you need to get started. You can revisit any of this — now go make your ClickCard yours.",
+  },
+];
 
 /** Solid retro-sunset tiles — icon, title, one-line hint. */
 const QUICK = [
@@ -80,6 +134,7 @@ export default function DashboardPage() {
   const { dashboard } = useAppSelector((s) => s.analytics);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [referralCount, setReferralCount] = useState(0);
+  const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -91,6 +146,31 @@ export default function DashboardPage() {
       .then(({ data }) => setReferralCount(Number(data.data?.stats?.total_referrals ?? 0)))
       .catch(() => {});
   }, [dispatch]);
+
+  // New-user onboarding tour — shown once per browser, the first time the
+  // dashboard loads. Checked client-side only (localStorage isn't
+  // available during SSR), so this can't run in the same render as the
+  // server — a brief delay also lets the dashboard's own content paint
+  // first instead of popping the tour over a blank page.
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(ONBOARDING_TOUR_KEY)) {
+        const t = setTimeout(() => setShowTour(true), 600);
+        return () => clearTimeout(t);
+      }
+    } catch {
+      /* storage blocked (private mode etc.) — just skip the tour */
+    }
+  }, []);
+
+  const finishTour = () => {
+    setShowTour(false);
+    try {
+      localStorage.setItem(ONBOARDING_TOUR_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+  };
 
   const completion = useMemo(() => {
     const checks = [
@@ -146,7 +226,9 @@ export default function DashboardPage() {
   ];
 
   return (
-    <AppShell>
+    <>
+      {showTour && <ProductTour steps={TOUR_STEPS} onFinish={finishTour} />}
+      <AppShell>
       <Head>
         <title>Dashboard · ClickCard</title>
       </Head>
@@ -173,18 +255,24 @@ export default function DashboardPage() {
               clickcard.app/{user?.username ?? "you"}
             </p>
           </div>
-          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <button
               onClick={() => setPreviewOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-4 py-3.5 text-sm font-bold text-white shadow-soft ring-1 ring-white/20 transition hover:bg-white/25 lg:hidden"
+              data-tour="live-preview"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/15 px-3 py-2.5 text-xs font-bold text-white shadow-soft ring-1 ring-white/20 transition hover:bg-white/25 sm:px-4 sm:py-3.5 sm:text-sm lg:hidden"
             >
-              <Eye size={17} /> Preview
+              <Eye size={15} className="shrink-0 sm:hidden" />
+              <Eye size={17} className="hidden shrink-0 sm:block" />
+              Preview
             </button>
             <Link
               href="/profile"
-              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-bold text-brand-600 shadow-soft transition hover:scale-105"
+              data-tour="hero-build-profile"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3 py-2.5 text-xs font-bold text-brand-600 shadow-soft transition hover:scale-105 sm:gap-2 sm:px-6 sm:py-3.5 sm:text-sm"
             >
-              <Plus size={18} /> Build my profile
+              <Plus size={15} className="shrink-0 sm:hidden" />
+              <Plus size={18} className="hidden shrink-0 sm:block" />
+              Build my profile
             </Link>
           </div>
         </div>
@@ -197,7 +285,7 @@ export default function DashboardPage() {
           <AnalyticsTrendCard trend={dashboard?.trend} className="flex-1" />
         </div>
 
-        <div className="hidden lg:block">
+        <div className="hidden lg:block" data-tour="live-preview">
           <ProfilePreview profile={draft} avatarUrl={draft.personal?.profilePicture} username={user?.username} />
         </div>
       </div>
@@ -274,7 +362,8 @@ export default function DashboardPage() {
           </Link>
         ))}
       </div>
-    </AppShell>
+      </AppShell>
+    </>
   );
 }
 
@@ -335,7 +424,7 @@ function AnalyticsTrendCard({ trend, className = "" }: { trend?: DashboardTrendP
       <h2 className="font-display text-lg font-bold text-ink dark:text-white">
         Activity, last 14 days
       </h2>
-      <div className="mt-4 h-64 w-full flex-1">
+      <div className="mt-4 h-96 w-full flex-1">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={series} margin={{ left: -20, right: 8, top: 8 }}>
             <defs>

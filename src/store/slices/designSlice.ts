@@ -25,6 +25,8 @@ export interface DesignState {
   theme: "light" | "dark";
   wallpaperType: WallpaperType;
   backgroundImageUrl: string;
+  /** Shown above the profile photo when `headerLayout` is "banner". */
+  bannerImageUrl: string;
   backgroundColor: string;
   gradientColor: string;
   gradientColorEnd: string;
@@ -60,6 +62,7 @@ export const DEFAULT_DESIGN: DesignState = {
   theme: "light",
   wallpaperType: "fill",
   backgroundImageUrl: "",
+  bannerImageUrl: "",
   backgroundColor: "#FFFFFF",
   gradientColor: "#BE5103",
   gradientColorEnd: "#069494",
