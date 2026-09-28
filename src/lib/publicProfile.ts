@@ -210,6 +210,12 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
     updatedAt: d.updated_at,
     design: {
       ...(digitalCard.design || {}),
+      // The saved design stores this as `bannerImageUrl` (designSlice.ts,
+      // customize/index.tsx) but LiveProfileCard's prop — and this type —
+      // are named `bannerUrl`; without this rename the banner rendered fine
+      // in Customize (which renames it at its own call site) but silently
+      // never showed up on the public page.
+      bannerUrl: digitalCard.design?.bannerImageUrl,
       // Include all CV/Card specific settings from digitalCard
       templateId: digitalCard.templateId,
       cvTemplateId: digitalCard.cvTemplateId,

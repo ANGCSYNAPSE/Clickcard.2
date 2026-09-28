@@ -17,6 +17,11 @@ export interface CurrentUser {
   profilePicture?: string;
   isPublic?: boolean;
   createdAt?: string;
+  /** Raw backend field (snake_case) — the backend's `/users/current` response
+   * uses this casing, not `createdAt`; kept alongside it rather than
+   * renamed so existing `createdAt` references (if the field is ever
+   * normalized upstream) keep working too. */
+  created_at?: string;
   /** Raw backend field (snake_case) — this user's own 6-digit referral code. */
   referral_code?: string;
 }

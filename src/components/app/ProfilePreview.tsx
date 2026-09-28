@@ -29,6 +29,7 @@ export default function ProfilePreview({
     <>
       <LiveProfileCard
         {...design}
+        bannerUrl={design.bannerImageUrl || undefined}
         name={name}
         username={username}
         avatarUrl={avatarUrl}

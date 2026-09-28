@@ -147,21 +147,32 @@ export default function DashboardPage() {
       .catch(() => {});
   }, [dispatch]);
 
-  // New-user onboarding tour — shown once per browser, the first time the
-  // dashboard loads. Checked client-side only (localStorage isn't
-  // available during SSR), so this can't run in the same render as the
-  // server — a brief delay also lets the dashboard's own content paint
-  // first instead of popping the tour over a blank page.
+  // New-user onboarding tour — only for accounts that were just created
+  // (i.e. actually mid-signup, not any existing user whose browser simply
+  // hasn't seen the tour before), and even then only once per browser.
+  // Checked client-side only (localStorage isn't available during SSR), so
+  // this can't run in the same render as the server — a brief delay also
+  // lets the dashboard's own content paint first instead of popping the
+  // tour over a blank page.
   useEffect(() => {
+    if (!user) return; // wait for the account (and its createdAt) to load
     try {
-      if (!localStorage.getItem(ONBOARDING_TOUR_KEY)) {
-        const t = setTimeout(() => setShowTour(true), 600);
-        return () => clearTimeout(t);
+      if (localStorage.getItem(ONBOARDING_TOUR_KEY)) return;
+      const createdAt = user.created_at || user.createdAt;
+      const ageMs = createdAt ? Date.now() - new Date(createdAt).getTime() : Infinity;
+      const isFreshSignup = ageMs < 10 * 60 * 1000; // signup → first dashboard load is minutes, not hours
+      if (!isFreshSignup) {
+        // Not a new signup — never show it, and remember that so this
+        // check doesn't re-run on every future visit either.
+        localStorage.setItem(ONBOARDING_TOUR_KEY, "1");
+        return;
       }
+      const t = setTimeout(() => setShowTour(true), 600);
+      return () => clearTimeout(t);
     } catch {
       /* storage blocked (private mode etc.) — just skip the tour */
     }
-  }, []);
+  }, [user]);
 
   const finishTour = () => {
     setShowTour(false);

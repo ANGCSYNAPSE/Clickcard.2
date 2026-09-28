@@ -45,12 +45,14 @@ function useTargetRect(target: string | undefined, step: number) {
       }
     };
     // A mobile nav target can still be mid-slide out of its off-canvas
-    // drawer (its own CSS transition, separate from this tour) and the
-    // smooth scrollIntoView above takes a beat to settle too — keep
-    // re-measuring for a bit rather than trusting a single early snapshot,
-    // so the spotlight doesn't lock onto a stale, still-moving position.
+    // drawer (its own CSS transition, separate from this tour), and the
+    // smooth scrollIntoView above can easily outlast a short measurement
+    // window on a real, tall page (unlike a short test page, a real
+    // dashboard scroll can take the better part of a second) — keep
+    // re-measuring for a while rather than trusting an early snapshot, so
+    // the spotlight/arrow don't lock onto a stale, still-settling position.
     const start = performance.now();
-    const DURATION = 500;
+    const DURATION = 900;
     const tick = (now: number) => {
       measure();
       if (now - start < DURATION) raf = window.requestAnimationFrame(tick);
@@ -60,11 +62,16 @@ function useTargetRect(target: string | undefined, step: number) {
     }, 150);
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
+    // Belt-and-suspenders: once the browser confirms the smooth scroll has
+    // actually finished, take one more authoritative measurement — covers
+    // the rare case where scrolling runs past the polling window above.
+    document.addEventListener("scrollend", measure, true);
     return () => {
       clearTimeout(t);
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
+      document.removeEventListener("scrollend", measure, true);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target, step]);
@@ -231,7 +238,8 @@ export default function ProductTour({
     const holeRight = rect.left + rect.width + PAD;
     const holeBottom = rect.top + rect.height + PAD;
     const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
-    const EDGE = 16; // keep anchors off the very corner of a box
+    const EDGE = 35; // keep anchors off the very corner of a box
+    const INSET = 6; // land the tip just inside the ring, not exactly on its edge
 
     let start: { x: number; y: number };
     let end: { x: number; y: number };
@@ -249,7 +257,12 @@ export default function ProductTour({
         const startX = clamp(targetCenterX, cardRect.left + EDGE, cardRect.right - EDGE);
         const endX = clamp(cardCenterX, holeLeft + EDGE / 2, holeRight - EDGE / 2);
         start = { x: startX, y: placement.side === "bottom" ? cardRect.top : cardRect.bottom };
-        end = { x: endX, y: placement.side === "bottom" ? holeBottom : holeTop };
+        // Land the tip a few px *inside* the ring rather than exactly on its
+        // outer edge — small enough not to look off, but enough that the
+        // arrowhead visibly overlaps the ring instead of appearing to stop
+        // just short of it if the target's measured box is off by a pixel
+        // or two (e.g. still settling after a scroll).
+        end = { x: endX, y: placement.side === "bottom" ? holeBottom - INSET : holeTop + INSET };
         break;
       }
       case "right":
@@ -260,7 +273,7 @@ export default function ProductTour({
         const startY = clamp(targetCenterY, cardRect.top + EDGE, cardRect.bottom - EDGE);
         const endY = clamp(cardCenterY, holeTop + EDGE / 2, holeBottom - EDGE / 2);
         start = { x: placement.side === "right" ? cardRect.left : cardRect.right, y: startY };
-        end = { x: placement.side === "right" ? holeRight : holeLeft, y: endY };
+        end = { x: placement.side === "right" ? holeRight - INSET : holeLeft + INSET, y: endY };
         break;
       }
     }
@@ -272,7 +285,7 @@ export default function ProductTour({
     const bow = clamp(dist * 0.18, 24, 90);
     const control =
       placement.side === "bottom" || placement.side === "top"
-        ? { x: (start.x + end.x) / 2 - bow, y: (start.y + end.y) / 2 }
+        ? { x: (start.x + end.x) / 2 + bow, y: (start.y + end.y) / 2 }
         : { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 - bow };
 
     const dx = end.x - control.x;

@@ -1138,23 +1138,39 @@ export default function StudioPage() {
                 {headerLayout === "banner" && (
                   <div className="flex items-center justify-between gap-4">
                     <p className="text-sm font-semibold text-ink dark:text-white">Banner image</p>
-                    <button
-                      onClick={() => bannerFileRef.current?.click()}
-                      className="relative grid h-14 w-20 shrink-0 place-items-center"
-                      aria-label="Upload banner image"
-                    >
-                      <span className="grid h-full w-full place-items-center overflow-hidden rounded-xl bg-ink/10 text-ink/40 dark:bg-white/10 dark:text-white/40">
-                        {bannerImageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={bannerImageUrl} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <ImageIcon size={18} />
+                    <div className="relative shrink-0">
+                      <button
+                        onClick={() => bannerFileRef.current?.click()}
+                        className="relative grid h-14 w-20 place-items-center"
+                        aria-label="Upload banner image"
+                      >
+                        <span className="grid h-full w-full place-items-center overflow-hidden rounded-xl bg-ink/10 text-ink/40 dark:bg-white/10 dark:text-white/40">
+                          {bannerImageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={bannerImageUrl} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <ImageIcon size={18} />
+                          )}
+                        </span>
+                        {!bannerImageUrl && (
+                          <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#262626] dark:text-white">
+                            <Plus size={12} />
+                          </span>
                         )}
-                      </span>
-                      <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-600 shadow-card ring-1 ring-ink/5 dark:bg-[#262626] dark:text-white">
-                        <Plus size={12} />
-                      </span>
-                    </button>
+                      </button>
+                      {bannerImageUrl && (
+                        <button
+                          onClick={() => {
+                            setBannerFile(null);
+                            set({ bannerImageUrl: "" });
+                          }}
+                          className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-white text-red-500 shadow-card ring-1 ring-ink/5 dark:bg-[#262626] dark:text-red-400"
+                          aria-label="Remove banner image"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
                     <input ref={bannerFileRef} type="file" accept="image/*" hidden onChange={onPickBanner} />
                   </div>
                 )}

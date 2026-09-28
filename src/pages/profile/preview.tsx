@@ -156,6 +156,7 @@ export default function ProfilePreviewPage() {
           <div className="mt-6 flex flex-col items-center lg:hidden">
             <LiveProfileCard
               {...design}
+              bannerUrl={design.bannerImageUrl || undefined}
               name={name}
               username={user?.username}
               avatarUrl={avatarUrl}
@@ -284,6 +285,7 @@ export default function ProfilePreviewPage() {
                 <div className="overflow-hidden rounded-2xl" style={{ height: 560 }}>
                   <LiveProfileCard
                     {...design}
+                    bannerUrl={design.bannerImageUrl || undefined}
                     name={name}
                     username={user?.username}
                     avatarUrl={avatarUrl}
