@@ -699,7 +699,7 @@ export default function ProfileEditorPage() {
                 </button>
               ) : (
                 <Button onClick={onSave} loading={saving} className="text-xs sm:text-sm">
-                  <Save size={16} /> Save profile 🎉
+                  <Save size={16} /> Save profile
                 </Button>
               )}
             </div>

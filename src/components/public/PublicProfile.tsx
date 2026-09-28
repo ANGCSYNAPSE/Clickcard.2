@@ -3,13 +3,16 @@ import { motion } from "framer-motion";
 import { QRCodeCanvas } from "qrcode.react";
 import { Copy, Check, X, QrCode } from "lucide-react";
 import LiveProfileCard from "@/components/app/LiveProfileCard";
+import PublicProfileDesktop from "@/components/public/PublicProfileDesktop";
 import { PublicProfile as TProfile, shareTargets, trackEvent } from "@/lib/publicProfile";
 
 /**
- * The real public page — renders with LiveProfileCard, the exact same
- * component Studio's live preview uses, so what a visitor sees when they
- * scan the QR code or open the link is pixel-identical to what the owner
- * designed, not a separately-maintained lookalike.
+ * The real public page. Below lg, renders with LiveProfileCard — the exact
+ * same component every in-app preview uses, so a visitor on mobile/tablet
+ * sees what the owner designed, not a separately-maintained lookalike.
+ * At lg+, renders PublicProfileDesktop instead — a wide glass layout built
+ * specifically for desktop screens (deliberately its own component, not a
+ * LiveProfileCard variant, so this never affects any in-app preview).
  */
 export default function PublicProfile({
   profile,
@@ -21,6 +24,15 @@ export default function PublicProfile({
   const [shareOpen, setShareOpen] = useState(false);
   const name = profile.fullName || `@${profile.username}`;
   const d = profile.design || {};
+  const theme = (d.theme as "light" | "dark") || "light";
+  const primary = d.primary || "#3B82F6";
+  const accent = d.accent || "#10B981";
+  const contact = {
+    phone: profile.phone,
+    whatsapp: profile.whatsapp,
+    email: profile.email,
+    website: profile.website,
+  };
 
   // Track profile view (and link taps) into the owner's dashboard analytics.
   useEffect(() => {
@@ -30,53 +42,94 @@ export default function PublicProfile({
 
   return (
     <>
-      <LiveProfileCard
-        interactive
-        onShare={() => setShareOpen(true)}
-        referralCode={profile.referralCode}
-        primary={d.primary || "#3B82F6"}
-        accent={d.accent || "#10B981"}
-        theme={(d.theme as "light" | "dark") || "light"}
-        name={name}
-        username={profile.username}
-        avatarUrl={profile.profilePicture}
-        bio={profile.bio}
-        socialLinks={profile.social}
-        contact={{
-          phone: profile.phone,
-          whatsapp: profile.whatsapp,
-          email: profile.email,
-          website: profile.website,
-        }}
-        experience={profile.experience}
-        education={profile.education}
-        products={profile.products}
-        business={profile.business}
-        headerLayout={d.headerLayout}
-        bannerUrl={d.bannerUrl}
-        wallpaperType={d.wallpaperType || "fill"}
-        backgroundImageUrl={d.backgroundImageUrl}
-        backgroundColor={d.backgroundColor || "#F9FAFB"}
-        gradientColor={d.gradientColor}
-        gradientColorEnd={d.gradientColorEnd}
-        gradientDirection={d.gradientDirection}
-        noise={d.noise}
-        patternIndex={d.patternIndex}
-        buttonColor={d.buttonColor}
-        buttonTextColor={d.buttonTextColor}
-        buttonStyle={d.buttonStyle}
-        buttonRoundness={d.buttonRoundness}
-        buttonShadow={d.buttonShadow}
-        socialLinksStyle={d.socialLinksStyle}
-        pageFont={d.pageFont || "Inter"}
-        pageTextColor={d.pageTextColor}
-        matchTitleFont={d.matchTitleFont}
-        titleFont={d.titleFont}
-        titleColor={d.titleColor}
-        titleFontSize={d.titleFontSize}
-        bioFontSize={d.bioFontSize}
-        bodyFontSize={d.bodyFontSize}
-      />
+      <div className="lg:hidden">
+        <LiveProfileCard
+          interactive
+          onShare={() => setShareOpen(true)}
+          referralCode={profile.referralCode}
+          primary={primary}
+          accent={accent}
+          theme={theme}
+          name={name}
+          username={profile.username}
+          avatarUrl={profile.profilePicture}
+          bio={profile.bio}
+          socialLinks={profile.social}
+          contact={contact}
+          experience={profile.experience}
+          education={profile.education}
+          products={profile.products}
+          business={profile.business}
+          headerLayout={d.headerLayout}
+          bannerUrl={d.bannerUrl}
+          wallpaperType={d.wallpaperType || "fill"}
+          backgroundImageUrl={d.backgroundImageUrl}
+          backgroundColor={d.backgroundColor || "#F9FAFB"}
+          gradientColor={d.gradientColor}
+          gradientColorEnd={d.gradientColorEnd}
+          gradientDirection={d.gradientDirection}
+          noise={d.noise}
+          patternIndex={d.patternIndex}
+          buttonColor={d.buttonColor}
+          buttonTextColor={d.buttonTextColor}
+          buttonStyle={d.buttonStyle}
+          buttonRoundness={d.buttonRoundness}
+          buttonShadow={d.buttonShadow}
+          socialLinksStyle={d.socialLinksStyle}
+          pageFont={d.pageFont || "Inter"}
+          pageTextColor={d.pageTextColor}
+          matchTitleFont={d.matchTitleFont}
+          titleFont={d.titleFont}
+          titleColor={d.titleColor}
+          titleFontSize={d.titleFontSize}
+          bioFontSize={d.bioFontSize}
+          bodyFontSize={d.bodyFontSize}
+        />
+      </div>
+
+      <div className="hidden lg:block">
+        <PublicProfileDesktop
+          primary={primary}
+          accent={accent}
+          theme={theme}
+          name={name}
+          username={profile.username}
+          avatarUrl={profile.profilePicture}
+          bannerUrl={d.bannerUrl}
+          headerLayout={d.headerLayout}
+          bio={profile.bio}
+          socialLinks={profile.social}
+          contact={contact}
+          experience={profile.experience}
+          education={profile.education}
+          products={profile.products}
+          business={profile.business}
+          onShare={() => setShareOpen(true)}
+          referralCode={profile.referralCode}
+          wallpaperType={d.wallpaperType || "fill"}
+          backgroundImageUrl={d.backgroundImageUrl}
+          backgroundColor={d.backgroundColor || "#F9FAFB"}
+          gradientColor={d.gradientColor}
+          gradientColorEnd={d.gradientColorEnd}
+          gradientDirection={d.gradientDirection}
+          noise={d.noise}
+          patternIndex={d.patternIndex}
+          buttonColor={d.buttonColor}
+          buttonTextColor={d.buttonTextColor}
+          buttonStyle={d.buttonStyle}
+          buttonRoundness={d.buttonRoundness}
+          buttonShadow={d.buttonShadow}
+          socialLinksStyle={d.socialLinksStyle}
+          pageFont={d.pageFont || "Inter"}
+          pageTextColor={d.pageTextColor}
+          matchTitleFont={d.matchTitleFont}
+          titleFont={d.titleFont}
+          titleColor={d.titleColor}
+          titleFontSize={d.titleFontSize}
+          bioFontSize={d.bioFontSize}
+          bodyFontSize={d.bodyFontSize}
+        />
+      </div>
 
       {shareOpen && (
         <ShareModal url={shareUrl} name={name} username={profile.username} onClose={() => setShareOpen(false)} />

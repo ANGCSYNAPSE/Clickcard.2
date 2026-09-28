@@ -6,6 +6,11 @@ import { MAX_LOGO_SIZE, MIN_LOGO_SIZE } from "@/lib/qrStyling";
 
 export interface QRPreviewHandle {
   download: (extension: FileExtension) => Promise<void>;
+  /** Shares the QR *image itself* (via the Web Share API's file support) —
+   * not a link — so the recipient gets the actual scannable code, not the
+   * profile page. Returns false when the browser can't share files at all,
+   * so callers can fall back to a download instead. */
+  share: (fileName?: string) => Promise<boolean>;
 }
 
 function buildOptions(data: string, settings: QrDesignSettings, size: number): Partial<Options> {
@@ -117,6 +122,26 @@ const QRPreview = forwardRef<
     download: async (extension) => {
       if (!qrRef.current) return;
       await qrRef.current.download({ name: fileName, extension });
+    },
+    share: async (name = fileName) => {
+      if (!qrRef.current) return false;
+      // This component only ever runs in the browser (see the dynamic
+      // import in the mount effect above), so `getRawData` always resolves
+      // a real Blob here — the `Buffer` half of its type is only for
+      // qr-code-styling's node/SSR usage, which this file never exercises.
+      const raw = (await qrRef.current.getRawData("png")) as Blob | null;
+      if (!raw) return false;
+      const file = new File([raw], `${name}.png`, { type: "image/png" });
+      if (typeof navigator === "undefined" || !navigator.canShare?.({ files: [file] })) return false;
+      try {
+        await navigator.share({ files: [file] });
+        return true;
+      } catch (err) {
+        // AbortError = the user cancelled the native share sheet — not a
+        // failure, so don't fall back to a download in that case.
+        if (err instanceof Error && err.name === "AbortError") return true;
+        return false;
+      }
     },
   }));
 

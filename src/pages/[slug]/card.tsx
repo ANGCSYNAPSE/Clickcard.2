@@ -85,9 +85,9 @@ export default function CardPage({ profile, slug, shareUrl }: Props) {
           username={profile.username}
           fontFamily={(profile.design as any)?.fontFamily}
           textColor={(profile.design as any)?.cardTextColor}
-          backgroundColor={(profile.design as any)?.backgroundColor}
-          headerColor={(profile.design as any)?.headerColor}
-          paletteStyle={(profile.design as any)?.paletteStyle}
+          backgroundColor={(profile.design as any)?.cardBackgroundColor}
+          headerColor={(profile.design as any)?.cardHeaderColor}
+          paletteStyle={(profile.design as any)?.cardPaletteStyle}
         />
       </div>
     </>

@@ -220,18 +220,26 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
       // in Customize (which renames it at its own call site) but silently
       // never showed up on the public page.
       bannerUrl: digitalCard.design?.bannerImageUrl,
-      // Include all CV/Card specific settings from digitalCard
+      // Card/CV-specific fields that the [slug]/card.tsx and [slug]/cv.tsx
+      // pages read via `(profile.design as any)?.xxx`. These are kept here
+      // so those pages still work, but they must NOT overwrite the Studio
+      // design fields already spread above from `digitalCard.design` (e.g.
+      // backgroundColor, theme, paletteStyle, headerColor). The Card editor
+      // stores its own backgroundColor/headerColor/paletteStyle/theme at the
+      // top level of digitalCard (NOT inside digitalCard.design), which is a
+      // different namespace — merging them here caused the Card editor's dark
+      // backgroundColor to silently replace the Studio's white background on
+      // the public profile page.
       templateId: digitalCard.templateId,
       cvTemplateId: digitalCard.cvTemplateId,
       primaryColor: digitalCard.primaryColor,
       accentColor: digitalCard.accentColor,
-      theme: digitalCard.theme,
       fontFamily: digitalCard.fontFamily,
       cardTextColor: digitalCard.cardTextColor,
       cvTextColor: digitalCard.cvTextColor,
-      backgroundColor: digitalCard.backgroundColor,
-      headerColor: digitalCard.headerColor,
-      paletteStyle: digitalCard.paletteStyle,
+      cardBackgroundColor: digitalCard.backgroundColor,
+      cardHeaderColor: digitalCard.headerColor,
+      cardPaletteStyle: digitalCard.paletteStyle,
       skills: digitalCard.skills,
       projects: digitalCard.projects,
       awards: digitalCard.awards,

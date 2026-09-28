@@ -1,21 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { QRCodeCanvas } from "qrcode.react";
 import {
   ArrowLeft,
   Copy,
   Check,
   Share2,
   Pencil,
-  Globe,
   Phone as PhoneIcon,
   Link2,
   Briefcase,
   GraduationCap,
   Package,
   Building2,
-  Download,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProfile } from "@/store/slices/profileSlice";
@@ -25,6 +22,9 @@ import { SITE_URL } from "@/lib/config";
 import LiveProfileCard from "@/components/app/LiveProfileCard";
 import SharePopup from "@/components/app/SharePopup";
 import { displayName } from "@/lib/personal";
+import QRPreview, { type QRPreviewHandle } from "@/components/qr/QRPreview";
+import { qrDesignService } from "@/services/qrDesignService";
+import { DEFAULT_QR_SETTINGS, type QrDesignSettings } from "@/lib/qrStyling";
 
 /** Standalone "View as" preview — the live profile card on its own page.
  * Mobile/tablet just get the card, same as it always has; lg+ gets a
@@ -40,10 +40,24 @@ export default function ProfilePreviewPage() {
   const design = useAppSelector((s) => s.design);
   const [copied, setCopied] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [qrSettings, setQrSettings] = useState<QrDesignSettings>(DEFAULT_QR_SETTINGS);
+  const qrRef = useRef<QRPreviewHandle>(null);
 
   useEffect(() => {
     if (status === "idle") dispatch(fetchProfile());
   }, [dispatch, status]);
+
+  // The user's own saved QR design (colors, logo, pattern) — same source
+  // SharePopup uses — so this panel shows their real, custom QR instead of
+  // a plain default-styled one.
+  useEffect(() => {
+    qrDesignService
+      .getMine()
+      .then(({ data }) => {
+        if (data.data?.settings) setQrSettings({ ...DEFAULT_QR_SETTINGS, ...data.data.settings });
+      })
+      .catch(() => {});
+  }, []);
 
   const profileUrl = user?.username ? `${SITE_URL}/${user.username}` : null;
 
@@ -56,12 +70,14 @@ export default function ProfilePreviewPage() {
   };
 
   const downloadQr = () => {
-    const canvas = document.getElementById("preview-qr") as HTMLCanvasElement | null;
-    if (!canvas) return;
-    const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/png");
-    a.download = `${user?.username || "profile"}-qr.png`;
-    a.click();
+    qrRef.current?.download("png");
+  };
+
+  const shareQr = async () => {
+    // Shares the QR image itself, not the profile link — falls back to a
+    // download when the browser can't share files (e.g. most desktops).
+    const shared = await qrRef.current?.share(`${user?.username || "profile"}-qr`);
+    if (!shared) downloadQr();
   };
 
   if (!ready) {
@@ -99,8 +115,8 @@ export default function ProfilePreviewPage() {
       <Head>
         <title>View as · ClickCard</title>
       </Head>
-      <div className="min-h-screen bg-mist px-6 py-8 dark:bg-[#1a1a1a] lg:px-10 lg:py-8">
-        <div className="mx-auto w-full max-w-md lg:max-w-6xl">
+      <div className="min-h-screen bg-mist px-6 py-8 dark:bg-[#1a1a1a] lg:h-screen lg:overflow-hidden lg:px-10 lg:py-8">
+        <div className="mx-auto w-full max-w-md lg:flex lg:h-full lg:max-w-6xl lg:flex-col">
           {/* header — plain pill bar below lg (unchanged), dashboard-style
               title + breadcrumb at lg+ */}
           <div className="flex w-full items-center justify-between gap-3 lg:hidden">
@@ -116,7 +132,7 @@ export default function ProfilePreviewPage() {
             <span className="w-[74px]" aria-hidden />
           </div>
 
-          <div className="hidden items-center justify-between gap-3 lg:flex">
+          <div className="hidden items-center justify-between gap-3 lg:flex lg:shrink-0">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => router.back()}
@@ -144,8 +160,9 @@ export default function ProfilePreviewPage() {
                 </button>
               )}
               <button
-                onClick={() => router.push("/profile")}
-                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-br from-primary to-secondary px-4 py-2 text-sm font-bold text-white transition hover:opacity-90"
+                onClick={() => router.push("/customize")}
+                className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold text-white transition hover:opacity-90"
+                style={{ background: `linear-gradient(to bottom right, ${design.primary}, ${design.accent})` }}
               >
                 <Pencil size={15} /> Edit profile
               </button>
@@ -171,10 +188,18 @@ export default function ProfilePreviewPage() {
             />
           </div>
 
-          {/* lg+: dashboard-style detail layout */}
-          <div className="hidden lg:block">
+          {/* lg+: dashboard-style detail layout — a left column (name/summary
+              card stacked above Profile Summary + Share & QR) beside a
+              right column (Live Preview) that spans the full height of both
+              rows, not just the bottom row. Height-bound to the viewport
+              (via the h-screen/overflow-hidden ancestors above) so the page
+              never needs to scroll — panels that overflow scroll on their
+              own instead. */}
+          <div className="hidden lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+          <div className="mt-6 grid min-h-0 flex-1 gap-6 lg:grid-cols-[1fr_360px]">
+          <div className="no-scrollbar flex min-h-0 flex-col gap-6 overflow-y-auto">
             {/* Summary card */}
-            <div className="mt-6 rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#262626]">
+            <div className="rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#262626]">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-6">
                   <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-primary to-secondary">
@@ -197,9 +222,13 @@ export default function ProfilePreviewPage() {
                       </span>
                     </div>
                     {profileUrl && (
-                      <p className="mb-2 flex items-center gap-2 text-sm text-ink/55 dark:text-white/55">
-                        <Globe size={16} /> {profileUrl}
-                      </p>
+                      <button
+                        onClick={copyUrl}
+                        className="mb-2 flex items-center gap-1.5 text-sm text-ink/55 transition hover:text-ink dark:text-white/55 dark:hover:text-white"
+                        title="Click to copy"
+                      >
+                        {copied ? "Copied!" : profileUrl} {copied ? <Check size={14} /> : <Copy size={14} />}
+                      </button>
                     )}
                     {draft.personal?.bio && (
                       <p className="mb-3 max-w-lg text-sm text-ink/55 dark:text-white/55">{draft.personal.bio}</p>
@@ -214,14 +243,6 @@ export default function ProfilePreviewPage() {
                     </div>
                   </div>
                 </div>
-                {profileUrl && (
-                  <button
-                    onClick={copyUrl}
-                    className="flex shrink-0 items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-4 py-2 text-sm font-bold text-ink transition hover:bg-ink/5 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-                  >
-                    {copied ? <Check size={15} /> : <Copy size={15} />} {copied ? "Copied" : "Copy link"}
-                  </button>
-                )}
               </div>
 
               {/* Meta row */}
@@ -253,8 +274,8 @@ export default function ProfilePreviewPage() {
               </div>
             </div>
 
-            {/* Three-column detail grid */}
-            <div className="mt-6 grid grid-cols-3 gap-6">
+            {/* Profile Summary + Share & QR, side by side */}
+            <div className="grid grid-cols-2 gap-6">
               {/* Profile summary */}
               <div className="rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#262626]">
                 <div className="mb-4 flex items-center justify-between">
@@ -278,34 +299,6 @@ export default function ProfilePreviewPage() {
                 </div>
               </div>
 
-              {/* Live preview mockup */}
-              <div className="rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#262626]">
-                <h3 className="mb-4 font-bold text-ink dark:text-white">Live Preview</h3>
-                {/* Full-width scrollable preview — card fills the column width */}
-                <div className="overflow-hidden rounded-2xl" style={{ height: 560 }}>
-                  <LiveProfileCard
-                    {...design}
-                    bannerUrl={design.bannerImageUrl || undefined}
-                    name={name}
-                    username={user?.username}
-                    avatarUrl={avatarUrl}
-                    bio={draft.personal?.bio}
-                    socialLinks={social}
-                    contact={draft.contact}
-                    experience={draft.experience}
-                    education={draft.education}
-                    products={draft.products}
-                    business={draft.business}
-                    onShare={profileUrl ? () => setShareOpen(true) : undefined}
-                    interactive
-                    fullWidth
-                  />
-                </div>
-                <p className="mt-4 text-center text-xs text-ink/45 dark:text-white/45">
-                  Exactly what visitors see on your ClickCard link
-                </p>
-              </div>
-
               {/* Share & QR */}
               <div className="rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#262626]">
                 <h3 className="mb-4 font-bold text-ink dark:text-white">Share &amp; QR</h3>
@@ -323,19 +316,14 @@ export default function ProfilePreviewPage() {
                       </button>
                     </div>
                     <div className="mt-4 grid place-items-center rounded-2xl bg-paper-soft p-4 dark:bg-dark">
-                      <QRCodeCanvas id="preview-qr" value={profileUrl} size={128} level="M" includeMargin />
-                      <button
-                        onClick={downloadQr}
-                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-ink/50 transition hover:text-primary dark:text-white/50"
-                      >
-                        <Download size={13} /> Download QR
-                      </button>
+                      <QRPreview ref={qrRef} data={profileUrl} settings={qrSettings} size={128} fileName={`${user?.username || "profile"}-qr`} />
                     </div>
                     <button
-                      onClick={() => setShareOpen(true)}
-                      className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-br from-primary to-secondary px-4 py-2.5 text-sm font-bold text-white transition hover:opacity-90"
+                      onClick={shareQr}
+                      className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition hover:opacity-90"
+                      style={{ background: `linear-gradient(to bottom right, ${design.primary}, ${design.accent})` }}
                     >
-                      <Share2 size={15} /> Share profile
+                      <Share2 size={15} /> Share QR
                     </button>
                   </>
                 ) : (
@@ -345,6 +333,39 @@ export default function ProfilePreviewPage() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Live preview mockup — right column, spanning the full height of
+              the left column (summary card + the two rows beneath it), not
+              just sitting alongside the bottom row. */}
+          <div className="flex min-h-0 flex-col rounded-3xl border border-ink/5 bg-white p-6 dark:border-white/5 dark:bg-[#262626]">
+            <h3 className="mb-4 shrink-0 font-bold text-ink dark:text-white">Live Preview</h3>
+            {/* Fills whatever height the grid gives this column (matching
+                the left column's height) instead of a fixed box. */}
+            <div className="min-h-0 flex-1 overflow-hidden rounded-2xl">
+              <LiveProfileCard
+                {...design}
+                bannerUrl={design.bannerImageUrl || undefined}
+                name={name}
+                username={user?.username}
+                avatarUrl={avatarUrl}
+                bio={draft.personal?.bio}
+                socialLinks={social}
+                contact={draft.contact}
+                experience={draft.experience}
+                education={draft.education}
+                products={draft.products}
+                business={draft.business}
+                onShare={profileUrl ? () => setShareOpen(true) : undefined}
+                interactive
+                fullWidth
+              />
+            </div>
+            <p className="mt-4 shrink-0 text-center text-xs text-ink/45 dark:text-white/45">
+              Exactly what visitors see on your ClickCard link
+            </p>
+          </div>
+          </div>
           </div>
         </div>
       </div>
