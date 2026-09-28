@@ -149,22 +149,34 @@ export default function DashboardPage() {
 
   // New-user onboarding tour — only for accounts that were just created
   // (i.e. actually mid-signup, not any existing user whose browser simply
-  // hasn't seen the tour before), and even then only once per browser.
+  // hasn't seen the tour before), and even then only once per *account* —
+  // keyed by user id rather than one flat key, so testing/QA signing up
+  // several accounts in the same browser doesn't have the first account's
+  // "seen" flag silently block the tour for every account after it.
   // Checked client-side only (localStorage isn't available during SSR), so
   // this can't run in the same render as the server — a brief delay also
   // lets the dashboard's own content paint first instead of popping the
   // tour over a blank page.
   useEffect(() => {
     if (!user) return; // wait for the account (and its createdAt) to load
+    const accountId = user.id ?? user.userId ?? user.email;
+    if (!accountId) return;
+    const key = `${ONBOARDING_TOUR_KEY}_${accountId}`;
     try {
-      if (localStorage.getItem(ONBOARDING_TOUR_KEY)) return;
+      if (localStorage.getItem(key)) return;
       const createdAt = user.created_at || user.createdAt;
-      const ageMs = createdAt ? Date.now() - new Date(createdAt).getTime() : Infinity;
+      const createdMs = createdAt ? new Date(createdAt).getTime() : NaN;
+      // An unparseable/missing timestamp shouldn't silently disable the
+      // tour forever — only treat it as "not new" when we can actually
+      // confirm the account is old, not merely when the date failed to
+      // parse (ageMs would be NaN, and every comparison against NaN is
+      // false, which would otherwise fall through to "not fresh").
+      const ageMs = Number.isNaN(createdMs) ? 0 : Date.now() - createdMs;
       const isFreshSignup = ageMs < 10 * 60 * 1000; // signup → first dashboard load is minutes, not hours
       if (!isFreshSignup) {
         // Not a new signup — never show it, and remember that so this
         // check doesn't re-run on every future visit either.
-        localStorage.setItem(ONBOARDING_TOUR_KEY, "1");
+        localStorage.setItem(key, "1");
         return;
       }
       const t = setTimeout(() => setShowTour(true), 600);
@@ -176,8 +188,9 @@ export default function DashboardPage() {
 
   const finishTour = () => {
     setShowTour(false);
+    const accountId = user?.id ?? user?.userId ?? user?.email;
     try {
-      localStorage.setItem(ONBOARDING_TOUR_KEY, "1");
+      if (accountId) localStorage.setItem(`${ONBOARDING_TOUR_KEY}_${accountId}`, "1");
     } catch {
       /* ignore */
     }
