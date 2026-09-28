@@ -293,14 +293,13 @@ export default function LiveProfileCard({
   return (
     <div
       className={
-        // Full viewport on mobile (standard link-in-bio behavior); on sm+
-        // the card sizes to its own content instead of forcing 100vh, so a
-        // short profile doesn't leave a huge blank gap above the footer —
-        // it reads the same compact size as the Dashboard/Studio preview.
+        // Full viewport on mobile and tablet (standard link-in-bio behavior).
+        // lg+ screens use PublicProfileDesktop instead, so there is no need
+        // to cap height or add margins at any breakpoint below lg.
         interactive
           ? fullWidth
             ? "relative h-full w-full overflow-hidden"
-            : "relative h-[100dvh] w-full overflow-hidden sm:mx-auto sm:my-8 sm:h-[85vh] sm:max-w-[420px] sm:rounded-3xl sm:shadow-card"
+            : "relative h-[100dvh] w-full overflow-y-auto overflow-x-hidden"
           : "relative rounded-3xl overflow-hidden"
       }
       style={{
