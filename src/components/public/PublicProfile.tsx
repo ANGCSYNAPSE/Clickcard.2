@@ -33,6 +33,7 @@ export default function PublicProfile({
       <LiveProfileCard
         interactive
         onShare={() => setShareOpen(true)}
+        referralCode={profile.referralCode}
         primary={d.primary || "#3B82F6"}
         accent={d.accent || "#10B981"}
         theme={(d.theme as "light" | "dark") || "light"}

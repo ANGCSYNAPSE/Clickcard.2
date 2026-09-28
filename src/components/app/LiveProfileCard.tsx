@@ -123,6 +123,7 @@ export default function LiveProfileCard({
   interactive = false,
   fullWidth = false,
   onShare,
+  referralCode,
 }: {
   primary: string;
   accent: string;
@@ -172,6 +173,10 @@ export default function LiveProfileCard({
   fullWidth?: boolean;
   /** Called when the header's share icon is tapped (interactive mode only). */
   onShare?: () => void;
+  /** This profile owner's own referral code — carried into the "Join on
+   * ClickCard" CTA's signup link so a visitor who signs up from here gets
+   * attributed to them. */
+  referralCode?: string;
 }) {
   useEffect(() => {
     const loadFont = (font: string) => {
@@ -658,7 +663,7 @@ export default function LiveProfileCard({
                 already-signed-in owner to join. */}
             {interactive && (
               <a
-                href="/signup"
+                href={referralCode ? `/signup?ref=${encodeURIComponent(referralCode)}` : "/signup"}
                 className="shrink-0 px-8 py-2.5 rounded-full font-bold text-sm shadow-lg transition hover:opacity-90"
                 style={{ background: textColor, color: bg }}
               >

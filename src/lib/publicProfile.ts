@@ -84,6 +84,9 @@ export interface PublicProfile {
   fullName?: string;
   tagline?: string;
   bio?: string;
+  /** This profile owner's own referral code — carried through to the "Join
+   * on ClickCard" CTA so a visitor who signs up gets attributed to them. */
+  referralCode?: string;
   profilePicture?: string;
   email?: string;
   phone?: string;
@@ -185,6 +188,7 @@ function mapApiProfile(slug: string, d: any): PublicProfile {
       ? `${personal.title} ${personal.fullName}`
       : personal.fullName || d.name || undefined,
     tagline: personal.tagline,
+    referralCode: d.referral_code || undefined,
     bio: personal.bio || d.profile_bio || undefined,
     profilePicture: d.profile_picture || personal.profilePicture || undefined,
     email: contact.email,
