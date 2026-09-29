@@ -73,6 +73,7 @@ export default function CvPage() {
   const draft = useAppSelector((s) => s.profile.draft);
   const profileUser = useAppSelector((s) => s.auth.user);
   const saving = useAppSelector((s) => s.profile.saving);
+  const profileStatus = useAppSelector((s) => s.profile.status);
 
   const [templateId, setTemplateId] = useState<string>(
     draft.digitalCard?.cvTemplateId !== undefined ? draft.digitalCard.cvTemplateId : (CV_TEMPLATES[0]?.id || "")
@@ -122,8 +123,8 @@ export default function CvPage() {
   const dirty = savedSnapshotRef.current !== null && currentSnapshot !== savedSnapshotRef.current;
 
   useEffect(() => {
-    dispatch(fetchProfile());
-  }, [dispatch]);
+    if (profileStatus === "idle") dispatch(fetchProfile());
+  }, [dispatch, profileStatus]);
 
   useEffect(() => {
     // `!== undefined`, not truthy — an explicitly saved "" (user unselected

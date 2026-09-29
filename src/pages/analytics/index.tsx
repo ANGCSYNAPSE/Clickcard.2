@@ -16,12 +16,12 @@ import { fetchShareTotals, fetchShareLinks } from "@/store/slices/shareSlice";
 
 export default function AnalyticsPage() {
   const dispatch = useAppDispatch();
-  const { totals, links } = useAppSelector((s) => s.share);
+  const { totals, links, status } = useAppSelector((s) => s.share);
 
   useEffect(() => {
-    dispatch(fetchShareTotals());
-    dispatch(fetchShareLinks());
-  }, [dispatch]);
+    if (!totals) dispatch(fetchShareTotals());
+    if (status === "idle") dispatch(fetchShareLinks());
+  }, [dispatch, totals, status]);
 
   // Use real byDate if present, otherwise a graceful 14-day zero series.
   const series = useMemo(() => {

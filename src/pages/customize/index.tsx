@@ -195,6 +195,7 @@ export default function StudioPage() {
   const set = (patch: Partial<typeof design>) => dispatch(updateDesign(patch));
   const profileDirty = useAppSelector((s) => s.profile.dirty);
   const savingProfile = useAppSelector((s) => s.profile.saving);
+  const profileStatus = useAppSelector((s) => s.profile.status);
 
   const [expandedSection, setExpandedSection] = useState<string | null>("palette");
   const [detailView, setDetailView] = useState<string | null>(null);
@@ -227,8 +228,8 @@ export default function StudioPage() {
   };
 
   useEffect(() => {
-    dispatch(fetchProfile());
-  }, [dispatch]);
+    if (profileStatus === "idle") dispatch(fetchProfile());
+  }, [dispatch, profileStatus]);
 
   // Preload every preset's title font so the "Aa" swatch previews render
   // correctly the first time the Templates panel opens.

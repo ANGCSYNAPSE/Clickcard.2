@@ -31,7 +31,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchProfile } from "@/store/slices/profileSlice";
 import { fetchShareTotals, fetchShareLinks } from "@/store/slices/shareSlice";
 import { fetchDashboardAnalytics } from "@/store/slices/analyticsSlice";
-import { referralService } from "@/services/referralService";
+import { fetchReferrals } from "@/store/slices/referralSlice";
 import type { DashboardTrendPoint } from "@/services/analyticsService";
 
 const ONBOARDING_TOUR_KEY = "cc_onboarding_tour_seen";
@@ -129,23 +129,21 @@ const QUICK = [
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((s) => s.auth);
-  const { draft, isPublic } = useAppSelector((s) => s.profile);
-  const { links } = useAppSelector((s) => s.share);
-  const { dashboard } = useAppSelector((s) => s.analytics);
+  const { draft, isPublic, status: profileStatus } = useAppSelector((s) => s.profile);
+  const { links, totals: shareTotals, status: shareStatus } = useAppSelector((s) => s.share);
+  const { dashboard, status: analyticsStatus } = useAppSelector((s) => s.analytics);
+  const { stats: referralStats, status: referralStatus } = useAppSelector((s) => s.referrals);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [referralCount, setReferralCount] = useState(0);
+  const referralCount = Number(referralStats?.total_referrals ?? 0);
   const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchProfile());
-    dispatch(fetchShareTotals());
-    dispatch(fetchShareLinks());
-    dispatch(fetchDashboardAnalytics());
-    referralService
-      .myReferrals()
-      .then(({ data }) => setReferralCount(Number(data.data?.stats?.total_referrals ?? 0)))
-      .catch(() => {});
-  }, [dispatch]);
+    if (profileStatus === "idle") dispatch(fetchProfile());
+    if (!shareTotals) dispatch(fetchShareTotals());
+    if (shareStatus === "idle") dispatch(fetchShareLinks());
+    if (analyticsStatus === "idle") dispatch(fetchDashboardAnalytics());
+    if (referralStatus === "idle") dispatch(fetchReferrals());
+  }, [dispatch, profileStatus, shareTotals, shareStatus, analyticsStatus, referralStatus]);
 
   // New-user onboarding tour — only for accounts that were just created
   // (i.e. actually mid-signup, not any existing user whose browser simply
@@ -166,13 +164,13 @@ export default function DashboardPage() {
       if (localStorage.getItem(key)) return;
       const createdAt = user.created_at || user.createdAt;
       const createdMs = createdAt ? new Date(createdAt).getTime() : NaN;
-      // An unparseable/missing timestamp shouldn't silently disable the
-      // tour forever — only treat it as "not new" when we can actually
-      // confirm the account is old, not merely when the date failed to
-      // parse (ageMs would be NaN, and every comparison against NaN is
-      // false, which would otherwise fall through to "not fresh").
-      const ageMs = Number.isNaN(createdMs) ? 0 : Date.now() - createdMs;
-      const isFreshSignup = ageMs < 10 * 60 * 1000; // signup → first dashboard load is minutes, not hours
+      // Unknown age (missing/unparseable createdAt) defaults to "not a
+      // fresh signup" — the safe direction. The previous fallback (`ageMs =
+      // 0` when unparseable) always evaluated as fresh, so any existing
+      // account whose timestamp didn't resolve got shown the tour the very
+      // first time this check ran for them — e.g. logging in on a new
+      // device/browser, where there's no localStorage history yet either.
+      const isFreshSignup = !Number.isNaN(createdMs) && Date.now() - createdMs < 10 * 60 * 1000;
       if (!isFreshSignup) {
         // Not a new signup — never show it, and remember that so this
         // check doesn't re-run on every future visit either.

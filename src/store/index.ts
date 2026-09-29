@@ -9,6 +9,7 @@ import analyticsReducer from "./slices/analyticsSlice";
 import uiReducer from "./slices/uiSlice";
 import designReducer from "./slices/designSlice";
 import businessProfileReducer from "./slices/businessProfileSlice";
+import referralReducer from "./slices/referralSlice";
 
 export const makeStore = () =>
   configureStore({
@@ -23,6 +24,7 @@ export const makeStore = () =>
       ui: uiReducer,
       design: designReducer,
       businessProfiles: businessProfileReducer,
+      referrals: referralReducer,
     },
     middleware: (getDefault) =>
       getDefault({

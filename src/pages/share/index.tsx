@@ -97,10 +97,10 @@ export default function SharePage() {
   const linkCap = limit("links");
 
   useEffect(() => {
-    dispatch(fetchShareLinks());
-    dispatch(fetchShareTotals());
+    if (status === "idle") dispatch(fetchShareLinks());
+    if (!totals) dispatch(fetchShareTotals());
     if (profileStatus === "idle") dispatch(fetchProfile());
-  }, [dispatch, profileStatus]);
+  }, [dispatch, status, totals, profileStatus]);
 
   const form = useFormik({
     initialValues: { custom_slug: "", expiry_days: 0, requires_password: false, share_password: "" },

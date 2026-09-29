@@ -4,9 +4,8 @@ import { Gift, Copy, Check, Share2, Users, UserCheck } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { pushToast } from "@/store/slices/uiSlice";
-import { referralService } from "@/services/referralService";
+import { fetchReferrals } from "@/store/slices/referralSlice";
 import { SITE_URL } from "@/lib/config";
-import type { ReferralStats, ReferredUser } from "@/types";
 
 export default function ReferralPage() {
   const dispatch = useAppDispatch();
@@ -14,25 +13,13 @@ export default function ReferralPage() {
   const code = user?.referral_code || "";
   const inviteLink = code ? `${SITE_URL}/signup?ref=${code}` : "";
 
-  const [referrals, setReferrals] = useState<ReferredUser[]>([]);
-  const [stats, setStats] = useState<ReferralStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { referrals, stats, status } = useAppSelector((s) => s.referrals);
+  const loading = status === "idle" || status === "loading";
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    referralService
-      .myReferrals()
-      .then(({ data }) => {
-        if (cancelled) return;
-        setReferrals(data.data?.referrals || []);
-        setStats(data.data?.stats || null);
-      })
-      .finally(() => !cancelled && setLoading(false));
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    if (status === "idle") dispatch(fetchReferrals());
+  }, [status, dispatch]);
 
   const copyLink = async () => {
     if (!inviteLink) return;
